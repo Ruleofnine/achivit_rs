@@ -1,46 +1,45 @@
 use color_eyre::Result;
 use dotenv::dotenv;
 use log::info;
-use serenity::async_trait;
-use serenity::model::channel::Message;
-use serenity::model::gateway::Ready;
-use serenity::prelude::*;
+use poise::serenity_prelude as serenity;
 use std::env;
-struct Handler;
-#[async_trait]
-impl EventHandler for Handler {
-    async fn message(&self, ctx: Context, msg: Message) {
-        if !msg.author.bot {
-            info!("{}: {}", msg.author.name, msg.content);
-        }
-        if msg.content == "!ping" {
-            if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
-                println!("Error sending message: {:?}", why);
-            }
-        } 
-    }
-    async fn ready(&self, _: Context, ready: Ready) {
-        info!("{} is connected!", ready.user.name)
-    }
-}
+mod df;
+mod event_handler;
+use crate::event_handler::event_handler;
+pub type Error = Box<dyn std::error::Error + Send + Sync>;
+pub type Context<'a> = poise::Context<'a, Data, Error>;
+pub struct Data {}
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main()  {
     dotenv().ok();
     env_logger::init_from_env(
         env_logger::Env::default().default_filter_or("info,serenity=error,tracing=error"),
     );
-    let token = env::var("BOT_TOKEN").expect("BOT_TOKEN not found");
-    let intents = GatewayIntents::GUILD_MESSAGES
-        | GatewayIntents::DIRECT_MESSAGES
-        | GatewayIntents::MESSAGE_CONTENT
-        | GatewayIntents::GUILDS;
-    let mut client = Client::builder(&token, intents)
-        .event_handler(Handler)
+ let options = poise::FrameworkOptions {
+        event_handler: |_ctx, event, _framework, _data| {
+            Box::pin(event_handler(_ctx, event, _framework, _data))
+        },
+        ..Default::default()
+    };
+
+    poise::Framework::builder()
+        .token(
+            env::var("BOT_TOKEN")
+                .expect("Missing `BOT_TOKEN` env var, see README for more information."),
+        )
+        .setup(move |_ctx, _ready, _framework| {
+            Box::pin(async move {
+                Ok(Data {
+                })
+            })
+        })
+        .options(options)
+        .intents(
+            serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT,
+        )
+        .run()
         .await
-        .expect("Err creating client");
-    if let Err(why) = client.start().await {
-        println!("Client error: {:?}", why);
-    }
-    Ok(())
+        .unwrap();
 }
+

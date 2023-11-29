@@ -7,7 +7,7 @@ use chrono::{Datelike, Timelike, Local};
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     let ping = ctx.ping().await.as_millis();
     let res = format!("{}ms 🏓", ping);
-    let avatar_url = dev_tools::get_bot_avatar(&ctx).await?;
+    let avatar_url =ctx.serenity_context().cache.current_user().face();
     poise::send_reply(ctx, |f| {
         f.embed(|f| f.color(random_rgb()).title("Pong!").description(res).thumbnail(avatar_url))
     })
@@ -27,7 +27,7 @@ pub async fn uptime(ctx: Context<'_>) -> Result<(), Error> {
         "{} hours, {} minutes, and {} seconds",
         hours, minutes, seconds
     );
-    let avatar_url = dev_tools::get_bot_avatar(&ctx).await?;
+    let avatar_url =ctx.serenity_context().cache.current_user().face();
     poise::send_reply(ctx, |f| {
         f.embed(|f| {
             f.color(random_rgb())
@@ -39,12 +39,12 @@ pub async fn uptime(ctx: Context<'_>) -> Result<(), Error> {
     .await?;
     Ok(())
 }
-
+///Just gives you the Server Time :)
 #[poise::command(slash_command)]
 pub async fn server_time(ctx:Context<'_>) -> Result<(),Error>{
     ctx.defer().await?;
     let now = Local::now();
-    let avatar_url = dev_tools::get_bot_avatar(&ctx).await?;
+    let avatar_url =ctx.serenity_context().cache.current_user().face();
     let description = format!(
         "**{}, {}, {:02}{} {:04}** \n**{:02}:{:02}:{:02} {} EST**\n**Week:** {} **Day:** {:03}\n**Swatch Time:** @{:03.0}\n**Day Progress:** {:.2}%\n**Seconds Since Midnight:** {}\n**Seconds Until Midnight:** {}\n**Today in History:** {}",
         now.format("%A"),
@@ -80,7 +80,8 @@ pub async fn random_event(ctx:Context<'_>) -> Result<(),Error>{
     ctx.defer().await?;
     let now = Local::now();
     let description = format!(
-        "**{:02}**\n**On This day in History: **{}",
+        "**{} {}**\n**On This day in History: **{}",
+        now.format("%B"),
         now.day(),
         dfelp::requests::get_random_event().await
     );

@@ -4,6 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "achivit_rs"
+path = "src/main.rs"
+
+[[library]]
+name = "dfelf"
+path = "dfelp/src/lib.rs"
 
 [dependencies]
 dotenv = "0.15.0"
@@ -15,4 +22,8 @@ tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 dfelp = {path = "./dfelp"}
 color-eyre = "0.6.2"
 chrono = "0.4.31"
-
+ego-tree = "0.6.2"
+thiserror = "1.0.49"
+anyhow = "1.0.75"
+sqlx = { version = "0.7.2", features = ["postgres","runtime-tokio","chrono","macros"] }
+regex = "1.10.2"

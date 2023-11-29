@@ -5,20 +5,15 @@ use crate::{Context,Error};
 pub async fn list_slash_commands(ctx: Context<'_>) -> Result<(),Error>{
     ctx.say("Command Executed").await?;
     let  commands = ctx.http().get_global_application_commands().await?;
+    info!("Global Commands");
     for command in &commands {
-        info!("{:?}",command);
+        info!("{}",command.name);
     }
+    info!("Guild Commands");
     let  commands = ctx.http().get_guild_application_commands(*ctx.guild_id().unwrap().as_u64()).await?;
     for command in &commands {
-        info!("{:?}",command)
+        info!("{}",command.name)
     } 
     Ok(())
 }
 
-pub async fn get_bot_avatar(ctx: &Context<'_>) -> Result<String,Error> {
-    let avatar_url =ctx.serenity_context().cache.current_user().avatar_url();
-    match avatar_url {
-        Some(url) => Ok(url),
-        None => Ok("https://cdn.drawception.com/images/panels/2016/12-10/Q4Zcfan1X5-6.png".to_string())
-    }
-}

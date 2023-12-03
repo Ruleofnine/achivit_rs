@@ -8,9 +8,6 @@ edition = "2021"
 name = "achivit_rs"
 path = "src/main.rs"
 
-[[library]]
-name = "dfelf"
-path = "dfelp/src/lib.rs"
 
 [dependencies]
 dotenv = "0.15.0"

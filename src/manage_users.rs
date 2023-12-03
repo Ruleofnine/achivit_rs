@@ -1,6 +1,7 @@
 use crate::{Context, Error};
 use color_eyre::Result;
 use dfelp::lookup::get_df_character;
+use dfelp::parsing::LookupState;
 use dfelp::CHARPAGE;
 use poise::serenity_prelude::User;
 use regex::Regex;
@@ -14,20 +15,12 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
     query!("INSERT INTO users (discord_id,discord_name,registered_by) VALUES ($1,$2,$3) ON CONFLICT (discord_id) DO NOTHING",user_id,user.name,author).execute(pool).await?;
     let result = get_df_character(df_id).await?;
     let character = match result {
-        Some(char) => char,
-        None => {
-            poise::send_reply(ctx, |f| {
-                f.embed(|f| {
-                    f.title(format!("No Character with DF ID: [{}]", df_id))
-                        .url(format!("{}{}", CHARPAGE, df_id))
-                        .color(Color::DARK_RED)
-                        .description("The game character you are searching for does not exist.")
-                        .image("https://account.dragonfable.com/images/bgs/bg-df-main.jpg")
-                })
-            })
-            .await?;
-            return Ok(());
+        LookupState::CharacterPage(char) => char,
+        LookupState::NotFound => return Ok(crate::lookup_df::not_found_embed(ctx, df_id).await?),
+        LookupState::Fail(flash) => {
+            return Ok(crate::lookup_df::wrong_cache_embed(df_id, ctx, flash).await?)
         }
+        _ => panic!("Unexpected LookupState",),
     };
     let res = query!("INSERT INTO df_characters (discord_id,df_id,character_name,registered_by) VALUES ($1,$2,$3,$4) ON CONFLICT (df_id) DO NOTHING",user_id,df_id,character.name,author).execute(pool).await?;
     let color: Color;
@@ -96,21 +89,31 @@ pub async fn autocomplete_character(
     ctx: Context<'_>,
     partial: &str,
 ) -> Vec<poise::AutocompleteChoice<i32>> {
-    dbg!("test");
     let discord_id = extract_name_from_invokation_data(&ctx.invocation_string());
     let mut ac_choices: Vec<poise::AutocompleteChoice<i32>> = Vec::new();
-let query = match partial.parse::<usize>() {
+    let chars = if discord_id != 0 {
+        let query = match partial.parse::<usize>() {
     Ok(num) => format!("SELECT df_id, character_name FROM df_characters WHERE discord_id = $1 AND CAST(df_id AS TEXT) LIKE '%{}%' ORDER BY created ASC",num),
     Err(_) => format!("SELECT df_id, character_name FROM df_characters WHERE discord_id = $1 AND character_name ILIKE '%{}%' ORDER BY created ASC",partial)
 };
-let res = sqlx::query_as::<_,CharacterQuery>(&query)
-    .bind(discord_id)
-    .bind(partial)
-    .fetch_all(&ctx.data().db_connection)
-    .await;
-    let chars = match res{
-        Ok(chars) => chars,
-        Err(_)=>return ac_choices
+        let res = sqlx::query_as::<_, CharacterQuery>(&query)
+            .bind(discord_id)
+            .bind(partial)
+            .fetch_all(&ctx.data().db_connection)
+            .await;
+        match res {
+            Ok(chars) => chars,
+            Err(_) => return ac_choices,
+        }
+    } else {
+        let query = match partial.parse::<usize>() {
+    Ok(num) => format!("SELECT df_id, character_name FROM df_characters WHERE CAST(df_id AS TEXT) LIKE '%{}%' ORDER BY created ASC",num),
+    Err(_) => format!("SELECT df_id, character_name FROM df_characters WHERE character_name ILIKE '%{}%' ORDER BY created ASC",partial)
+};
+        sqlx::query_as::<_, CharacterQuery>(&query)
+            .fetch_all(&ctx.data().db_connection)
+            .await
+            .unwrap()
     };
     ac_choices = chars
         .iter()
@@ -120,11 +123,10 @@ let res = sqlx::query_as::<_,CharacterQuery>(&query)
         })
         .collect();
     ac_choices
-
 }
 
-#[derive(sqlx::FromRow)]
-struct CharacterQuery{
-    character_name:String,
-    df_id:i32
+#[derive(sqlx::FromRow, Debug)]
+struct CharacterQuery {
+    character_name: String,
+    df_id: i32,
 }

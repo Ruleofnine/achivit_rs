@@ -4,7 +4,6 @@ use lookup_df::lookup_df_character;
 use poise::serenity_prelude as serenity;
 use std::env;
 mod dev_tools;
-mod error;
 mod error_handler;
 mod event_handler;
 mod lookup_df;
@@ -47,12 +46,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         time::server_time(),
         time::random_event(),
         dev_tools::list_slash_commands(),
-        lookup_df::lookup_df_id(),
         manage_users::register_character(),
         lookup_df::delete_character(),
         lookup_df::lookup_df_character(),
     ];
-    // let test_commands = vec![lookup_df_character()];
+    let test_commands = vec![lookup_df_character()];
     let options = poise::FrameworkOptions {
         commands,
         event_handler: |ctx, event, framework, data| {
@@ -77,7 +75,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .setup(move |ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                // poise::builtins::register_in_guild(ctx, &test_commands, guild_id).await?;
+                poise::builtins::register_in_guild(ctx, &test_commands, guild_id).await?;
                 let commands: Vec<String> = framework
                     .options()
                     .commands

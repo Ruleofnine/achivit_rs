@@ -220,21 +220,5 @@ pub async fn send_duplicates_embed(
     };
     Ok(())
 }
-pub async fn wrong_cache_embed(df_id: i32, ctx: Context<'_>, flash: bool) -> Result<()> {
-    let cached = match flash {
-        true => "Flash Charatcer Page",
-        false => "Non-Flash Character Page",
-    };
-    ctx.send( |f| {
-                f.embed(|f| {
-                    f.title(format!("Character page cached..."))
-                        .url(format!("{}{}", CHARPAGE, df_id))
-                        .color(Color::DARK_RED)
-                        .description(format!("This character page is currently cached as  a **{}** so it cannot be used to register yet. Wait a moment and try again.",cached))
-                        .image("https://account.dragonfable.com/images/bgs/bg-df-main.jpg")
-                })
-            })
-            .await?;
-    Ok(())
-}
+
 

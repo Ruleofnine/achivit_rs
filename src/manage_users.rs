@@ -1,4 +1,4 @@
-use crate::embeds::{not_found_embed, wrong_cache_embed};
+use crate::embeds::not_found_embed;
 use crate::lookup_df::LookupState;
 use crate::requests::{get_df_character, CHARPAGE};
 use crate::{Context, Error};
@@ -19,7 +19,6 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
         LookupState::CharacterPage(char) => char.name,
         LookupState::FlashCharatcerPage(char) => char.get("Name").take().unwrap().to_owned(),
         LookupState::NotFound => return Ok(not_found_embed(ctx, df_id).await?),
-        LookupState::Fail(flash) => return Ok(wrong_cache_embed(df_id, ctx, flash).await?),
         _ => panic!("Unexpected LookupState",),
     };
     dbg!(&character);

@@ -24,9 +24,8 @@ async fn lookup(category: &LookupCategory, df_id: i32) -> Result<LookupState> {
 async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<()> {
     
     match state {
-        LookupState::Fail(flash) => wrong_cache_embed(df_id, ctx, flash).await?,
         LookupState::NotFound => not_found_embed(ctx, df_id).await?,
-        LookupState::CharacterPage(char) => send_character_embed_c(char, df_id, ctx).await?,
+        LookupState::CharacterPage(char) => send_character_embed(char, df_id, ctx).await?,
         LookupState::FlashCharatcerPage(char) => {
             send_flash_character_embed(char, df_id, ctx).await?
         }
@@ -63,7 +62,6 @@ pub enum LookupState {
     Inventory(String, Vec<String>),
     Wars(String, WarList),
     Duplicates(String, HashMap<String, i32>),
-    Fail(bool),
     NotFound,
 }
 #[allow(non_camel_case_types)]

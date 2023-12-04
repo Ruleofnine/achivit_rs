@@ -19,9 +19,11 @@ To get started with this bot, you'll need to do the following:
 
 4. if on Linux make edit `init_db.sh`  and put in your username,database name, then make it executable by running 
 ```shell
-   chmod +x init_db.sh  
+   chmod +x init_db.sh
+```
 
 5. Run the following command to build and run the bot:
 
-   ```shell
-   cargo run
+```shell
+   cargo run`
+```

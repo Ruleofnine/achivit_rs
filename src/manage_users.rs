@@ -1,12 +1,13 @@
 use crate::{Context, Error};
+use crate::lookup_df::LookupState;
+use crate::embeds::{wrong_cache_embed,not_found_embed};
 use color_eyre::Result;
-use dfelp::lookup::get_df_character;
-use dfelp::parsing::LookupState;
-use dfelp::CHARPAGE;
+use crate::requests::{get_df_character,CHARPAGE};
 use poise::serenity_prelude::User;
 use regex::Regex;
 use serenity::utils::Color;
 use sqlx::query;
+/// Register Character by ID
 #[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
 pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) -> Result<(), Error> {
     let pool = &ctx.data().db_connection;
@@ -16,9 +17,9 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
     let result = get_df_character(df_id).await?;
     let character = match result {
         LookupState::CharacterPage(char) => char,
-        LookupState::NotFound => return Ok(crate::lookup_df::not_found_embed(ctx, df_id).await?),
+        LookupState::NotFound => return Ok(not_found_embed(ctx, df_id).await?),
         LookupState::Fail(flash) => {
-            return Ok(crate::lookup_df::wrong_cache_embed(df_id, ctx, flash).await?)
+            return Ok(wrong_cache_embed(df_id, ctx, flash).await?)
         }
         _ => panic!("Unexpected LookupState",),
     };
@@ -83,6 +84,93 @@ fn extract_name_from_invokation_data(input: &str) -> i64 {
         }
     }
     0
+}
+#[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
+pub async fn delete_character(
+    ctx: Context<'_>,
+    #[description = "User to delete character of"] user: User,
+    #[autocomplete = "autocomplete_character"]
+    #[description = "character of selected user"]
+    character: i32,
+) -> Result<(), Error> {
+    let pool = &ctx.data().db_connection;
+    let user_id = user.id.0 as i64;
+    let chars = query!(
+        "SELECT df_id,character_name FROM df_characters WHERE discord_id = $1 order by created asc",
+        user_id
+    )
+    .fetch_all(pool)
+    .await?;
+    let db_character = chars.iter().find(|c| c.df_id == character);
+    let db_character = match db_character {
+        Some(char) => char,
+        None => {
+            return Ok(not_found_embed(ctx, character).await?)
+        }
+    };
+    let res = query!(
+        "delete from df_characters where DF_ID = $1 and discord_id = $2",
+        character,
+        user_id
+    )
+    .execute(pool)
+    .await?;
+    let chars = query!(
+        "SELECT df_id,character_name FROM df_characters WHERE discord_id = $1",
+        user_id
+    )
+    .fetch_all(pool)
+    .await?;
+    let color: Color;
+    let title: String;
+    if res.rows_affected() == 0 {
+        color = Color::DARK_RED;
+        title = format!("NOT REGISTERED: {}", db_character.character_name);
+        poise::send_reply(ctx, |f| {
+            f.embed(|f| {
+                f.title(title)
+                    .url(format!("{}{}", CHARPAGE, character))
+                    .color(color)
+                    .description(format!(
+                        "**DF ID:** {} [{}]({}{})",
+                        db_character.df_id,
+                        db_character.character_name,
+                        CHARPAGE,
+                        db_character.df_id
+                    ))
+                    .image("https://account.dragonfable.com/images/bgs/bg-df-main.jpg")
+            })
+        })
+        .await?;
+        return Ok(());
+    } else {
+        color = Color::DARK_GOLD;
+        title = format!("Sucessfully DELETED: {}", db_character.character_name)
+    }
+    let chars_string = chars
+        .iter()
+        .map(|c| {
+            format!(
+                "**DF ID:** {} [{}]({}{})",
+                c.df_id, c.character_name, CHARPAGE, c.df_id
+            )
+        })
+        .chain(std::iter::once(format!(
+            "~~**DF ID:** {} [{}]({}{})~~",
+            db_character.df_id, db_character.character_name, CHARPAGE, db_character.df_id
+        )))
+        .collect::<Vec<String>>()
+        .join("\n");
+    poise::send_reply(ctx, |f| {
+        f.embed(|f| {
+            f.title(title)
+                .url(format!("{}{}", CHARPAGE, character))
+                .color(color)
+                .description(chars_string)
+        })
+    })
+    .await?;
+    Ok(())
 }
 
 pub async fn autocomplete_character(

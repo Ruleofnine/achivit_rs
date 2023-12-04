@@ -1,6 +1,7 @@
-use crate::{CHARPAGE, COLOR_SITE};
+use crate::requests::{CHARPAGE, COLOR_SITE};
 use chrono::NaiveDate;
 use color_eyre::Result;
+use crate::lookup_df::LookupState;
 use num_format::{Locale, ToFormattedString};
 use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
@@ -41,16 +42,7 @@ pub fn parse_df_character_duplicates_from_file(
     let document = Html::parse_document(&data);
     Ok(parse_df_character_duplicates(document))
 }
-#[derive(Debug)]
-pub enum LookupState{
-    FlashCharatcerPage(HashMap<String,String>),
-    CharacterPage(DFCharacterData),
-    Inventory(String,Vec<String>),
-    Wars(String, WarList),
-    Duplicates(String, HashMap<String, i32>),
-    Fail(bool),
-    NotFound,
-}
+
 
 #[derive(Debug)]
 pub struct Dragon {
@@ -297,20 +289,17 @@ impl WarList {
     }
 }
 pub fn parse_df_character(document: Html) -> LookupState {
-    let h3_selector = Selector::parse("h3").unwrap();
-    if document.select(&h3_selector).next().is_some(){
-        return LookupState::NotFound};
     let mut character = DFCharacterData::default();
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let h1_selector = Selector::parse("h1").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
         Some(charpagedetails) => charpagedetails,
-        None => {dbg!("no h1");return LookupState::Fail(true)},
+        None => {return LookupState::NotFound},
     };
     character.name = match charpagedetails
         .select(&h1_selector)
         .next(){
-            None => {return LookupState::Fail(true)},
+            None => {return parse_df_character_flash(document)},
             Some(name) =>name.text()
         .collect::<Vec<_>>()
         .join(" ")
@@ -427,17 +416,19 @@ pub fn parse_df_character(document: Html) -> LookupState {
     LookupState::CharacterPage(character)
 }
 pub fn parse_df_character_wars_only(document: Html) -> LookupState {
-    let h3_selector = Selector::parse("h3").unwrap();
-    if document.select(&h3_selector).next().is_some(){
-        return LookupState::NotFound};
+    // let h3_selector = Selector::parse("h3").unwrap();
+    // if document.select(&h3_selector).next().is_some(){
+    //     return LookupState::NotFound};
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
         Some(charpagedetails) => charpagedetails,
         None => return LookupState::NotFound,
     };
-    let mut wars = WarList::new();
-    let h1_selector = Selector::parse("h1").unwrap();
-    let character_name = charpagedetails
+    let flashvars_selector = Selector::parse(r#"param[name="FlashVars"]"#).unwrap();
+    let character_name = match document.select(&flashvars_selector).next(){
+        Some(vars) => {vars.value().attr("value").unwrap().split_once(" ").unwrap().0.trim()[5..].to_string()},
+        None => {    let h1_selector = Selector::parse("h1").unwrap();
+         charpagedetails
         .select(&h1_selector)
         .next()
         .expect("No Name Found")
@@ -445,7 +436,10 @@ pub fn parse_df_character_wars_only(document: Html) -> LookupState {
         .collect::<Vec<_>>()
         .join(" ")
         .trim()
-        .to_string();
+        .to_string()
+},
+    };
+    let mut wars = WarList::new();
 
     let war_label = Selector::parse("span.warlabel").unwrap();
     let war_text = Selector::parse("span.mx-2").unwrap();
@@ -461,16 +455,19 @@ pub fn parse_df_character_wars_only(document: Html) -> LookupState {
 }
 pub fn parse_df_character_inventory_only(document: Html) -> LookupState {
     let h3_selector = Selector::parse("h3").unwrap();
-    if document.select(&h3_selector).next().is_some(){
-        return LookupState::NotFound};
+    // if document.select(&h3_selector).next().is_some(){
+    //     return LookupState::NotFound};
     let mut items = Vec::new();
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
         Some(charpagedetails) => charpagedetails,
         None => return LookupState::NotFound,
     };
-    let h1_selector = Selector::parse("h1").unwrap();
-    let character_name = charpagedetails
+    let flashvars_selector = Selector::parse(r#"param[name="FlashVars"]"#).unwrap();
+    let character_name = match document.select(&flashvars_selector).next(){
+        Some(vars) => {vars.value().attr("value").unwrap().split_once(" ").unwrap().0.trim()[5..].to_string()},
+        None => {    let h1_selector = Selector::parse("h1").unwrap();
+         charpagedetails
         .select(&h1_selector)
         .next()
         .expect("No Name Found")
@@ -478,7 +475,9 @@ pub fn parse_df_character_inventory_only(document: Html) -> LookupState {
         .collect::<Vec<_>>()
         .join(" ")
         .trim()
-        .to_string();
+        .to_string()
+},
+    };
     let div_card_selector = Selector::parse("div.card").unwrap();
     let span_selector = Selector::parse("span").unwrap();
     let h4_selector = Selector::parse("h4").unwrap();
@@ -505,9 +504,9 @@ pub fn parse_df_character_inventory_only(document: Html) -> LookupState {
     LookupState::Inventory(character_name, items)
 }
 pub fn parse_df_character_duplicates(document: Html) -> LookupState {
-    let h3_selector = Selector::parse("h3").unwrap();
-    if document.select(&h3_selector).next().is_some(){
-        return LookupState::NotFound};
+    // let h3_selector = Selector::parse("h3").unwrap();
+    // if document.select(&h3_selector).next().is_some(){
+    //     return LookupState::NotFound};
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let h1_selector = Selector::parse("h1").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
@@ -515,7 +514,11 @@ pub fn parse_df_character_duplicates(document: Html) -> LookupState {
         None => return LookupState::NotFound,
     };
     let mut items = HashMap::new();
-    let character_name = charpagedetails
+    let flashvars_selector = Selector::parse(r#"param[name="FlashVars"]"#).unwrap();
+    let character_name = match document.select(&flashvars_selector).next(){
+        Some(vars) => {vars.value().attr("value").unwrap().split_once(" ").unwrap().0.trim()[5..].to_string()},
+        None => {    let h1_selector = Selector::parse("h1").unwrap();
+         charpagedetails
         .select(&h1_selector)
         .next()
         .expect("No Name Found")
@@ -523,18 +526,19 @@ pub fn parse_df_character_duplicates(document: Html) -> LookupState {
         .collect::<Vec<_>>()
         .join(" ")
         .trim()
-        .to_string();
+        .to_string()
+},
+    };
     let item_selector = Selector::parse("div#charpagedetails.card-columns.mx-auto span").unwrap();
     for span in document.select(&item_selector).into_iter() {
         let item_name = span.text().next().unwrap();
         let mut classes = span.value().classes();
         if let Some(class) = classes.next() {
             match class {
-                "gold" | "coins" | "amulet" | "artifact" => match items.get(item_name) {
-                    Some(occurrence) => {
-                        items.insert(item_name.to_string(), occurrence + 1);
-                    }
-                    None => {
+                "gold" | "coins" | "amulet" | "artifact" => {
+                    if let Some(occurrence) =items.get_mut(item_name){
+                        *occurrence+=1;
+                }else{
                         items.insert(item_name.to_string(), 1);
                     }
                 },
@@ -551,12 +555,12 @@ pub fn parse_df_character_duplicates(document: Html) -> LookupState {
 
 pub fn parse_df_character_flash(document: Html) -> LookupState {
     let flashvars_selector = Selector::parse(r#"param[name="FlashVars"]"#).unwrap();
-    let h3_selector = Selector::parse("h3").unwrap();
-    if document.select(&h3_selector).next().is_some(){
-        return LookupState::NotFound};
+    // let h3_selector = Selector::parse("h3").unwrap();
+    // if document.select(&h3_selector).next().is_some(){
+    //     return LookupState::NotFound};
     let flashvars = match document.select(&flashvars_selector).next() {
         Some(vars) => vars.value().attr("value").unwrap(),
-        None => {return LookupState::Fail(false)},
+        None => {return parse_df_character(document)},
     };
     let key_value_pairs: Vec<&str> = flashvars.split('&').collect();
     let mut flashvars_map = std::collections::HashMap::new();

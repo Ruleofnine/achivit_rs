@@ -1,3 +1,4 @@
+// #![recursion_limit="256"]
 use dotenv::dotenv;
 use log::info;
 use lookup_df::lookup_df_character;
@@ -13,9 +14,13 @@ use crate::event_handler::event_handler;
 use error_handler::on_error;
 use std::time::Instant;
 mod db;
+mod requests;
 mod manage_users;
+mod embeds;
 use crate::serenity::GuildId;
 use sqlx::PgPool;
+mod parsing;
+mod rng;
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 pub struct Data {
@@ -47,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         time::random_event(),
         dev_tools::list_slash_commands(),
         manage_users::register_character(),
-        lookup_df::delete_character(),
+        manage_users::delete_character(),
         lookup_df::lookup_df_character(),
     ];
     let test_commands = vec![lookup_df_character()];

@@ -6,10 +6,33 @@ use crate::serenity::Color;
 use crate::{Context, Error};
 use color_eyre::Result;
 use poise::serenity_prelude::User;
-use scraper::Html;
 use sqlx::{query, PgPool};
 use std::collections::HashMap;
-
+fn get_embed_color(has_da: &bool) -> (Color, String) {
+    match has_da {
+        true => (Color::from_rgb(254, 216, 55), DA_IMGUR.to_owned()),
+        false => (Color::from_rgb(111, 101, 87), NDA_IMGUR.to_owned()),
+    }
+}
+pub async fn send_character_embed_c(
+    character: DFCharacterData,
+    df_id: i32,
+    ctx: Context<'_>,
+) -> Result<()> {
+    let (embed_color, thumbnail) = get_embed_color(&character.dragon_amulet);
+    let description = character.get_discord_embed_description(df_id);
+    ctx.send(|f| {
+        f.embed(|f| {
+            f.title(format!("{}", character.name))
+                .url(format!("{}{}", CHARPAGE, df_id))
+                .color(embed_color)
+                .description(description)
+                .thumbnail(thumbnail)
+        })
+    })
+    .await?;
+    Ok(())
+}
 struct LookUpCommand {
     state: LookupState,
     category: LookupCategory,
@@ -24,10 +47,11 @@ async fn lookup(category: &LookupCategory, df_id: i32) -> Result<LookupState> {
     })
 }
 async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<()> {
+    
     match state {
         LookupState::Fail(flash) => wrong_cache_embed(df_id, ctx, flash).await?,
         LookupState::NotFound => not_found_embed(ctx, df_id).await?,
-        LookupState::CharacterPage(char) => send_character_embed(char, df_id, ctx).await?,
+        LookupState::CharacterPage(char) => send_character_embed_c(char, df_id, ctx).await?,
         LookupState::FlashCharatcerPage(char) => {
             send_flash_character_embed(char, df_id, ctx).await?
         }
@@ -103,6 +127,7 @@ pub async fn lookup_df_character(
 ) -> Result<(), Error> {
     let mut lookupcommand = LookUpCommand::new(category);
     let pool = &ctx.data().db_connection;
+
     let df_id = match (character, user) {
         (Some(character), _) => Some(character),
         (None, None) => query_with_id(pool, ctx.author().id.0).await,
@@ -111,7 +136,7 @@ pub async fn lookup_df_character(
     let df_id = match df_id {
         Some(df_id) => df_id,
         None => {
-            poise::send_reply(ctx, |f| {
+            ctx.send( |f| {
                     f.embed(|f| {
                         f.title("No Characters Registered")
                             .color(Color::DARK_RED)

@@ -1,12 +1,13 @@
+use crate::parsing::{get_discord_embed_description_flash, DFCharacterData, WarList};
+use crate::requests::{CHARPAGE, DA_IMGUR, NDA_IMGUR};
+use crate::rng::random_rgb;
+use crate::serenity::AttachmentType;
 use crate::serenity::Color;
 use crate::Context;
 use color_eyre::Result;
-use crate::parsing::{get_discord_embed_description_flash,DFCharacterData,WarList};
-use crate::requests::{CHARPAGE, DA_IMGUR, NDA_IMGUR};
 use std::collections::HashMap;
-use crate::rng::random_rgb;
-pub async fn to_many_request_embed(ctx: Context<'_>)->Result<()>{
-    poise::send_reply(ctx, |f| {
+pub async fn to_many_request_embed(ctx: Context<'_>) -> Result<()> {
+    ctx.send( |f| {
         f.embed(|f| {
             f.title("Too Many Requests!")
                 .color(Color::DARK_RED)
@@ -24,9 +25,8 @@ fn get_embed_color(has_da: &bool) -> (Color, String) {
     }
 }
 
-
 pub async fn not_found_embed(ctx: Context<'_>, df_id: i32) -> Result<()> {
-    poise::send_reply(ctx, |f| {
+    ctx.send(|f| {
         f.embed(|f| {
             f.title(format!("No Character With DF ID: [{}]", df_id))
                 .url(format!("{}{}", CHARPAGE, df_id))
@@ -45,7 +45,7 @@ pub async fn send_character_embed(
 ) -> Result<()> {
     let (embed_color, thumbnail) = get_embed_color(&character.dragon_amulet);
     let description = character.get_discord_embed_description(df_id);
-    poise::send_reply(ctx, |f| {
+    ctx.send(|f| {
         f.embed(|f| {
             f.title(format!("{}", character.name))
                 .url(format!("{}{}", CHARPAGE, df_id))
@@ -64,7 +64,7 @@ pub async fn send_flash_character_embed(
 ) -> Result<()> {
     let (_, thumbnail) = get_embed_color(match character.get("DA").unwrap().as_str() {
         "0" => &false,
-         _  => &true,
+        _ => &true,
     });
     let name = character.get("Name").unwrap().to_owned();
     let color_value = character
@@ -75,7 +75,7 @@ pub async fn send_flash_character_embed(
         .unwrap_or_default();
     let embed_color = Color::from(color_value);
     let description = get_discord_embed_description_flash(character, df_id);
-    poise::send_reply(ctx, |f| {
+    ctx.send(|f| {
         f.embed(|f| {
             f.title(format!("{}", name))
                 .url(format!("{}{}", CHARPAGE, df_id))
@@ -88,7 +88,12 @@ pub async fn send_flash_character_embed(
     Ok(())
 }
 
-pub async fn send_wars_embed(wars: WarList, df_id: i32, name: String, ctx: Context<'_>) -> Result<()> {
+pub async fn send_wars_embed(
+    wars: WarList,
+    df_id: i32,
+    name: String,
+    ctx: Context<'_>,
+) -> Result<()> {
     match wars.is_empty() {
         false => {
             let mut description = format!(
@@ -101,7 +106,7 @@ pub async fn send_wars_embed(wars: WarList, df_id: i32, name: String, ctx: Conte
                 }
                 description += &ele
             }
-            poise::send_reply(ctx, |f| {
+            ctx.send(|f| {
                 f.embed(|f| {
                     f.title(format!("{}'s War Record", name))
                         .url(format!("{}{}", CHARPAGE, df_id))
@@ -113,7 +118,7 @@ pub async fn send_wars_embed(wars: WarList, df_id: i32, name: String, ctx: Conte
             .await?;
         }
         true => {
-            poise::send_reply(ctx, |f| {
+            ctx.send(|f| {
                 f.embed(|f| {
                     f.title(format!("{} has No War Records", name))
                         .url(format!("{}{}", CHARPAGE, df_id))
@@ -135,6 +140,7 @@ pub async fn send_inventory_embed(
 ) -> Result<()> {
     match inventory.is_empty() {
         false => {
+            let file = &crate::sheets::sheet().await?;
             let mut description = String::new();
             for item in inventory {
                 if (item.len() + description.len()) > 4096 {
@@ -142,7 +148,7 @@ pub async fn send_inventory_embed(
                 }
                 description += &format!("{}\n", &item);
             }
-            poise::send_reply(ctx, |f| {
+            ctx.send(|f| {
                 f.embed(|f| {
                     f.title(format!("{}'s Inventory", name))
                         .url(format!("{}{}", CHARPAGE, df_id))
@@ -150,11 +156,15 @@ pub async fn send_inventory_embed(
                         .description(description)
                         .thumbnail("https://imgur.com/fUyFn0I.png")
                 })
+                .attachment(AttachmentType::Bytes {
+                    data: std::borrow::Cow::Borrowed(file),
+                    filename: "test.xlsx".to_owned(),
+                })
             })
             .await?;
         }
         true => {
-            poise::send_reply(ctx, |f| {
+            ctx.send(|f| {
                 f.embed(|f| {
                     f.title(format!("{} has no items in their Inventory", name))
                         .url(format!("{}{}", CHARPAGE, df_id))
@@ -185,7 +195,7 @@ pub async fn send_duplicates_embed(
                 }
                 description += &format!("{} (x{})\n", &ele, amount);
             }
-            poise::send_reply(ctx, |f| {
+            ctx.send(|f| {
                 f.embed(|f| {
                     f.title(format!("{}'s Duplicates", name))
                         .url(format!("{}{}", CHARPAGE, df_id))
@@ -197,7 +207,7 @@ pub async fn send_duplicates_embed(
             .await?;
         }
         true => {
-            poise::send_reply(ctx, |f| {
+            ctx.send(|f| {
                 f.embed(|f| {
                     f.title(format!("{} has no Duplicates", name))
                         .url(format!("{}{}", CHARPAGE, df_id))
@@ -216,7 +226,7 @@ pub async fn wrong_cache_embed(df_id: i32, ctx: Context<'_>, flash: bool) -> Res
         true => "Flash Charatcer Page",
         false => "Non-Flash Character Page",
     };
-    poise::send_reply(ctx, |f| {
+    ctx.send( |f| {
                 f.embed(|f| {
                     f.title(format!("Character page cached..."))
                         .url(format!("{}{}", CHARPAGE, df_id))
@@ -228,4 +238,3 @@ pub async fn wrong_cache_embed(df_id: i32, ctx: Context<'_>, flash: bool) -> Res
             .await?;
     Ok(())
 }
-

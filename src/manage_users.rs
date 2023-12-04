@@ -1,8 +1,8 @@
-use crate::{Context, Error};
+use crate::embeds::{not_found_embed, wrong_cache_embed};
 use crate::lookup_df::LookupState;
-use crate::embeds::{wrong_cache_embed,not_found_embed};
+use crate::requests::{get_df_character, CHARPAGE};
+use crate::{Context, Error};
 use color_eyre::Result;
-use crate::requests::{get_df_character,CHARPAGE};
 use poise::serenity_prelude::User;
 use regex::Regex;
 use serenity::utils::Color;
@@ -16,20 +16,20 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
     query!("INSERT INTO users (discord_id,discord_name,registered_by) VALUES ($1,$2,$3) ON CONFLICT (discord_id) DO NOTHING",user_id,user.name,author).execute(pool).await?;
     let result = get_df_character(df_id).await?;
     let character = match result {
-        LookupState::CharacterPage(char) => char,
+        LookupState::CharacterPage(char) => char.name,
+        LookupState::FlashCharatcerPage(char) => char.get("Name").take().unwrap().to_owned(),
         LookupState::NotFound => return Ok(not_found_embed(ctx, df_id).await?),
-        LookupState::Fail(flash) => {
-            return Ok(wrong_cache_embed(df_id, ctx, flash).await?)
-        }
+        LookupState::Fail(flash) => return Ok(wrong_cache_embed(df_id, ctx, flash).await?),
         _ => panic!("Unexpected LookupState",),
     };
-    let res = query!("INSERT INTO df_characters (discord_id,df_id,character_name,registered_by) VALUES ($1,$2,$3,$4) ON CONFLICT (df_id) DO NOTHING",user_id,df_id,character.name,author).execute(pool).await?;
+    dbg!(&character);
+    let res = query!("INSERT INTO df_characters (discord_id,df_id,character_name,registered_by) VALUES ($1,$2,$3,$4) ON CONFLICT (df_id) DO NOTHING",user_id,df_id,character,author).execute(pool).await?;
     let color: Color;
     let title: String;
     let username: String;
     if res.rows_affected() == 0 {
         color = Color::DARK_RED;
-        title = format!("Already Registered: {}", character.name);
+        title = format!("Already Registered: {}", character);
         user_id = query!(
             "SELECT discord_id FROM df_characters WHERE df_id = $1",
             df_id
@@ -40,7 +40,7 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
         user = ctx.http().get_user(user_id as u64).await?;
     } else {
         color = Color::DARK_GOLD;
-        title = format!("Sucessfully Registered: {}", character.name);
+        title = format!("Sucessfully Registered: {}", character);
     };
     username = user.name.to_owned();
     let icon_url = user.face();
@@ -61,7 +61,9 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
         })
         .collect::<Vec<String>>()
         .join("\n");
-    poise::send_reply(ctx, |f| {
+    dbg!(&character);
+
+    ctx.send(|f|{
         f.embed(|f| {
             f.title(title)
                 .url(format!("{}{}", CHARPAGE, df_id))
@@ -69,8 +71,7 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
                 .author(|a| a.name(&username).icon_url(icon_url))
                 .description(chars_string)
         })
-    })
-    .await?;
+    }).await?;
     Ok(())
 }
 
@@ -95,19 +96,14 @@ pub async fn delete_character(
 ) -> Result<(), Error> {
     let pool = &ctx.data().db_connection;
     let user_id = user.id.0 as i64;
-    let chars = query!(
-        "SELECT df_id,character_name FROM df_characters WHERE discord_id = $1 order by created asc",
-        user_id
+
+    let db_character = query!(
+        "SELECT df_id,character_name FROM df_characters WHERE discord_id = $1  and df_id = $2 order by created asc",
+        user_id,
+        character
     )
-    .fetch_all(pool)
+    .fetch_one(pool)
     .await?;
-    let db_character = chars.iter().find(|c| c.df_id == character);
-    let db_character = match db_character {
-        Some(char) => char,
-        None => {
-            return Ok(not_found_embed(ctx, character).await?)
-        }
-    };
     let res = query!(
         "delete from df_characters where DF_ID = $1 and discord_id = $2",
         character,
@@ -115,8 +111,9 @@ pub async fn delete_character(
     )
     .execute(pool)
     .await?;
+    dbg!(&res);
     let chars = query!(
-        "SELECT df_id,character_name FROM df_characters WHERE discord_id = $1",
+        "SELECT df_id,character_name FROM df_characters WHERE discord_id = $1 order by created asc",
         user_id
     )
     .fetch_all(pool)
@@ -126,7 +123,7 @@ pub async fn delete_character(
     if res.rows_affected() == 0 {
         color = Color::DARK_RED;
         title = format!("NOT REGISTERED: {}", db_character.character_name);
-        poise::send_reply(ctx, |f| {
+        ctx.send(|f| {
             f.embed(|f| {
                 f.title(title)
                     .url(format!("{}{}", CHARPAGE, character))
@@ -161,7 +158,7 @@ pub async fn delete_character(
         )))
         .collect::<Vec<String>>()
         .join("\n");
-    poise::send_reply(ctx, |f| {
+    ctx.send( |f| {
         f.embed(|f| {
             f.title(title)
                 .url(format!("{}{}", CHARPAGE, character))

@@ -7,35 +7,36 @@ use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
 use std::collections::HashMap;
 use std::fs;
+#[allow(unused)]
 pub fn convert_html_to_discord_format(input: &str) -> String {
     let re = Regex::new(r#"<a href="(?P<url>[^"]+)"[^>]*>(?P<text>[^<]+)</a>"#).unwrap();
     re.replace_all(input, "[${text}](${url})").to_string()
 }
-pub fn parse_df_character_from_file(file_path: &str) -> Result<LookupState> {
+pub fn _parse_df_character_from_file(file_path: &str) -> Result<LookupState> {
     let data = fs::read_to_string(file_path)?;
     let document = Html::parse_document(&data);
     Ok(parse_df_character(document))
 }
-pub fn parse_df_character_flash_from_file(
+pub fn _parse_df_character_flash_from_file(
     file_path: &str,
 ) -> Result<LookupState> {
     let data = fs::read_to_string(file_path)?;
     let document = Html::parse_document(&data);
     Ok(parse_df_character_flash(document))
 }
-pub fn parse_df_character_wars_from_file(file_path: &str) -> Result<LookupState> {
+pub fn _parse_df_character_wars_from_file(file_path: &str) -> Result<LookupState> {
     let data = fs::read_to_string(file_path)?;
     let document = Html::parse_document(&data);
     Ok(parse_df_character_wars_only(document))
 }
-pub fn parse_df_character_inventory_only_from_file(
+pub fn _parse_df_character_inventory_only_from_file(
     file_path: &str,
 ) -> Result<LookupState> {
     let data = fs::read_to_string(file_path)?;
     let document = Html::parse_document(&data);
     Ok(parse_df_character_inventory_only(document))
 }
-pub fn parse_df_character_duplicates_from_file(
+pub fn _parse_df_character_duplicates_from_file(
     file_path: &str,
 ) -> Result<LookupState> {
     let data = fs::read_to_string(file_path)?;
@@ -107,9 +108,6 @@ impl DFCharacterData {
     }
     fn calc_item_count(&mut self) {
         self.item_count = self.da_count + self.dc_count + self.nda_count + self.artifact_count
-    }
-    pub fn set_id(&mut self, id: u32) {
-        self.id = id;
     }
     pub fn get_da_str(&self) -> String {
         match self.dragon_amulet {
@@ -270,9 +268,6 @@ impl WarList {
     fn push_war(&mut self, war: War) {
         self.war_list.push(war);
     }
-    pub fn wars(&self) -> &Vec<War> {
-        &self.war_list
-    }
     pub fn calc_waves_cleared(&self) -> u32 {
         self.war_list.iter().fold(0, |c, x| {
             x.waves.replace(" waves", "").parse::<u32>().unwrap() + c
@@ -416,9 +411,6 @@ pub fn parse_df_character(document: Html) -> LookupState {
     LookupState::CharacterPage(character)
 }
 pub fn parse_df_character_wars_only(document: Html) -> LookupState {
-    // let h3_selector = Selector::parse("h3").unwrap();
-    // if document.select(&h3_selector).next().is_some(){
-    //     return LookupState::NotFound};
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
         Some(charpagedetails) => charpagedetails,
@@ -454,9 +446,6 @@ pub fn parse_df_character_wars_only(document: Html) -> LookupState {
     LookupState::Wars(character_name, wars)
 }
 pub fn parse_df_character_inventory_only(document: Html) -> LookupState {
-    let h3_selector = Selector::parse("h3").unwrap();
-    // if document.select(&h3_selector).next().is_some(){
-    //     return LookupState::NotFound};
     let mut items = Vec::new();
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
@@ -504,11 +493,7 @@ pub fn parse_df_character_inventory_only(document: Html) -> LookupState {
     LookupState::Inventory(character_name, items)
 }
 pub fn parse_df_character_duplicates(document: Html) -> LookupState {
-    // let h3_selector = Selector::parse("h3").unwrap();
-    // if document.select(&h3_selector).next().is_some(){
-    //     return LookupState::NotFound};
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
-    let h1_selector = Selector::parse("h1").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
         Some(charpagedetails) => charpagedetails,
         None => return LookupState::NotFound,
@@ -555,9 +540,6 @@ pub fn parse_df_character_duplicates(document: Html) -> LookupState {
 
 pub fn parse_df_character_flash(document: Html) -> LookupState {
     let flashvars_selector = Selector::parse(r#"param[name="FlashVars"]"#).unwrap();
-    // let h3_selector = Selector::parse("h3").unwrap();
-    // if document.select(&h3_selector).next().is_some(){
-    //     return LookupState::NotFound};
     let flashvars = match document.select(&flashvars_selector).next() {
         Some(vars) => vars.value().attr("value").unwrap(),
         None => {return parse_df_character(document)},

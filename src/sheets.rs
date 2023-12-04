@@ -1,9 +1,5 @@
 use rust_xlsxwriter::*;
 use color_eyre::Result;
-use std::io::Cursor;
-use tokio::fs::File;
-use std::io::Write;
-// use tokio::io::AsyncWriteExt; 
 pub async fn sheet() -> Result<Vec<u8>>{
     let mut workbook = Workbook::new();
     let properties = DocProperties::new()

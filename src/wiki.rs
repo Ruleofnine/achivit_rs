@@ -40,7 +40,7 @@ pub async fn wiki(
 ) -> Result<(), Error> {
     match get_wiki(&search_query).await {
         Ok(url) =>  ctx.say(url).await?,
-        Err(e) => {poise::send_reply(ctx, |f| {
+        Err(e) => {ctx.send( |f| {
             f.embed(|f| f.title(format!("[{}] Wiki Page Not Found",search_query)).color(Color::DARK_RED).description(e).thumbnail("https://static.wikia.nocookie.net/dragonfable-endgame/images/e/e6/Site-logo.png/revision/latest?cb=20210713144829"))
         }).await?}
     };

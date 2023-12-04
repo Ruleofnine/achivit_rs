@@ -15,7 +15,6 @@ pub fn ordinal_suffix(day: u32) -> &'static str {
 pub fn swatch_time() -> f64 {
     let cet = Utc::now() + chrono::Duration::hours(1); // CET is UTC+1
     let total_seconds = cet.num_seconds_from_midnight();
-    // 1 beat = 86.4 seconds
     total_seconds as f64 / 86.4
 }
 pub fn percentage_day_elapsed() -> f64 {

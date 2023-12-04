@@ -76,7 +76,6 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
 
 fn extract_name_from_invokation_data(input: &str) -> i64 {
     let re = Regex::new(r"user:(\d+)").unwrap();
-    // Search for the regex pattern in the input string
     if let Some(captures) = re.captures(input) {
         if let Some(number) = captures.get(1) {
             let user_id: i64 = number.as_str().parse().unwrap();

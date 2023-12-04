@@ -8,7 +8,6 @@ pub async fn establish_connection() -> Result<PgPool, sqlx::Error> {
     let password = env::var("DB_PASSWORD").expect("missing DB_PASSWORD");
     let ip = env::var("HOST").expect("missing DB_HOST");
     let port = env::var("PORT").expect("missing PORT");
-    // Create a connection string
     let connect_string = format!(
         "postgres://{}:{}@{}:{}/{}",
         user, password, ip, port, db_name

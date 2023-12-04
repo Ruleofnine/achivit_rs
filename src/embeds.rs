@@ -12,7 +12,6 @@ pub async fn to_many_request_embed(ctx: Context<'_>) -> Result<()> {
             f.title("Too Many Requests!")
                 .color(Color::DARK_RED)
                 .description("Too Many Requests were sent to the server please wait a moment before trying again!")
-                // .image("")
         })
     })
     .await?;
@@ -231,10 +230,11 @@ pub async fn wrong_cache_embed(df_id: i32, ctx: Context<'_>, flash: bool) -> Res
                     f.title(format!("Character page cached..."))
                         .url(format!("{}{}", CHARPAGE, df_id))
                         .color(Color::DARK_RED)
-                        .description(format!("This character page is currently cached as  a **{}** so it cannot be used to resigter yet. Wait a moment and try again.",cached))
+                        .description(format!("This character page is currently cached as  a **{}** so it cannot be used to register yet. Wait a moment and try again.",cached))
                         .image("https://account.dragonfable.com/images/bgs/bg-df-main.jpg")
                 })
             })
             .await?;
     Ok(())
 }
+

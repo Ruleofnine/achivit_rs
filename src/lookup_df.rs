@@ -8,31 +8,6 @@ use color_eyre::Result;
 use poise::serenity_prelude::User;
 use sqlx::{query, PgPool};
 use std::collections::HashMap;
-fn get_embed_color(has_da: &bool) -> (Color, String) {
-    match has_da {
-        true => (Color::from_rgb(254, 216, 55), DA_IMGUR.to_owned()),
-        false => (Color::from_rgb(111, 101, 87), NDA_IMGUR.to_owned()),
-    }
-}
-pub async fn send_character_embed_c(
-    character: DFCharacterData,
-    df_id: i32,
-    ctx: Context<'_>,
-) -> Result<()> {
-    let (embed_color, thumbnail) = get_embed_color(&character.dragon_amulet);
-    let description = character.get_discord_embed_description(df_id);
-    ctx.send(|f| {
-        f.embed(|f| {
-            f.title(format!("{}", character.name))
-                .url(format!("{}{}", CHARPAGE, df_id))
-                .color(embed_color)
-                .description(description)
-                .thumbnail(thumbnail)
-        })
-    })
-    .await?;
-    Ok(())
-}
 struct LookUpCommand {
     state: LookupState,
     category: LookupCategory,

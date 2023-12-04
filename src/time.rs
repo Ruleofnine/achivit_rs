@@ -33,7 +33,7 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     let ping = ctx.ping().await.as_millis();
     let res = format!("{}ms 🏓", ping);
     let avatar_url =ctx.serenity_context().cache.current_user().face();
-    poise::send_reply(ctx, |f| {
+    ctx.send( |f| {
         f.embed(|f| f.color(random_rgb()).title("Pong!").description(res).thumbnail(avatar_url))
     })
     .await?;
@@ -53,7 +53,7 @@ pub async fn uptime(ctx: Context<'_>) -> Result<(), Error> {
         hours, minutes, seconds
     );
     let avatar_url =ctx.serenity_context().cache.current_user().face();
-    poise::send_reply(ctx, |f| {
+    ctx.send( |f| {
         f.embed(|f| {
             f.color(random_rgb())
                 .title("Uptime!")
@@ -89,7 +89,7 @@ pub async fn server_time(ctx:Context<'_>) -> Result<(),Error>{
         seconds_until_midnight(),
         crate::requests::get_random_event().await
     );
-    poise::send_reply(ctx, |f| {
+    ctx.send( |f| {
         f.embed(|f| {
             f.color(random_rgb())
                 .title("Server time")
@@ -111,7 +111,7 @@ pub async fn random_event(ctx:Context<'_>) -> Result<(),Error>{
         now.day(),
         get_random_event().await
     );
-    poise::send_reply(ctx, |f| {
+    ctx.send( |f| {
         f.embed(|f| {
             f.color(random_rgb())
                 .title("Random Event")

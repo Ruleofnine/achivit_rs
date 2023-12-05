@@ -17,7 +17,7 @@ Before you begin, make sure you have the following software installed on your sy
 
 - Rust: Install Rust from [the official website](https://www.rust-lang.org/tools/install).
 
-- PostgreSQL: Install PostgreSQL from [the official website](https://www.postgresql.org/download/).
+- PostgreSQL: Install PostgreSQL from [the official website](https://www.postgresql.org/download/) and [set it up](https://www.prisma.io/dataguide/postgresql/setting-up-a-local-postgresql-database).
 
 ### Installation
 
@@ -73,3 +73,4 @@ Finally, run the following command to build and run the bot:
 This will start the bot and connect it to the configured Discord server. You're now ready to use your Archivist Discord Bot!
 
 Note: If you are using Windows or macOS, you can follow a similar process but may need to adapt the instructions for your specific environment.
+

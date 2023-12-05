@@ -63,39 +63,14 @@ If you are using Linux, you can automate the database initialization process usi
     ./init_db.sh
 ```
 
-###  Database Initialization (Windows):
+###  Database Initialization (Windows)
 
-Running Bash scripts on Windows may require additional steps because Windows does not have Bash installed by default. You can choose one of the following methods:
+Running Bash scripts on Windows may require additional steps because Windows does not have Bash installed by default.
+    A common approach is to use [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install)
+    Regardless of how you approach it. Once on you have the ability to run Bash Scripts on your windows machine follow the [Linux/macOS](#database-initialization-linuxmacos) steps
+    Alternatively you can swap your OS to Linux.
 
-    1. Use Windows Subsystem for Linux (WSL):
 
-        Install WSL: If you don't have WSL installed, you can follow the official Microsoft documentation to install it.
-
-        Open WSL terminal: Open the WSL terminal and navigate to the directory where the init_db.sh script is located.
-
-        Follow the macOS and Linux steps mentioned above to make the script executable (chmod +x init_db.sh) and run it (./init_db.sh).
-
-    Use Git Bash or Cygwin:
-
-        If you have Git installed, it often includes Git Bash, which provides a Bash-like environment on Windows.
-
-        Alternatively, you can use Cygwin, which is a more comprehensive Linux-like environment for Windows.
-
-        After installing Git Bash or Cygwin, open the terminal and navigate to the directory containing init_db.sh.
-
-        Follow the macOS and Linux steps mentioned above to make the script executable (chmod +x init_db.sh) and run it (./init_db.sh).
-
-    Use a Bash Shell Emulator for Windows:
-
-    There are third-party Bash shell emulators for Windows, such as Git Bash, Windows Terminal, or other terminal emulators like cmder. You can use these emulators to run your Bash script.
-
-        Install one of these emulators.
-
-        Open the emulator and navigate to the directory containing init_db.sh.
-
-        Follow the macOS and Linux steps mentioned above to make the script executable (chmod +x init_db.sh) and run it (./init_db.sh).
-
-Each of these methods allows you to run the Bash script on Windows. Choose the one that best fits your development environment and preferences.
 ### Running the Bot
 
 Finally, run the following command to build and run the bot:

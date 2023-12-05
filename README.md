@@ -1,7 +1,7 @@
 
 # Archivist Discord Bot
 
-WIP README
+This Discord Bot uses the libraries Serenity and Poise to interact with the Discord API
 
 ## Features
 

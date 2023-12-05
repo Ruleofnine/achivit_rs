@@ -32,7 +32,6 @@ pub struct Data {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
     let db_connection = db::establish_connection().await?;
-    let database_url = env::var("DATABASE_URL")?;
     let token = env::var("BOT_TOKEN").expect("Missing `BOT_TOKEN` env var,");
     let start_time = Instant::now();
     color_eyre::install().expect("Failed to install color_eyre");

@@ -27,9 +27,9 @@ Before you begin, make sure you have the following software installed on your sy
    git clone https://github.com/ruleofnine/achivit_rs.git
    cd achivit_rs
 ```
-2. Create a .env file using the provided .env_example as a template.
+2. Create a .env file using the provided .env_example as a template and open it with your editor of choice.
 
-3. Put your bot token in the `BOT_TOKEN` field.
+3. Put your bot token in the `BOT_TOKEN` field. (If you don't have a bot token go to [here](https://discord.com/developers/docs/getting-started) and finish "Step:1 Creating an app)
 
 4. Set your desired debug guild in the `DEBUG_GUILD` field.
 

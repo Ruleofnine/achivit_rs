@@ -34,12 +34,14 @@ Before you begin, make sure you have the following software installed on your sy
    After this you should have a discord bot, it will be in your server of choice, and a bot token to put in the `BOT_TOKEN` field.
 
 4. Set your desired debug guild in the `DEBUG_GUILD` field.  
-   The Guild(server) you put your bot in will be your `DEBUG_GUILD`.   
+   The Guild(server) you put your bot in should be your `DEBUG_GUILD`.   
    Right Click the server icon and `Copy Server ID`.  
    You must have Developer Mode enabled to do so.  
    Settings -> Advanced -> Developer Mode  
+   (there currently isn't any point to having a debug guild but might as well)
 
-5. In the `DATABASE_URL` field, fill in your PostgreSQL username and password, and specify your PostgreSQL server's IP address and port.
+5. In the `DATABASE_URL` field, replace your PostgreSQL username and password, and specify your PostgreSQL server's IP address and port in their respective spots.  
+   for example `DATABASE_URL="postgres://ruleofnine:p4ssw0rd@localhost:5432/archivitdb"`
 
 6. After the `/` in the `DATABASE_URL field`, enter your desired database name. **NOTE:** that this database doesn't exist yet; it will be created during setup.
 
@@ -51,7 +53,7 @@ If you are using Linux, you can automate the database initialization process usi
 
 2. Open the terminal and navigate to the project directory.
 
-3. Edit the init_db.sh script to set your PostgreSQL username and the desired database name.
+3. Ensure that you have set your  PostgreSQL username and the desired database name.
 
 4. Make the script executable:
 
@@ -66,7 +68,7 @@ If you are using Linux, you can automate the database initialization process usi
 ###  Database Initialization (Windows)
 
 Running Bash scripts on Windows may require additional steps because Windows does not have Bash installed by default.  
-    A common approach is to use [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install)  
+    A common approach is to use [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install).  
     Regardless of how you approach it. Once on you have the ability to run Bash Scripts on your windows machine follow the [Linux/macOS](#database-initialization-linuxmacos) steps.  
     Alternatively you can swap your OS to Linux.  
 

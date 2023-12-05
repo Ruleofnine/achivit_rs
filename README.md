@@ -64,26 +64,29 @@ If you are using Linux, you can automate the database initialization process usi
 ```
 
 ###  Database Initialization (Windows):
+
 Running Bash scripts on Windows may require additional steps because Windows does not have Bash installed by default. You can choose one of the following methods:
-    - Use Windows Subsystem for Linux (WSL):
 
-       - Install WSL: If you don't have WSL installed, you can follow the official Microsoft documentation to install it.
+    1. Use Windows Subsystem for Linux (WSL):
 
-       - Open WSL terminal: Open the WSL terminal and navigate to the directory where the init_db.sh script is located.
+        Install WSL: If you don't have WSL installed, you can follow the official Microsoft documentation to install it.
 
-        - Follow the macOS and Linux steps mentioned above to make the script executable (chmod +x init_db.sh) and run it (./init_db.sh).
+        Open WSL terminal: Open the WSL terminal and navigate to the directory where the init_db.sh script is located.
 
-    - Use Git Bash or Cygwin:
+        Follow the macOS and Linux steps mentioned above to make the script executable (chmod +x init_db.sh) and run it (./init_db.sh).
 
-      -  If you have Git installed, it often includes Git Bash, which provides a Bash-like environment on Windows.
+    Use Git Bash or Cygwin:
 
-      - Alternatively, you can use Cygwin, which is a more comprehensive Linux-like environment for Windows.
+        If you have Git installed, it often includes Git Bash, which provides a Bash-like environment on Windows.
 
-      - After installing Git Bash or Cygwin, open the terminal and navigate to the directory containing init_db.sh.
+        Alternatively, you can use Cygwin, which is a more comprehensive Linux-like environment for Windows.
 
-      - Follow the macOS and Linux steps mentioned above to make the script executable (chmod +x init_db.sh) and run it (./init_db.sh).
+        After installing Git Bash or Cygwin, open the terminal and navigate to the directory containing init_db.sh.
 
-    - Use a Bash Shell Emulator for Windows:
+        Follow the macOS and Linux steps mentioned above to make the script executable (chmod +x init_db.sh) and run it (./init_db.sh).
+
+    Use a Bash Shell Emulator for Windows:
+
     There are third-party Bash shell emulators for Windows, such as Git Bash, Windows Terminal, or other terminal emulators like cmder. You can use these emulators to run your Bash script.
 
         Install one of these emulators.
@@ -101,7 +104,6 @@ Finally, run the following command to build and run the bot:
     cargo run
 ```
 
-This will start the bot and connect it to the configured Discord server. You're now ready to use your Archivist Discord Bot!
+This will start the bot and connect it to the configured Discord server.
 
-Note: If you are using Windows or macOS, you can follow a similar process but may need to adapt the instructions for your specific environment.
 

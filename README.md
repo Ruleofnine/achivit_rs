@@ -50,16 +50,14 @@ If you are using Linux, you can automate the database initialization process usi
 4. Make the script executable:
 
 ```shell
-
 chmod +x init_db.sh
 ```
 5. Run the script to create a blank database:
 ```shell
-
     ./init_db.sh
 ```
 ### Running the Bot
-    Finally, run the following command to build and run the bot:
+Finally, run the following command to build and run the bot:
 ```shell
     cargo run
 ```

@@ -1,16 +1,26 @@
-use color_eyre::Result;
-use sqlx::PgPool;
+use color_eyre::{Result,eyre::eyre};
+use sqlx::{PgPool, Row};
 use std::env;
 
+
+pub async fn query_with_id(pool: &PgPool, id: u64) -> Option<i32> {
+    let result = sqlx::query(
+        "SELECT df_id FROM df_characters WHERE discord_id = $1 ORDER BY created ASC LIMIT 1",
+    )
+    .bind(id as i64)
+    .fetch_optional(pool)
+    .await;
+
+    match result {
+        Ok(Some(row)) => {
+            let num: i32 = row.get("df_id");
+            Some(num)
+        }
+        Ok(None) => None,
+        Err(_) => None,
+    }
+}
 pub async fn establish_connection() -> Result<PgPool, sqlx::Error> {
-    let db_name = env::var("DB").expect("missing DB");
-    let user = env::var("DB_USER").expect("missing DB_USER");
-    let password = env::var("DB_PASSWORD").expect("missing DB_PASSWORD");
-    let ip = env::var("HOST").expect("missing DB_HOST");
-    let port = env::var("PORT").expect("missing PORT");
-    let connect_string = format!(
-        "postgres://{}:{}@{}:{}/{}",
-        user, password, ip, port, db_name
-    );
+    let connect_string = env::var("DATABASE_URL").expect("missing DATABASE_URL");
     Ok(PgPool::connect(&connect_string).await?)
 }

@@ -1,4 +1,5 @@
 use crate::embeds::*;
+use crate::db::query_with_id;
 use crate::manage_users::autocomplete_character;
 use crate::parsing::{DFCharacterData, WarList};
 use crate::requests::*;
@@ -6,7 +7,6 @@ use crate::serenity::Color;
 use crate::{Context, Error};
 use color_eyre::Result;
 use poise::serenity_prelude::User;
-use sqlx::{query, PgPool};
 use std::collections::HashMap;
 struct LookUpCommand {
     state: LookupState,
@@ -74,19 +74,6 @@ enum LookupCategory {
     Duplicates,
 }
 impl LookUpCommand {}
-
-async fn query_with_id(pool: &PgPool, id: u64) -> Option<i32> {
-    match query!(
-        "select df_id from df_characters where discord_id = $1 order by created asc limit 1",
-        id as i64
-    )
-    .fetch_one(pool)
-    .await
-    {
-        Ok(num) => Some(num.df_id),
-        Err(_) => None,
-    }
-}
 
 /// Lookup a DF Character in various ways
 #[poise::command(slash_command)]

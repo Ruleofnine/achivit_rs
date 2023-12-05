@@ -8,7 +8,6 @@ authors = ["Ruleofnine"]
 name = "achivit_rs"
 path = "src/main.rs"
 
-
 [dependencies]
 dotenv = "0.15.0"
 env_logger = "0.10.0"

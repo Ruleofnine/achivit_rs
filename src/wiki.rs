@@ -1,7 +1,7 @@
+use crate::requests::fetch_page;
 use crate::serenity::Color;
 use crate::{Context, Error};
 use color_eyre::Result;
-use crate::requests::fetch_page;
 pub async fn get_wiki(search_query: &str) -> Result<String> {
     let search_query = if search_query.contains(' ') {
         search_query

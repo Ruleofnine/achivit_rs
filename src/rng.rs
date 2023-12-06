@@ -1,7 +1,7 @@
 use rand::Rng;
 
-use serde_json::Value;
 use serde_derive::Deserialize;
+use serde_json::Value;
 
 #[derive(Debug, Deserialize)]
 pub struct Data {
@@ -30,8 +30,8 @@ pub struct Link {
     pub title: String,
     pub link: String,
 }
-pub fn random_event(json:Value)->Option<Event>{
- let mut data: Data = serde_json::from_value(json).expect("Failed to parse JSON");
+pub fn random_event(json: Value) -> Option<Event> {
+    let mut data: Data = serde_json::from_value(json).expect("Failed to parse JSON");
     if !data.data.Events.is_empty() {
         let idx = rand::thread_rng().gen_range(0..data.data.Events.len());
         Some(data.data.Events.remove(idx))
@@ -39,10 +39,10 @@ pub fn random_event(json:Value)->Option<Event>{
         None
     }
 }
-pub fn event_parsing(event:Option<Event>)->String{
-    match event{
-        Some(event) =>  crate::parsing::convert_html_to_discord_format(&event.html),
-        None => "None".to_string()
+pub fn event_parsing(event: Option<Event>) -> String {
+    match event {
+        Some(event) => crate::parsing::convert_html_to_discord_format(&event.html),
+        None => "None".to_string(),
     }
 }
 

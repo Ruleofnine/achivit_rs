@@ -10,6 +10,9 @@ default-run = "achivit_rs"
 [[bin]]
 name = "achivit_rs"
 path = "src/main.rs"
+[lib]
+name = "achivit_rs"
+path = "src/lib.rs"
 
 [dependencies]
 dotenv = "0.15.0"

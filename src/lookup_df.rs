@@ -1,5 +1,5 @@
-use crate::embeds::*;
 use crate::db::query_with_id;
+use crate::embeds::*;
 use crate::manage_users::autocomplete_character;
 use crate::parsing::{DFCharacterData, WarList};
 use crate::requests::*;
@@ -22,7 +22,6 @@ async fn lookup(category: &LookupCategory, df_id: i32) -> Result<LookupState> {
     })
 }
 async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<()> {
-    
     match state {
         LookupState::NotFound => not_found_embed(ctx, df_id).await?,
         LookupState::CharacterPage(char) => send_character_embed(char, df_id, ctx).await?,
@@ -36,6 +35,7 @@ async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<
         LookupState::Duplicates(name, dups) => {
             send_duplicates_embed(dups, df_id, name, ctx).await?
         }
+        LookupState::Compare => (),
     };
     Ok(())
 }
@@ -51,7 +51,7 @@ impl LookUpCommand {
             category,
         }
     }
-    fn state(&mut self,state:LookupState){
+    fn state(&mut self, state: LookupState) {
         self.state = state;
     }
 }
@@ -63,6 +63,7 @@ pub enum LookupState {
     Wars(String, WarList),
     Duplicates(String, HashMap<String, i32>),
     NotFound,
+    Compare,
 }
 #[allow(non_camel_case_types)]
 #[derive(poise::ChoiceParameter, PartialEq)]
@@ -109,4 +110,23 @@ pub async fn lookup_df_character(
     };
     lookupcommand.state(lookup(&lookupcommand.category, df_id).await?);
     Ok(send_embed(lookupcommand.state, ctx, df_id).await?)
+}
+/// Compare two DF Characters in various ways
+#[poise::command(slash_command)]
+pub async fn compare_df_characters(
+    ctx: Context<'_>,
+    #[autocomplete = "autocomplete_character"]
+    #[description = "character of selected user"]
+    character1: i32,
+    #[autocomplete = "autocomplete_character"]
+    #[description = "character of selected user"]
+    character2: i32,
+) -> Result<(), Error> {
+    let mut lookupcommand = LookUpCommand::new(None);
+    let pool = &ctx.data().db_connection;
+    let char1 = get_df_character(character1).await?;
+    let char1 = get_df_character(character2).await?;
+    // lookupcommand.state(lookup(&lookupcommand.category, df_id).await?);
+    // Ok(send_embed(lookupcommand.state, ctx, df_id).await?)
+    Ok(())
 }

@@ -1,6 +1,8 @@
-use rust_xlsxwriter::*;
 use color_eyre::Result;
-pub async fn sheet() -> Result<Vec<u8>>{
+use rust_xlsxwriter::*;
+
+use crate::lookup_df::LookupState;
+pub async fn compare_sheet(main_state: LookupState, second_state: LookupState) -> Result<Vec<u8>> {
     let mut workbook = Workbook::new();
     let properties = DocProperties::new()
         .set_title("This is an example spreadsheet")

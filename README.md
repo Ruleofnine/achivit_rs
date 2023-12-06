@@ -59,7 +59,7 @@ to build a binary:
 ```shell
     cargo build --release
 ```
-The generated binary file will be located in the `achivit_rs/target/release/archivit_rs`. 
+The generated binary file will be located at the `achivit_rs/target/release/archivit_rs`. 
 
 The provided `build.rs` file runs <ins>automatically</ins> whenver you edit the `.env` file then build/run/check etc with cargo.
 The build file executes before compilation of the main code, and it checks to see if a postgres database with the name provied in the `.env` `DATABASE_URL` path section exists, if not it creates one and creates the needed tables.

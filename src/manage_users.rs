@@ -62,7 +62,7 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
         .join("\n");
     dbg!(&character);
 
-    ctx.send(|f|{
+    ctx.send(|f| {
         f.embed(|f| {
             f.title(title)
                 .url(format!("{}{}", CHARPAGE, df_id))
@@ -70,7 +70,8 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
                 .author(|a| a.name(&username).icon_url(icon_url))
                 .description(chars_string)
         })
-    }).await?;
+    })
+    .await?;
     Ok(())
 }
 
@@ -156,7 +157,7 @@ pub async fn delete_character(
         )))
         .collect::<Vec<String>>()
         .join("\n");
-    ctx.send( |f| {
+    ctx.send(|f| {
         f.embed(|f| {
             f.title(title)
                 .url(format!("{}{}", CHARPAGE, character))

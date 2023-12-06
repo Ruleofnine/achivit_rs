@@ -2,11 +2,10 @@ use dotenv::dotenv;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::env;
 use url::Url;
-pub async fn create_db(db_url:&String) -> Result<bool, sqlx::Error> {
-    let mut url =
-        Url::parse(db_url).expect("Error parsing DATABASE_URL");
-    let db_path= url.path().to_owned();
-    let db_name = db_path.get(1..).expect("Error parsing path"); 
+pub async fn create_db(db_url: &String) -> Result<bool, sqlx::Error> {
+    let mut url = Url::parse(db_url).expect("Error parsing DATABASE_URL");
+    let db_path = url.path().to_owned();
+    let db_name = db_path.get(1..).expect("Error parsing path");
     url.set_path("postgres");
     let pool = PgPoolOptions::new().connect(url.as_str()).await?;
     let database_exists: bool = sqlx::query_scalar(&format!(
@@ -16,25 +15,24 @@ pub async fn create_db(db_url:&String) -> Result<bool, sqlx::Error> {
     .fetch_one(&pool)
     .await?;
     if !database_exists {
-        println!("Database: {} Does not exist.",db_name);
+        println!("Database: {} Does not exist.", db_name);
         sqlx::query(&format!("CREATE DATABASE {}", db_name))
             .execute(&pool)
             .await?;
-        println!("Database: {} Created Successfully.",db_name);
-    } else{
-        println!("Database: {} Exists.",db_name);
-        return Ok(true)
+        println!("Database: {} Created Successfully.", db_name);
+    } else {
+        println!("Database: {} Exists.", db_name);
+        return Ok(true);
     }
     // Create the target database if it doesn't exist
     Ok(database_exists)
 }
-async fn intitialize_db(db_url:&String)->Result<(),sqlx::Error>{
-    let url =
-        Url::parse(&db_url).expect("Error parsing DATABASE_URL");
+async fn intitialize_db(db_url: &String) -> Result<(), sqlx::Error> {
+    let url = Url::parse(&db_url).expect("Error parsing DATABASE_URL");
     let username = url.username();
     let pool = PgPool::connect(&db_url).await?;
-    println!("Connected to :{}",db_url);
-    println!("Initializing Database to User: {}",username);
+    println!("Connected to :{}", db_url);
+    println!("Initializing Database to User: {}", username);
     let sql_commands = format!(
         r#"
         CREATE TABLE public.users (
@@ -64,9 +62,7 @@ async fn intitialize_db(db_url:&String)->Result<(),sqlx::Error>{
     let sql_statements: Vec<&str> = sql_commands.split(';').map(|s| s.trim()).collect();
     for sql_statement in sql_statements {
         if !sql_statement.is_empty() {
-            sqlx::query(sql_statement)
-                .execute(&pool)
-                .await?;
+            sqlx::query(sql_statement).execute(&pool).await?;
         }
     }
     println!("All Tables Created Successfully");
@@ -77,12 +73,13 @@ async fn intitialize_db(db_url:&String)->Result<(),sqlx::Error>{
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
     dotenv().ok();
-    let db_url = env::var("DATABASE_URL").expect("No Database URl create a .env file based on the '.env_example'");
-    println!(".env DATABASE_URL : {}",db_url);
+    let db_url = env::var("DATABASE_URL")
+        .expect("No Database URl create a .env file based on the '.env_example'");
+    println!(".env DATABASE_URL : {}", db_url);
     let exists = create_db(&db_url).await?;
-    match exists{
+    match exists {
         true => (),
-        false => {intitialize_db(&db_url).await?}
+        false => intitialize_db(&db_url).await?,
     }
     // This print staementment is what tells cargo to only rerun the build script when the .env fil is altered.
     // if commented out the build script will always run when built.

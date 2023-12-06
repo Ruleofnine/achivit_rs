@@ -1,7 +1,6 @@
 use crate::parsing::{get_discord_embed_description_flash, DFCharacterData, WarList};
 use crate::requests::{CHARPAGE, DA_IMGUR, NDA_IMGUR};
 use crate::rng::random_rgb;
-use crate::serenity::AttachmentType;
 use crate::serenity::Color;
 use crate::Context;
 use color_eyre::Result;
@@ -139,7 +138,6 @@ pub async fn send_inventory_embed(
 ) -> Result<()> {
     match inventory.is_empty() {
         false => {
-            let file = &crate::sheets::sheet().await?;
             let mut description = String::new();
             for item in inventory {
                 if (item.len() + description.len()) > 4096 {
@@ -154,10 +152,6 @@ pub async fn send_inventory_embed(
                         .color(Color::from_rgb(105, 68, 48))
                         .description(description)
                         .thumbnail("https://imgur.com/fUyFn0I.png")
-                })
-                .attachment(AttachmentType::Bytes {
-                    data: std::borrow::Cow::Borrowed(file),
-                    filename: "test.xlsx".to_owned(),
                 })
             })
             .await?;
@@ -220,5 +214,3 @@ pub async fn send_duplicates_embed(
     };
     Ok(())
 }
-
-

@@ -1,36 +1,17 @@
+use crate::serenity::GuildId;
+use achivit_rs::error_handler::on_error;
+use achivit_rs::event_handler::event_handler;
+use achivit_rs::lookup_df::lookup_df_character;
+use achivit_rs::Data;
 use dotenv::dotenv;
 use log::info;
-use lookup_df::lookup_df_character;
 use poise::serenity_prelude as serenity;
 use std::env;
-mod dev_tools;
-mod error_handler;
-mod event_handler;
-mod lookup_df;
-mod time;
-mod wiki;
-use crate::event_handler::event_handler;
-use error_handler::on_error;
 use std::time::Instant;
-pub mod db;
-mod requests;
-mod manage_users;
-mod embeds;
-use crate::serenity::GuildId;
-use sqlx::PgPool;
-mod parsing;
-mod rng;
-mod sheets;
-pub type Error = Box<dyn std::error::Error + Send + Sync>;
-pub type Context<'a> = poise::Context<'a, Data, Error>;
-pub struct Data {
-    start_time: Instant,
-    db_connection: PgPool,
-}
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
-    let db_connection = db::establish_connection().await?;
+    let db_connection = achivit_rs::db::establish_connection().await?;
     let token = env::var("BOT_TOKEN").expect("Missing `BOT_TOKEN` env var,");
     let start_time = Instant::now();
     color_eyre::install().expect("Failed to install color_eyre");
@@ -45,15 +26,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("DEBUG_GUILD must be an integer"),
     );
     let commands = vec![
-        wiki::wiki(),
-        time::ping(),
-        time::uptime(),
-        time::server_time(),
-        time::random_event(),
-        dev_tools::list_slash_commands(),
-        manage_users::register_character(),
-        manage_users::delete_character(),
-        lookup_df::lookup_df_character(),
+        achivit_rs::wiki::wiki(),
+        achivit_rs::time::ping(),
+        achivit_rs::time::uptime(),
+        achivit_rs::time::server_time(),
+        achivit_rs::time::random_event(),
+        achivit_rs::dev_tools::list_slash_commands(),
+        achivit_rs::manage_users::register_character(),
+        achivit_rs::manage_users::delete_character(),
+        achivit_rs::lookup_df::lookup_df_character(),
     ];
     let test_commands = vec![lookup_df_character()];
     let options = poise::FrameworkOptions {

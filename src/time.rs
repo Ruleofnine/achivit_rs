@@ -1,8 +1,8 @@
-use crate::{Context, Error};
-use color_eyre::Result;
 use crate::requests::get_random_event;
 use crate::rng::random_rgb;
-use chrono::{Datelike, Timelike, Local,Utc};
+use crate::{Context, Error};
+use chrono::{Datelike, Local, Timelike, Utc};
+use color_eyre::Result;
 use num_format::{Locale, ToFormattedString};
 pub fn ordinal_suffix(day: u32) -> &'static str {
     match day {
@@ -18,22 +18,29 @@ pub fn swatch_time() -> f64 {
     total_seconds as f64 / 86.4
 }
 pub fn percentage_day_elapsed() -> f64 {
-    (Local::now().num_seconds_from_midnight() as f64 / 86400.0 ) * 100.0
+    (Local::now().num_seconds_from_midnight() as f64 / 86400.0) * 100.0
 }
 pub fn seconds_since_midnight() -> String {
-    Local::now().num_seconds_from_midnight().to_formatted_string(&Locale::en)
+    Local::now()
+        .num_seconds_from_midnight()
+        .to_formatted_string(&Locale::en)
 }
 pub fn seconds_until_midnight() -> String {
-    (86400-Local::now().num_seconds_from_midnight()).to_formatted_string(&Locale::en)
+    (86400 - Local::now().num_seconds_from_midnight()).to_formatted_string(&Locale::en)
 }
 ///Ping the bot!
 #[poise::command(slash_command)]
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     let ping = ctx.ping().await.as_millis();
     let res = format!("{}ms 🏓", ping);
-    let avatar_url =ctx.serenity_context().cache.current_user().face();
-    ctx.send( |f| {
-        f.embed(|f| f.color(random_rgb()).title("Pong!").description(res).thumbnail(avatar_url))
+    let avatar_url = ctx.serenity_context().cache.current_user().face();
+    ctx.send(|f| {
+        f.embed(|f| {
+            f.color(random_rgb())
+                .title("Pong!")
+                .description(res)
+                .thumbnail(avatar_url)
+        })
     })
     .await?;
     Ok(())
@@ -51,8 +58,8 @@ pub async fn uptime(ctx: Context<'_>) -> Result<(), Error> {
         "{} hours, {} minutes, and {} seconds",
         hours, minutes, seconds
     );
-    let avatar_url =ctx.serenity_context().cache.current_user().face();
-    ctx.send( |f| {
+    let avatar_url = ctx.serenity_context().cache.current_user().face();
+    ctx.send(|f| {
         f.embed(|f| {
             f.color(random_rgb())
                 .title("Uptime!")
@@ -65,10 +72,10 @@ pub async fn uptime(ctx: Context<'_>) -> Result<(), Error> {
 }
 ///Just gives you the Server Time :)
 #[poise::command(slash_command)]
-pub async fn server_time(ctx:Context<'_>) -> Result<(),Error>{
+pub async fn server_time(ctx: Context<'_>) -> Result<(), Error> {
     ctx.defer().await?;
     let now = Local::now();
-    let avatar_url =ctx.serenity_context().cache.current_user().face();
+    let avatar_url = ctx.serenity_context().cache.current_user().face();
     let description = format!(
         "**{}, {}, {:02}{} {:04}** \n**{:02}:{:02}:{:02} {} EST**\n**Week:** {} **Day:** {:03}\n**Swatch Time:** @{:03.0}\n**Day Progress:** {:.2}%\n**Seconds Since Midnight:** {}\n**Seconds Until Midnight:** {}\n**Today in History:** {}",
         now.format("%A"),
@@ -88,7 +95,7 @@ pub async fn server_time(ctx:Context<'_>) -> Result<(),Error>{
         seconds_until_midnight(),
         crate::requests::get_random_event().await
     );
-    ctx.send( |f| {
+    ctx.send(|f| {
         f.embed(|f| {
             f.color(random_rgb())
                 .title("Server time")
@@ -101,7 +108,7 @@ pub async fn server_time(ctx:Context<'_>) -> Result<(),Error>{
 }
 /// A Random Event on this day in history!
 #[poise::command(slash_command)]
-pub async fn random_event(ctx:Context<'_>) -> Result<(),Error>{
+pub async fn random_event(ctx: Context<'_>) -> Result<(), Error> {
     ctx.defer().await?;
     let now = Local::now();
     let description = format!(
@@ -110,7 +117,7 @@ pub async fn random_event(ctx:Context<'_>) -> Result<(),Error>{
         now.day(),
         get_random_event().await
     );
-    ctx.send( |f| {
+    ctx.send(|f| {
         f.embed(|f| {
             f.color(random_rgb())
                 .title("Random Event")

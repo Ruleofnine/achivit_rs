@@ -1,4 +1,3 @@
-// #![recursion_limit="256"]
 use dotenv::dotenv;
 use log::info;
 use lookup_df::lookup_df_character;

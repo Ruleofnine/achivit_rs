@@ -45,33 +45,16 @@ Before you begin, make sure you have the following software installed on your sy
 
 6. After the `/` in the `DATABASE_URL field`, enter your desired database name. **NOTE:** that this database doesn't exist yet; it will be created during setup.
 
-### Database Initialization (Linux/macOS)
+### Database Initialization 
 
-If you are using Linux, you can automate the database initialization process using the provided `init_db.sh` script. Follow these steps:
+1. Make sure you are in the project directory and have finshed all steps in (Installation)[#Installation].
 
-1. Ensure that the `init_db.sh` script is in the project directory.
-
-2. Open the terminal and navigate to the project directory.
-
-3. Ensure that you have set your  PostgreSQL username and the desired database name.
-
-4. Make the script executable:
-
+2. run the following command to Initialize the database with the settings from the `.env` file: 
 ```shell
-    chmod +x init_db.sh
+    cargo run --bin init_db
 ```
-5. Run the script to create a blank database:
-```shell
-    ./init_db.sh
-```
-
-###  Database Initialization (Windows)
-
-Running Bash scripts on Windows may require additional steps because Windows does not have Bash installed by default.  
-    A common approach is to use [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install).  
-    Regardless of how you approach it. Once on you have the ability to run Bash Scripts on your windows machine follow the [Linux/macOS](#database-initialization-linuxmacos) steps.  
-    Alternatively you can swap your OS to Linux.  
-
+`init_db` is seperate bin in the `src` dir that creates and Initializes the database. 
+**NOTE:** [Sqlx](https://docs.rs/sqlx/latest/sqlx/) [query](https://docs.rs/sqlx/latest/sqlx/macro.query.html) macros check your database at COMPILE TIME to ensure correctness. The program will **NOT RUN** unless you have a valid database. 
 
 ### Running the Bot
 

@@ -5,10 +5,15 @@ edition = "2021"
 authors = ["Ruleofnine"]
 repository = "https://github.com/Ruleofnine/achivit_rs"
 license = "MIT"
+default-run = "achivit_rs"
 
 [[bin]]
 name = "achivit_rs"
 path = "src/main.rs"
+
+[[bin]]
+name = "init_db"
+path = "src/init_db.rs"
 
 [dependencies]
 dotenv = "0.15.0"
@@ -32,3 +37,4 @@ rand = "0.8.5"
 serde_derive = "1.0.193"
 serde = "1.0.193"
 rust_xlsxwriter = "0.56.0"
+url = "2.5.0"

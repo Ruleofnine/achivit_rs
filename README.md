@@ -47,7 +47,7 @@ Before you begin, make sure you have the following software installed on your sy
 
 ### Database Initialization 
 
-1. Make sure you are in the project directory and have finshed all steps in (Installation)[#Installation].
+1. Make sure you are in the project directory and have finshed all steps in [Installation](#installation).
 
 2. run the following command to Initialize the database with the settings from the `.env` file: 
 ```shell

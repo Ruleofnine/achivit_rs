@@ -61,6 +61,6 @@ to build a binary:
 ```
 The generated binary file will be located in the `achivit_rs/target/release/archivit_rs`. 
 
-The provided `build.rs` file runs <ins>automatically<\ins> whenver you edit the `.env` file then build/run/check etc with cargo.
+The provided `build.rs` file runs <ins>automatically</ins> whenver you edit the `.env` file then build/run/check etc with cargo.
 The build file executes before compilation of the main code, and it checks to see if a postgres database with the name provied in the `.env` `DATABASE_URL` path section exists, if not it creates one and creates the needed tables.
 **NOTE:** [Sqlx](https://docs.rs/sqlx/latest/sqlx/) [query](https://docs.rs/sqlx/latest/sqlx/macro.query.html) macros check your database at COMPILE TIME to ensure correctness. The program will **NOT RUN** unless you have a valid database. 

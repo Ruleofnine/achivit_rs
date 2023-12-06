@@ -49,23 +49,18 @@ Before you begin, make sure you have the following software installed on your sy
 
 ### Database Initialization 
 
-1. Make sure you are in the project directory and have finshed all steps in [Installation](#installation).
+Make sure you are in the project directory and have finshed all steps in [Installation](#installation).
 
-2. run the following command to Initialize the database with the settings from the `.env` file: 
-```shell
-    cargo run --bin init_db
-```
-`init_db` is seperate bin in the `src` dir that creates and Initializes the database. 
-**NOTE:** [Sqlx](https://docs.rs/sqlx/latest/sqlx/) [query](https://docs.rs/sqlx/latest/sqlx/macro.query.html) macros check your database at COMPILE TIME to ensure correctness. The program will **NOT RUN** unless you have a valid database. 
-
-### Running the Bot
-
-Finally, run the following command to run the bot:
-
+To run a debug instance of the bot:  
 ```shell
     cargo run
 ```
+to build a binary:
+```shell
+    cargo build --release
+```
+The generated binary file will be located in the `achivit_rs/target/release/archivit_rs`. 
 
-This will start the bot and connect it to the configured Discord server.
-
-
+The provided `build.rs` file runs <ins>automatically<\ins> whenver you edit the `.env` file then build/run/check etc with cargo.
+The build file executes before compilation of the main code, and it checks to see if a postgres database with the name provied in the `.env` `DATABASE_URL` path section exists, if not it creates one and creates the needed tables.
+**NOTE:** [Sqlx](https://docs.rs/sqlx/latest/sqlx/) [query](https://docs.rs/sqlx/latest/sqlx/macro.query.html) macros check your database at COMPILE TIME to ensure correctness. The program will **NOT RUN** unless you have a valid database. 

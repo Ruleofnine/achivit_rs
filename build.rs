@@ -2,8 +2,6 @@ use dotenv::dotenv;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::env;
 use url::Url;
-/// this is a seperate bin used to create an inital dataebase for the bot.
-/// run 'Cargo run --bin init_db' to initialize the database.
 pub async fn create_db(db_url:&String) -> Result<bool, sqlx::Error> {
     let mut url =
         Url::parse(db_url).expect("Error parsing DATABASE_URL");
@@ -24,7 +22,8 @@ pub async fn create_db(db_url:&String) -> Result<bool, sqlx::Error> {
             .await?;
         println!("Database: {} Created Successfully.",db_name);
     } else{
-        panic!("Database: {} Already Exists",db_name)
+        println!("Database: {} Exists.",db_name);
+        return Ok(true)
     }
     // Create the target database if it doesn't exist
     Ok(database_exists)
@@ -33,9 +32,9 @@ async fn intitialize_db(db_url:&String)->Result<(),sqlx::Error>{
     let url =
         Url::parse(&db_url).expect("Error parsing DATABASE_URL");
     let username = url.username();
-    println!("Initializing Database to User: {}",username);
     let pool = PgPool::connect(&db_url).await?;
     println!("Connected to :{}",db_url);
+    println!("Initializing Database to User: {}",username);
     let sql_commands = format!(
         r#"
         CREATE TABLE public.users (
@@ -71,7 +70,7 @@ async fn intitialize_db(db_url:&String)->Result<(),sqlx::Error>{
         }
     }
     println!("All Tables Created Successfully");
-    println!("'Cargo run' will now run the bot.");
+    println!("Build commencing");
     Ok(())
 }
 
@@ -79,7 +78,14 @@ async fn intitialize_db(db_url:&String)->Result<(),sqlx::Error>{
 async fn main() -> Result<(), sqlx::Error> {
     dotenv().ok();
     let db_url = env::var("DATABASE_URL").expect("No Database URl create a .env file based on the '.env_example'");
-    let _ = create_db(&db_url).await?;
-    intitialize_db(&db_url).await?;
+    println!(".env DATABASE_URL : {}",db_url);
+    let exists = create_db(&db_url).await?;
+    match exists{
+        true => (),
+        false => {intitialize_db(&db_url).await?}
+    }
+    // This print staementment is what tells cargo to only rerun the build script when the .env fil is altered.
+    // if commented out the build script will always run when built.
+    println!("cargo:rerun-if-changed=.env");
     Ok(())
 }

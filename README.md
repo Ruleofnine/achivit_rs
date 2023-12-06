@@ -2,7 +2,7 @@
 # Archivist Discord Bot
 
 This is  *WIP* Discord Bot that uses the libraries Serenity and Poise to interact with the Discord API.
-This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/qbMr24aupz).
+This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/M5g97hnHjT).
 
 
 ## Features

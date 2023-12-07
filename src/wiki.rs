@@ -1,4 +1,4 @@
-use crate::requests::fetch_page;
+use crate::requests::{fetch_page_with_user_agent, USER_AGENT};
 use crate::serenity::Color;
 use crate::{Context, Error};
 use color_eyre::Result;
@@ -27,7 +27,7 @@ pub async fn get_wiki(search_query: &str) -> Result<String> {
         "https://dragonfable-endgame.fandom.com/wiki/{}",
         search_query
     );
-    match fetch_page(&url).await {
+    match fetch_page_with_user_agent(USER_AGENT,&url).await {
         Ok(_) => Ok(url),
         Err(_) => Err(color_eyre::eyre::eyre!(url)),
     }

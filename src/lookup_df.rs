@@ -1,26 +1,12 @@
 use crate::db::query_with_id;
 use crate::embeds::*;
 use crate::manage_users::autocomplete_character;
-use crate::parsing::{DFCharacterData, WarList};
-use crate::requests::*;
+use crate::parsing::{DFCharacterData, WarList,HttpFetcher,ParsingCategory,DataFetcher};
 use crate::serenity::Color;
 use crate::{Context, Error};
 use color_eyre::Result;
 use poise::serenity_prelude::User;
 use std::collections::HashMap;
-struct LookUpCommand {
-    state: LookupState,
-    category: LookupCategory,
-}
-async fn lookup(category: &LookupCategory, df_id: i32) -> Result<LookupState> {
-    Ok(match category {
-        LookupCategory::CharacterPage => get_df_character(df_id).await?,
-        LookupCategory::FlashCharacterPage => get_df_character_flash(df_id).await?,
-        LookupCategory::Inventory => get_df_character_inventory_only(df_id).await?,
-        LookupCategory::Wars => get_df_character_wars_only(df_id).await?,
-        LookupCategory::Duplicates => get_df_character_duplicates(df_id).await?,
-    })
-}
 async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<()> {
     match state {
         LookupState::NotFound => not_found_embed(ctx, df_id).await?,
@@ -39,22 +25,6 @@ async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<
     };
     Ok(())
 }
-
-impl LookUpCommand {
-    fn new(category: Option<LookupCategory>) -> LookUpCommand {
-        let category = match category {
-            None => LookupCategory::CharacterPage,
-            Some(cat) => cat,
-        };
-        LookUpCommand {
-            state: LookupState::NotFound,
-            category,
-        }
-    }
-    fn state(&mut self, state: LookupState) {
-        self.state = state;
-    }
-}
 #[derive(Debug)]
 pub enum LookupState {
     FlashCharatcerPage(HashMap<String, String>),
@@ -67,14 +37,13 @@ pub enum LookupState {
 }
 #[allow(non_camel_case_types)]
 #[derive(poise::ChoiceParameter, PartialEq)]
-enum LookupCategory {
+pub enum LookupCategory {
     CharacterPage,
     FlashCharacterPage,
     Inventory,
     Wars,
     Duplicates,
 }
-impl LookUpCommand {}
 
 /// Lookup a DF Character in various ways
 #[poise::command(slash_command)]
@@ -86,13 +55,12 @@ pub async fn lookup_df_character(
     character: Option<i32>,
     category: Option<LookupCategory>,
 ) -> Result<(), Error> {
-    let mut lookupcommand = LookUpCommand::new(category);
     let pool = &ctx.data().db_connection;
-
+    let category = category.unwrap_or(LookupCategory::CharacterPage);
     let df_id = match (character, user) {
         (Some(character), _) => Some(character),
-        (None, None) => query_with_id(pool, ctx.author().id.0).await,
-        (None, Some(user)) => query_with_id(pool, user.id.0).await,
+        (None, None) => query_with_id(pool, ctx.author().id.0).await?,
+        (None, Some(user)) => query_with_id(pool, user.id.0).await?,
     };
     let df_id = match df_id {
         Some(df_id) => df_id,
@@ -108,8 +76,9 @@ pub async fn lookup_df_character(
             return Ok(());
         }
     };
-    lookupcommand.state(lookup(&lookupcommand.category, df_id).await?);
-    Ok(send_embed(lookupcommand.state, ctx, df_id).await?)
+
+    let lookupstate = HttpFetcher::new_character_page(df_id).fetch_and_parse_data(category.into()).await?;
+    Ok(send_embed(lookupstate, ctx, df_id).await?)
 }
 /// Compare two DF Characters in various ways
 #[poise::command(slash_command)]
@@ -122,10 +91,9 @@ pub async fn compare_df_characters(
     #[description = "character of selected user"]
     character2: i32,
 ) -> Result<(), Error> {
-    let mut lookupcommand = LookUpCommand::new(None);
     let pool = &ctx.data().db_connection;
-    let char1 = get_df_character(character1).await?;
-    let char1 = get_df_character(character2).await?;
+    // let char1 = get_df_character(character1).await?;
+    // let char1 = get_df_character(character2).await?;
     // lookupcommand.state(lookup(&lookupcommand.category, df_id).await?);
     // Ok(send_embed(lookupcommand.state, ctx, df_id).await?)
     Ok(())

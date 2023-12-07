@@ -1,40 +1,140 @@
 use crate::lookup_df::LookupState;
-use crate::requests::{CHARPAGE, COLOR_SITE};
+use crate::requests::{CHARPAGE, COLOR_SITE,FLASH_USER_AGENT,USER_AGENT,fetch_page_with_user_agent};
 use chrono::NaiveDate;
 use color_eyre::Result;
 use num_format::{Locale, ToFormattedString};
 use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
 use std::collections::{HashMap, HashSet};
-use std::fs;
+use tokio::fs;
+use crate::lookup_df::LookupCategory;
+use std::future::Future;
+use std::pin::Pin;
+use std::fmt;
+use color_eyre::eyre::eyre;
+#[derive(PartialEq)]
+pub enum ParsingCategory {
+    CharacterPage,
+    FlashCharacterPage,
+    Wars,
+    Items,
+    Inventory,
+    Duplicates,
+}
+impl ParsingCategory{
+    fn is_flash(&self)->bool{
+        self == &ParsingCategory::FlashCharacterPage
+}}
+enum UserAgent{
+    Flash,
+    Standard
+}
+impl fmt::Display for UserAgent {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            UserAgent::Flash => write!(f, "{}",FLASH_USER_AGENT),
+            UserAgent::Standard => write!(f,"{}",USER_AGENT),
+        }
+    }
+}
+
+impl From<LookupCategory> for ParsingCategory {
+    fn from(item: LookupCategory) -> Self {
+        match item {
+            LookupCategory::CharacterPage => ParsingCategory::CharacterPage,
+            LookupCategory::FlashCharacterPage => ParsingCategory::FlashCharacterPage,
+            LookupCategory::Inventory => ParsingCategory::Inventory,
+            LookupCategory::Wars => ParsingCategory::Wars,
+            LookupCategory::Duplicates => ParsingCategory::Duplicates,
+        }
+    }
+}
+// Trait for data fetching
+pub trait DataFetcher {
+   fn fetch_data(&self) -> Pin<Box<dyn Future<Output = Result<String>> + Send + '_>>;
+   fn fetch_and_parse_data(&mut self,category:ParsingCategory)  -> Pin<Box<dyn Future<Output = Result<LookupState>> + Send + '_>> {
+    let future = self.fetch_data();
+        Box::pin(async move{
+    let data = future.await.map_err(|e|eyre!(e))?;
+    let document = Html::parse_document(&data);
+    Ok(match category {
+            ParsingCategory::CharacterPage => parse_df_character(&document),
+            ParsingCategory::FlashCharacterPage => parse_df_character_flash(&document),
+            ParsingCategory::Wars => parse_df_character_wars_only(&document),
+            ParsingCategory::Items => parse_df_character_with_items(&document),
+            ParsingCategory::Duplicates => parse_df_character_duplicates(&document),
+            ParsingCategory::Inventory => parse_df_character_inventory_only(&document),
+    })}
+    )}
+}
+
+// Implement DataFetcher for File-based fetching
+pub struct FileFetcher<'a> {
+    file_path: &'a str,
+}
+impl<'a> FileFetcher<'a>{
+    pub fn new(file_path:&str)->FileFetcher{
+        FileFetcher { file_path }
+    }
+}
+
+impl<'a> DataFetcher for FileFetcher<'a> {
+    fn fetch_data(&self) -> Pin<Box<dyn Future<Output = Result<String>> + Send>> {
+        let file_path = self.file_path.to_string();
+        Box::pin(async move {
+            fs::read_to_string(file_path)
+                .await.map_err(|e|eyre!(e))
+        })
+    }
+
+}
+// Implement DataFetcher for HTTP-based fetching
+pub struct HttpFetcher {
+    url: String,
+    user_agent:UserAgent,
+}
+impl HttpFetcher{
+    pub fn new(url:String)->HttpFetcher{
+        HttpFetcher {url,user_agent:UserAgent::Standard}
+    } 
+    pub fn new_character_page(df_id: i32)->HttpFetcher{
+        let url  = format!("{}{}",CHARPAGE,df_id);
+        HttpFetcher::new(url) 
+    }
+    pub fn flash(&mut self){
+        self.user_agent = UserAgent::Flash;
+    }
+}
+
+impl DataFetcher for HttpFetcher {
+   fn fetch_data(&self) -> Pin<Box<dyn Future<Output = Result<String>> + Send + '_>> {
+        Box::pin(async move {
+            fetch_page_with_user_agent(&self.user_agent.to_string(), &self.url).await
+        })
+    }
+   fn fetch_and_parse_data(&mut self,category:ParsingCategory)  -> Pin<Box<dyn Future<Output = Result<LookupState>> + Send + '_>> {
+        if category.is_flash(){
+            self.flash();
+        }
+    let future = self.fetch_data();
+        Box::pin(async move{
+    let data = future.await.map_err(|e|eyre!(e))?;
+    let document = Html::parse_document(&data);
+    Ok(match category {
+            ParsingCategory::CharacterPage => parse_df_character(&document),
+            ParsingCategory::FlashCharacterPage => parse_df_character_flash(&document),
+            ParsingCategory::Wars => parse_df_character_wars_only(&document),
+            ParsingCategory::Items => parse_df_character_with_items(&document),
+            ParsingCategory::Duplicates => parse_df_character_duplicates(&document),
+            ParsingCategory::Inventory => parse_df_character_inventory_only(&document),
+    })}
+    )}
+}
+
+
 pub fn convert_html_to_discord_format(input: &str) -> String {
     let re = Regex::new(r#"<a href="(?P<url>[^"]+)"[^>]*>(?P<text>[^<]+)</a>"#).unwrap();
     re.replace_all(input, "[${text}](${url})").to_string()
-}
-pub fn parse_df_character_from_file(file_path: &str) -> Result<LookupState> {
-    let data = fs::read_to_string(file_path)?;
-    let document = Html::parse_document(&data);
-    Ok(parse_df_character(&document))
-}
-pub fn parse_df_character_flash_from_file(file_path: &str) -> Result<LookupState> {
-    let data = fs::read_to_string(file_path)?;
-    let document = Html::parse_document(&data);
-    Ok(parse_df_character_flash(&document))
-}
-pub fn parse_df_character_wars_from_file(file_path: &str) -> Result<LookupState> {
-    let data = fs::read_to_string(file_path)?;
-    let document = Html::parse_document(&data);
-    Ok(parse_df_character_wars_only(&document))
-}
-pub fn parse_df_character_inventory_only_from_file(file_path: &str) -> Result<LookupState> {
-    let data = fs::read_to_string(file_path)?;
-    let document = Html::parse_document(&data);
-    Ok(parse_df_character_inventory_only(&document))
-}
-pub fn parse_df_character_duplicates_from_file(file_path: &str) -> Result<LookupState> {
-    let data = fs::read_to_string(file_path)?;
-    let document = Html::parse_document(&data);
-    Ok(parse_df_character_duplicates(&document))
 }
 
 #[derive(Debug)]

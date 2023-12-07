@@ -1,7 +1,8 @@
 use crate::embeds::not_found_embed;
 use crate::lookup_df::LookupState;
-use crate::requests::{get_df_character, CHARPAGE};
+use crate::requests::CHARPAGE;
 use crate::{Context, Error};
+use crate::parsing::{HttpFetcher,DataFetcher,ParsingCategory};
 use color_eyre::Result;
 use poise::serenity_prelude::User;
 use regex::Regex;
@@ -14,8 +15,8 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
     let author = &ctx.author().name;
     let mut user_id = user.id.0 as i64;
     query!("INSERT INTO users (discord_id,discord_name,registered_by) VALUES ($1,$2,$3) ON CONFLICT (discord_id) DO NOTHING",user_id,user.name,author).execute(pool).await?;
-    let result = get_df_character(df_id).await?;
-    let character = match result {
+    let lookupstate = HttpFetcher::new_character_page(df_id).fetch_and_parse_data(ParsingCategory::CharacterPage).await?;
+    let character = match lookupstate {
         LookupState::CharacterPage(char) => char.name,
         LookupState::FlashCharatcerPage(char) => char.get("Name").take().unwrap().to_owned(),
         LookupState::NotFound => return Ok(not_found_embed(ctx, df_id).await?),

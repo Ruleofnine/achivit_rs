@@ -2,7 +2,7 @@ use crate::serenity::GuildId;
 use achivit_rs::error_handler::on_error;
 use achivit_rs::event_handler::event_handler;
 use achivit_rs::lookup_df::lookup_df_character;
-use achivit_rs::Data;
+use achivit_rs::{Data, print_banner};
 use dotenv::dotenv;
 use log::info;
 use poise::serenity_prelude as serenity;
@@ -10,6 +10,7 @@ use std::env;
 use std::time::Instant;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    print_banner();
     dotenv().ok();
     let db_connection = achivit_rs::db::establish_connection().await?;
     let token = env::var("BOT_TOKEN").expect("Missing `BOT_TOKEN` env var,");

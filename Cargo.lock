@@ -10,7 +10,6 @@ dependencies = [
  "chrono",
  "color-eyre",
  "dotenv",
- "ego-tree",
  "env_logger",
  "log",
  "num-format",

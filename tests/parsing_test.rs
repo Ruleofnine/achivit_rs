@@ -15,6 +15,7 @@ mod tests {
             .to_lookupstate()?;
         let data = LookupState::extract_data(char)?;
         let roles = check_roles(data)?;       // let char1 = extract_data(char1)?;
+        dbg!(roles.roles());
         dbg!(roles.roles().len());
         // let char2 = extract_data(char2)?;
         // let list1 = char1.item_list.unwrap();

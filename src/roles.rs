@@ -1,14 +1,14 @@
+use crate::parsing::{DFCharacterData, WarList};
 use color_eyre::Result;
 use getset::Getters;
 use serde_derive::Deserialize;
 use std::cmp::Ordering;
+use std::collections::BTreeSet;
 use std::fs::File;
 use std::io::BufReader;
-use std::collections::{BTreeSet,HashSet};
-use crate::parsing::{WarList,DFCharacterData};
 #[derive(Getters)]
 #[getset(get = "pub")]
-#[derive(Debug, Deserialize,Eq,Hash,PartialEq)]
+#[derive(Debug, Deserialize, Eq, Hash, PartialEq)]
 pub struct Role {
     pub name: String,
     pub description: String,
@@ -38,7 +38,7 @@ impl RoleList {
         self.0.sort_by(|a, b| max_last(&a, &b))
     }
 }
-#[derive(Debug, Deserialize, Eq, PartialEq,Hash)]
+#[derive(Debug, Deserialize, Eq, PartialEq, Hash)]
 #[allow(non_snake_case)]
 #[serde(rename_all = "PascalCase")]
 pub enum ReqType {
@@ -87,59 +87,66 @@ fn check_gold(role: &Role, gold: &i32) -> bool {
     let amount = role.amount().expect("gold Needs amount.");
     gold >= &amount
 }
-fn check_max_role(roles:&Vec<Role>,role: &Role, aquired_roles: &Vec<usize>) -> bool {
+fn check_max_role(roles: &Vec<Role>, role: &Role, aquired_roles: &Vec<usize>) -> bool {
     let prereqs = role.prereqs().as_ref().expect("expected prereqs");
     let amount = prereqs.len();
     let mut has = 0;
-    for index in aquired_roles{
+    for index in aquired_roles {
         let role = roles.get(*index).as_ref().expect("expeced prereqs").name();
-        if prereqs.contains(role){
+        if prereqs.contains(role) {
             has += 1
         };
-        if has >= amount{
-            return true
+        if has >= amount {
+            return true;
         }
-    };
+    }
     false
 }
-fn roles_to_remove<'a> (roles:&mut RoleList,mut char:DFCharacterData)->Vec<usize>{
-    let char_items = char.item_list.take().unwrap().all();
+fn aquired_roles_indexes<'a>(roles: &mut RoleList, mut char: DFCharacterData) -> Vec<usize> {
+    let char_items = char.item_list.take().expect("expected char items").all();
     let roles_list = roles.roles();
-    let mut roles_indexes_to_remove: Vec<usize>=vec![];
-    for (i,role) in roles_list.iter().enumerate() {
+    let mut roles_indexes_to_remove: Vec<usize> = vec![];
+    for (i, role) in roles_list.iter().enumerate() {
         let aquired = match role.req_type {
             ReqType::Wars => check_war(role, &char),
             ReqType::Item => check_item(role, &char_items),
             ReqType::ItemsAmount => check_item_amount(role, &char_items),
             ReqType::Waves => check_waves(role, &char.wars),
             ReqType::Gold => check_gold(role, &char.gold()),
-            ReqType::Max => check_max_role(roles_list,role, &roles_indexes_to_remove),
+            ReqType::Max => check_max_role(roles_list, role, &roles_indexes_to_remove),
         };
         if aquired {
             roles_indexes_to_remove.push(i);
-        }}
-    roles_indexes_to_remove
-
-}
-pub fn check_roles(char: DFCharacterData) ->Result<RoleList>{
-    let mut roles = get_roles("JSONS/roles.json")?;
-    let mut to_remove = roles_to_remove(&mut roles, char);
-    to_remove.sort_by(|a,b|b.cmp(a));
-    let mut roles:Vec<Role> = to_remove.iter().map(|i|roles.0.remove(*i)).collect();
-    to_remove.clear();
-    for role in roles.iter(){
-        if let Some(prereqs) = role.prereqs().as_ref(){
-        for prereq in prereqs{
-            for (i,checking_role) in roles.iter().enumerate(){
-                if prereq == checking_role.name() && !to_remove.contains(&i){
-                    to_remove.push(i);
-                }
-
-            }
-        }
         }
     }
-    to_remove.sort_by(|a,b|b.cmp(a));
-    to_remove.iter().for_each(|i|{roles.remove(*i);});
-    Ok(RoleList(roles))     
+    roles_indexes_to_remove
+}
+fn prereq_roles_to_remove(roles: &Vec<Role>) -> Vec<usize> {
+    let mut prereq_roles = Vec::new();
+    for role in roles {
+        if let Some(prereqs) = role.prereqs().as_ref() {
+            for prereq in prereqs {
+                for (i, checking_role) in roles.iter().enumerate() {
+                    if prereq == checking_role.name() && !prereq_roles.contains(&i) {
+                        prereq_roles.push(i);
+                    }
+                }
+            }
+        }
+    }
+    prereq_roles
+}
+pub fn check_roles(char: DFCharacterData) -> Result<RoleList> {
+    let mut roles = get_roles("JSONS/roles.json")?;
+    let mut aquired_roles = aquired_roles_indexes(&mut roles, char);
+    aquired_roles.sort_by(|a, b| b.cmp(a));
+    let mut roles: Vec<Role> = aquired_roles
+        .iter()
+        .map(|i| roles.0.swap_remove(*i))
+        .collect();
+    let prereq_roles = prereq_roles_to_remove(&roles);
+    prereq_roles.iter().for_each(|i| {
+        roles.swap_remove(*i);
+    });
+    Ok(RoleList(roles))
 }

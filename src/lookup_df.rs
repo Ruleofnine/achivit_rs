@@ -1,8 +1,9 @@
 use crate::db::query_with_id;
 use crate::embeds::*;
 use crate::manage_users::autocomplete_character;
-use crate::parsing::{DFCharacterData, WarList,HttpFetcher,ParsingCategory,DataFetcher};
+use crate::parsing::{DFCharacterData, WarList, CharacterFetcher, ParsingCategory};
 use crate::serenity::Color;
+use crate::sheets::compare_sheet;
 use crate::{Context, Error};
 use color_eyre::Result;
 use poise::serenity_prelude::User;
@@ -21,7 +22,6 @@ async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<
         LookupState::Duplicates(name, dups) => {
             send_duplicates_embed(dups, df_id, name, ctx).await?
         }
-        LookupState::Compare => (),
     };
     Ok(())
 }
@@ -33,7 +33,6 @@ pub enum LookupState {
     Wars(String, WarList),
     Duplicates(String, HashMap<String, i32>),
     NotFound,
-    Compare,
 }
 #[allow(non_camel_case_types)]
 #[derive(poise::ChoiceParameter, PartialEq)]
@@ -77,7 +76,9 @@ pub async fn lookup_df_character(
         }
     };
 
-    let lookupstate = HttpFetcher::new_character_page(df_id).fetch_and_parse_data(category.into()).await?;
+    let lookupstate = CharacterFetcher::new(df_id,category)
+        .fetch_data()
+        .await?.to_lookupstate()?;
     Ok(send_embed(lookupstate, ctx, df_id).await?)
 }
 /// Compare two DF Characters in various ways
@@ -91,10 +92,30 @@ pub async fn compare_df_characters(
     #[description = "character of selected user"]
     character2: i32,
 ) -> Result<(), Error> {
-    let pool = &ctx.data().db_connection;
-    // let char1 = get_df_character(character1).await?;
-    // let char1 = get_df_character(character2).await?;
-    // lookupcommand.state(lookup(&lookupcommand.category, df_id).await?);
-    // Ok(send_embed(lookupcommand.state, ctx, df_id).await?)
+    let main_state = CharacterFetcher::new(character1,LookupCategory::CharacterPage)
+        .category(ParsingCategory::Compare)
+        .fetch_data()
+        .await?.to_lookupstate()?;
+    let second_state = CharacterFetcher::new(character2,LookupCategory::CharacterPage)
+        .category(ParsingCategory::Compare)
+        .fetch_data()
+        .await?.to_lookupstate()?;
+    let mut not_found:Vec<i32> = vec![];
+    match (&main_state,&second_state){
+        (LookupState::NotFound,LookupState::NotFound)=>{not_found.extend(vec![character1,character2]);},
+        (LookupState::NotFound,_) =>{not_found.push(character1);},
+        (_,LookupState::NotFound) =>{not_found.push(character2)},
+        _ => ()
+    };
+    match not_found.len(){
+        0 => {},
+        _ => {compare_not_found_embed(ctx, not_found).await?}
+
+    };
+    let sheet_data = compare_sheet(main_state, second_state).await?;
+    match sheet_data{
+        Some(sheet) =>send_compare_embed(sheet,ctx).await?,
+        None => ()
+    };
     Ok(())
 }

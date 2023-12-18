@@ -1,10 +1,7 @@
-use crate::lookup_df::LookupState;
-use crate::parsing::*;
 use color_eyre::eyre::eyre;
 use color_eyre::Result;
 use log::error;
 use reqwest::{Client, StatusCode};
-use scraper::Html;
 use serde_json::Value;
 pub const FLASH_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ArtixGameLauncher/2.0.7 Chrome/80.0.3987.137 Electron/8.1.0 Safari/537.36";
 pub const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.137 Electron/8.1.0 Safari/537.36";

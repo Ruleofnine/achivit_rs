@@ -1,18 +1,18 @@
+use crate::lookup_df::LookupCategory;
 use crate::lookup_df::LookupState;
-use crate::requests::{CHARPAGE, COLOR_SITE,FLASH_USER_AGENT,USER_AGENT,fetch_page_with_user_agent};
+use crate::requests::{
+    fetch_page_with_user_agent, CHARPAGE, COLOR_SITE, FLASH_USER_AGENT, USER_AGENT,
+};
 use chrono::NaiveDate;
 use color_eyre::Result;
 use num_format::{Locale, ToFormattedString};
 use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
-use std::collections::{HashMap, HashSet};
-use tokio::fs;
-use crate::lookup_df::LookupCategory;
+use std::collections::{BTreeSet, HashMap};
 use std::future::Future;
 use std::pin::Pin;
-use std::fmt;
-use color_eyre::eyre::eyre;
-#[derive(PartialEq)]
+use tokio::fs;
+#[derive(PartialEq, Copy, Clone)]
 pub enum ParsingCategory {
     CharacterPage,
     FlashCharacterPage,
@@ -20,26 +20,30 @@ pub enum ParsingCategory {
     Items,
     Inventory,
     Duplicates,
+    Compare,
 }
-impl ParsingCategory{
-    fn is_flash(&self)->bool{
-        self == &ParsingCategory::FlashCharacterPage
-}}
-enum UserAgent{
-    Flash,
-    Standard
+pub trait IsFlash {
+    fn is_flash(&self) -> bool;
 }
-impl fmt::Display for UserAgent {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl IsFlash for ParsingCategory {
+    fn is_flash(&self) -> bool {
         match self {
-            UserAgent::Flash => write!(f, "{}",FLASH_USER_AGENT),
-            UserAgent::Standard => write!(f,"{}",USER_AGENT),
+            ParsingCategory::FlashCharacterPage => true,
+            _ => false,
         }
     }
 }
 
-impl From<LookupCategory> for ParsingCategory {
-    fn from(item: LookupCategory) -> Self {
+impl IsFlash for LookupCategory {
+    fn is_flash(&self) -> bool {
+        match self {
+            LookupCategory::FlashCharacterPage => true,
+            _ => false,
+        }
+    }
+}
+impl From<&LookupCategory> for ParsingCategory {
+    fn from(item: &LookupCategory) -> Self {
         match item {
             LookupCategory::CharacterPage => ParsingCategory::CharacterPage,
             LookupCategory::FlashCharacterPage => ParsingCategory::FlashCharacterPage,
@@ -49,95 +53,91 @@ impl From<LookupCategory> for ParsingCategory {
         }
     }
 }
-// Trait for data fetching
-pub trait DataFetcher {
-   fn fetch_data(&self) -> Pin<Box<dyn Future<Output = Result<String>> + Send + '_>>;
-   fn fetch_and_parse_data(&mut self,category:ParsingCategory)  -> Pin<Box<dyn Future<Output = Result<LookupState>> + Send + '_>> {
-    let future = self.fetch_data();
-        Box::pin(async move{
-    let data = future.await.map_err(|e|eyre!(e))?;
-    let document = Html::parse_document(&data);
-    Ok(match category {
-            ParsingCategory::CharacterPage => parse_df_character(&document),
-            ParsingCategory::FlashCharacterPage => parse_df_character_flash(&document),
-            ParsingCategory::Wars => parse_df_character_wars_only(&document),
-            ParsingCategory::Items => parse_df_character_with_items(&document),
-            ParsingCategory::Duplicates => parse_df_character_duplicates(&document),
-            ParsingCategory::Inventory => parse_df_character_inventory_only(&document),
-    })}
-    )}
-}
 
-// Implement DataFetcher for File-based fetching
 pub struct FileFetcher<'a> {
     file_path: &'a str,
+    category: ParsingCategory,
 }
-impl<'a> FileFetcher<'a>{
-    pub fn new(file_path:&str)->FileFetcher{
-        FileFetcher { file_path }
-    }
-}
-
-impl<'a> DataFetcher for FileFetcher<'a> {
-    fn fetch_data(&self) -> Pin<Box<dyn Future<Output = Result<String>> + Send>> {
-        let file_path = self.file_path.to_string();
-        Box::pin(async move {
-            fs::read_to_string(file_path)
-                .await.map_err(|e|eyre!(e))
-        })
-    }
-
-}
-// Implement DataFetcher for HTTP-based fetching
-pub struct HttpFetcher {
-    url: String,
-    user_agent:UserAgent,
-}
-impl HttpFetcher{
-    pub fn new(url:String)->HttpFetcher{
-        HttpFetcher {url,user_agent:UserAgent::Standard}
-    } 
-    pub fn new_character_page(df_id: i32)->HttpFetcher{
-        let url  = format!("{}{}",CHARPAGE,df_id);
-        HttpFetcher::new(url) 
-    }
-    pub fn flash(&mut self){
-        self.user_agent = UserAgent::Flash;
-    }
-}
-
-impl DataFetcher for HttpFetcher {
-   fn fetch_data(&self) -> Pin<Box<dyn Future<Output = Result<String>> + Send + '_>> {
-        Box::pin(async move {
-            fetch_page_with_user_agent(&self.user_agent.to_string(), &self.url).await
-        })
-    }
-   fn fetch_and_parse_data(&mut self,category:ParsingCategory)  -> Pin<Box<dyn Future<Output = Result<LookupState>> + Send + '_>> {
-        if category.is_flash(){
-            self.flash();
+impl<'a> FileFetcher<'a> {
+    pub fn new(file_path: &str) -> FileFetcher {
+        FileFetcher {
+            file_path,
+            category: ParsingCategory::CharacterPage,
         }
-    let future = self.fetch_data();
-        Box::pin(async move{
-    let data = future.await.map_err(|e|eyre!(e))?;
-    let document = Html::parse_document(&data);
-    Ok(match category {
+    }
+    pub fn category(&'a mut self, category: ParsingCategory) -> &mut FileFetcher {
+        self.category = category;
+        self
+    }
+    pub async fn fetch_data(&'a self) -> Result<CharacterData> {
+        let str = fs::read_to_string(self.file_path.to_string()).await?;
+        Ok(CharacterData {
+            str,
+            category: self.category,
+        })
+    }
+}
+
+pub struct CharacterFetcher {
+    df_id: i32,
+    category: ParsingCategory,
+}
+impl CharacterFetcher {
+    pub fn new(df_id: i32, category: LookupCategory) -> CharacterFetcher {
+        CharacterFetcher {
+            df_id,
+            category: ParsingCategory::from(&category),
+        }
+    }
+    pub fn url(&self) -> String {
+        format!("{}{}", CHARPAGE, self.df_id)
+    }
+    pub fn user_agent(&self) -> &str {
+        match self.category {
+            ParsingCategory::FlashCharacterPage => FLASH_USER_AGENT,
+            _ => USER_AGENT,
+        }
+    }
+    pub fn category(mut self, category: ParsingCategory) -> CharacterFetcher {
+        self.category = category;
+        self
+    }
+    pub fn fetch_data(
+        self,
+    ) -> Pin<Box<dyn Future<Output = Result<CharacterData>> + Send + 'static>> {
+        Box::pin(async move {
+            let str = fetch_page_with_user_agent(&self.user_agent(), &self.url()).await?;
+            let category = self.category;
+            Ok(CharacterData { str, category })
+        })
+    }
+}
+
+pub struct CharacterData {
+    str: String,
+    category: ParsingCategory,
+}
+impl CharacterData {
+    pub fn to_lookupstate(&self) -> Result<LookupState> {
+        let document = Html::parse_document(&self.str);
+        Ok(match self.category {
             ParsingCategory::CharacterPage => parse_df_character(&document),
             ParsingCategory::FlashCharacterPage => parse_df_character_flash(&document),
             ParsingCategory::Wars => parse_df_character_wars_only(&document),
             ParsingCategory::Items => parse_df_character_with_items(&document),
             ParsingCategory::Duplicates => parse_df_character_duplicates(&document),
             ParsingCategory::Inventory => parse_df_character_inventory_only(&document),
-    })}
-    )}
+            ParsingCategory::Compare => parse_df_character_with_items(&document),
+        })
+    }
 }
-
 
 pub fn convert_html_to_discord_format(input: &str) -> String {
     let re = Regex::new(r#"<a href="(?P<url>[^"]+)"[^>]*>(?P<text>[^<]+)</a>"#).unwrap();
     re.replace_all(input, "[${text}](${url})").to_string()
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Dragon {
     pub name: String,
     pub dragon_type: String,
@@ -161,6 +161,49 @@ impl Dragon {
     }
 }
 #[derive(Debug)]
+pub struct Items {
+    pub nda: BTreeSet<String>,
+    pub da: BTreeSet<String>,
+    pub dc: BTreeSet<String>,
+    pub artifact: BTreeSet<String>,
+}
+impl Items {
+    pub fn text(num:usize)->String{
+        let str =match num{
+            0 => "NDA Items",
+            1 => "DA Items",
+            2 => "DC Items",
+            _ => "Artifacts"
+    };
+        str.to_string()
+    }
+    pub fn new() -> Items {
+        Items {
+            nda: BTreeSet::new(),
+            da: BTreeSet::new(),
+            dc: BTreeSet::new(),
+            artifact: BTreeSet::new(),
+        }
+    }
+    pub fn count(&self) -> u16 {
+        (self.nda.len() + self.dc.len() + self.da.len() + self.artifact.len()) as u16
+    }
+    pub fn iter(&self) -> impl Iterator<Item = &BTreeSet<String>> {
+        vec![&self.nda, &self.da, &self.dc, &self.artifact].into_iter()
+    }
+    pub fn iter_mut_zip<'a>(
+        &'a mut self,
+        other: &'a mut Self,
+    ) -> Vec<(&'a mut BTreeSet<String>, &'a mut BTreeSet<String>)> {
+        vec![
+            (&mut self.nda, &mut other.nda),
+            (&mut self.da, &mut other.da),
+            (&mut self.dc, &mut other.dc),
+            (&mut self.artifact, &mut other.artifact),
+        ]
+    }
+}
+#[derive(Debug)]
 pub struct DFCharacterData {
     pub id: u32,
     pub name: String,
@@ -177,7 +220,7 @@ pub struct DFCharacterData {
     pub artifact_count: u16,
     pub last_played: NaiveDate,
     pub wars: WarList,
-    pub item_list: Option<HashSet<String>>,
+    pub item_list: Option<Items>,
 }
 impl DFCharacterData {
     fn default() -> DFCharacterData {
@@ -200,8 +243,8 @@ impl DFCharacterData {
             item_list: None,
         }
     }
-    fn calc_item_count(&mut self) {
-        self.item_count = self.da_count + self.dc_count + self.nda_count + self.artifact_count
+    fn calc_item_count(&mut self) -> u16 {
+        self.da_count + self.dc_count + self.nda_count + self.artifact_count
     }
     pub fn get_da_str(&self) -> String {
         match self.dragon_amulet {
@@ -327,7 +370,7 @@ impl WarBuilder {
         )
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct War {
     pub warlabel: String,
     pub waves: String,
@@ -348,7 +391,8 @@ impl War {
         format!("**{}**\n*{} ,{}*\n", self.warlabel, self.waves, self.rares)
     }
 }
-#[derive(Debug)]
+
+#[derive(Debug, Clone)]
 pub struct WarList {
     war_list: Vec<War>,
 }
@@ -376,7 +420,7 @@ impl WarList {
     pub fn total_waves_string(&self) -> String {
         self.calc_waves_cleared().to_formatted_string(&Locale::en)
     }
-    pub fn wars(&self)->&Vec<War>{
+    pub fn wars(&self) -> &Vec<War> {
         &self.war_list
     }
 }
@@ -454,7 +498,7 @@ pub fn parse_df_character(document: &Html) -> LookupState {
             _ => {}
         }
     }
-    let mut unique_names: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut unique: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     let item_selector = Selector::parse("div#charpagedetails.card-columns.mx-auto span").unwrap();
     let mut warbuilder = WarBuilder::default();
     for span in document.select(&item_selector).into_iter() {
@@ -493,12 +537,12 @@ pub fn parse_df_character(document: &Html) -> LookupState {
                 }
             }
             if item {
-                unique_names.insert(item_name.to_owned());
+                unique.insert(item_name.to_owned());
             }
         }
     }
 
-    character.unique_item_count = unique_names.len() as u16;
+    character.unique_item_count = unique.len() as u16;
     character.calc_item_count();
     LookupState::CharacterPage(character)
 }
@@ -835,35 +879,39 @@ pub fn parse_df_character_with_items(document: &Html) -> LookupState {
             character.name = name.text().collect::<Vec<_>>().join(" ").trim().to_string();
         }
     };
-
-    let mut unique_names: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut items = Items::new();
     let item_selector = Selector::parse("div#charpagedetails.card-columns.mx-auto span").unwrap();
     let mut warbuilder = WarBuilder::default();
     for span in document.select(&item_selector).into_iter() {
-        let mut item = true;
         let item_name = span.text().next().unwrap();
+        let item_name = match item_name.split_once(" (x"){
+            None => item_name.to_string(),
+            Some(item) => item.0.to_string()
+        };
         let mut classes = span.value().classes();
         if let Some(class) = classes.next() {
             match class {
                 "gold" => {
                     character.nda_count += 1;
+                    items.nda.insert(item_name);
                 }
                 "coins" => {
                     character.dc_count += 1;
+                    items.dc.insert(item_name);
                 }
                 "amulet" => {
                     character.da_count += 1;
+                    items.da.insert(item_name);
                 }
                 "artifact" => {
                     character.artifact_count += 1;
+                    items.artifact.insert(item_name);
                 }
                 "warlabel" => {
-                    item = false;
-                    warbuilder.warlabel = Some(item_name.to_owned());
+                    warbuilder.warlabel = Some(item_name);
                 }
                 "d-inline-block" => {
-                    item = false;
-                    warbuilder.war_text = Some(item_name.to_owned());
+                    warbuilder.war_text = Some(item_name);
                     character.wars.push_war(warbuilder.build());
                     warbuilder = WarBuilder::default();
                 }
@@ -874,13 +922,10 @@ pub fn parse_df_character_with_items(document: &Html) -> LookupState {
                     panic!("UnexpectedItemType");
                 }
             }
-            if item {
-                unique_names.insert(item_name.to_owned());
-            }
         }
     }
-
-    character.unique_item_count = unique_names.len() as u16;
-    character.calc_item_count();
+    character.unique_item_count = items.count();
+    character.item_count = character.calc_item_count();
+    character.item_list = Some(items);
     LookupState::CharacterPage(character)
 }

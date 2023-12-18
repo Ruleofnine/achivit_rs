@@ -1,7 +1,6 @@
 use crate::serenity::GuildId;
 use achivit_rs::error_handler::on_error;
 use achivit_rs::event_handler::event_handler;
-use achivit_rs::lookup_df::lookup_df_character;
 use achivit_rs::{Data, print_banner};
 use dotenv::dotenv;
 use log::info;
@@ -9,6 +8,7 @@ use poise::serenity_prelude as serenity;
 use std::env;
 use std::time::Instant;
 #[tokio::main]
+
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_banner();
     dotenv().ok();
@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         env_logger::Env::default().default_filter_or("info,serenity=error,tracing=error"),
     );
 
-    let guild_id = GuildId(
+    let _guild_id = GuildId(
         env::var("DEBUG_GUILD")
             .expect("Expected DEBUG_GUILD in environment")
             .parse()
@@ -36,8 +36,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         achivit_rs::manage_users::register_character(),
         achivit_rs::manage_users::delete_character(),
         achivit_rs::lookup_df::lookup_df_character(),
+        achivit_rs::lookup_df::compare_df_characters()
     ];
-    let test_commands = vec![lookup_df_character()];
+    // let test_commands = vec![];
     let options = poise::FrameworkOptions {
         commands,
         event_handler: |ctx, event, framework, data| {
@@ -62,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .setup(move |ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                poise::builtins::register_in_guild(ctx, &test_commands, guild_id).await?;
+                // poise::builtins::register_in_guild(ctx, &test_commands, guild_id).await?;
                 let commands: Vec<String> = framework
                     .options()
                     .commands

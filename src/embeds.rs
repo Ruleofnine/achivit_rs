@@ -2,8 +2,10 @@ use crate::parsing::{get_discord_embed_description_flash, DFCharacterData, WarLi
 use crate::requests::{CHARPAGE, DA_IMGUR, NDA_IMGUR};
 use crate::rng::random_rgb;
 use crate::serenity::Color;
+use crate::sheets::SheetData;
 use crate::Context;
 use color_eyre::Result;
+use poise::serenity_prelude;
 use std::collections::HashMap;
 pub async fn to_many_request_embed(ctx: Context<'_>) -> Result<()> {
     ctx.send( |f| {
@@ -31,6 +33,29 @@ pub async fn not_found_embed(ctx: Context<'_>, df_id: i32) -> Result<()> {
                 .color(Color::DARK_RED)
                 .description("the game character you are searching for does not exist.")
                 .image("https://account.dragonfable.com/images/bgs/bg-df-main.jpg")
+        })
+    })
+    .await?;
+    Ok(())
+}
+pub async fn compare_not_found_embed(ctx: Context<'_>, notfound: Vec<i32>) -> Result<()> {
+    let (amount, description) = match notfound.len() {
+        2 => (("Both"), "These characters were"),
+        _ => (("One"), "This character was"),
+    };
+    let chars_description = notfound
+        .iter()
+        .map(|f| format!("[{f}]({CHARPAGE})\n"))
+        .collect::<String>();
+    ctx.send(|f| {
+        f.embed(|f| {
+            f.title(format!(
+                "{} of the characters you searched does not exsit",
+                amount
+            ))
+            .color(Color::DARK_RED)
+            .description(format!("{description} not found:\n{chars_description}"))
+            .image("https://account.dragonfable.com/images/bgs/bg-df-main.jpg")
         })
     })
     .await?;
@@ -212,5 +237,31 @@ pub async fn send_duplicates_embed(
             .await?;
         }
     };
+    Ok(())
+}
+pub async fn send_compare_embed(sheet: SheetData, ctx: Context<'_>) -> Result<()> {
+    let title = format!("{} vs {}", sheet.user_one_name, sheet.user_two_name);
+    let sheet_attachment = serenity_prelude::AttachmentType::Bytes {
+        data: std::borrow::Cow::Borrowed(&sheet.buf),
+        filename: format!("{}.xlsx", title.clone()),
+    };
+    let description1 = format!(
+        "**{}** has *{}* unique items **{}** does not",
+        sheet.user_one_name, sheet.user_one_unique_dif, sheet.user_two_name
+    );
+    let description2 = format!(
+        "**{}** has *{}* unique items **{}** does not",
+        sheet.user_two_name, sheet.user_two_unique_dif, sheet.user_one_name
+    );
+
+    ctx.send(|f| {
+        f.embed(|f| {
+            f.title(title)
+                .color(random_rgb())
+                .description(format!("{description1}\n{description2}"))
+        })
+        .attachment(sheet_attachment)
+    })
+    .await?;
     Ok(())
 }

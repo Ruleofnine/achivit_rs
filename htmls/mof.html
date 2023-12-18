@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en"><script>/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+var __webpack_exports__ = {};
+
+;// CONCATENATED MODULE: ../core/dist/flash-identifiers.js
+const FLASH_MIMETYPE = "application/x-shockwave-flash";
+const FUTURESPLASH_MIMETYPE = "application/futuresplash";
+const FLASH7_AND_8_MIMETYPE = "application/x-shockwave-flash2-preview";
+const FLASH_MOVIE_MIMETYPE = "application/vnd.adobe.flash.movie";
+const FLASH_ACTIVEX_CLASSID = "clsid:D27CDB6E-AE6D-11cf-96B8-444553540000";
+
+;// CONCATENATED MODULE: ../core/dist/plugin-polyfill.js
+
+/**
+ * Replacement object for `MimeTypeArray` that lets us install new fake mime
+ * types.
+ *
+ * Unlike plugins we can at least enumerate mime types in Firefox, so we don't
+ * lose data.
+ *
+ * We also expose a method called `install` which adds a new plugin. This is
+ * used to falsify Flash detection. If the existing `navigator.mimeTypes` has an
+ * `install` method, you should not use `RuffleMimeTypeArray` as some other
+ * plugin emulator is already present.
+ */
+class RuffleMimeTypeArray {
+    constructor(mimeTypes) {
+        this.__mimeTypes = [];
+        this.__namedMimeTypes = {};
+        if (mimeTypes) {
+            for (let i = 0; i < mimeTypes.length; i++) {
+                this.install(mimeTypes[i]);
+            }
+        }
+    }
+    /**
+     * Install a MIME Type into the array.
+     *
+     * @param mimeType The mime type to install
+     */
+    install(mimeType) {
+        const index = this.__mimeTypes.length;
+        this.__mimeTypes.push(mimeType);
+        this.__namedMimeTypes[mimeType.type] = mimeType;
+        this[mimeType.type] = mimeType;
+        this[index] = mimeType;
+    }
+    item(index) {
+        // This behavior is done to emulate a 32-bit uint,
+        // which browsers use.
+        return this.__mimeTypes[index >>> 0];
+    }
+    namedItem(name) {
+        return this.__namedMimeTypes[name];
+    }
+    get length() {
+        return this.__mimeTypes.length;
+    }
+    [Symbol.iterator]() {
+        return this.__mimeTypes[Symbol.iterator]();
+    }
+}
+/**
+ * Equivalent object to `Plugin` that allows us to falsify plugins.
+ */
+class RufflePlugin extends RuffleMimeTypeArray {
+    constructor(name, description, filename) {
+        super();
+        this.name = name;
+        this.description = description;
+        this.filename = filename;
+    }
+}
+/**
+ * Replacement object for `PluginArray` that lets us install new fake plugins.
+ *
+ * This object needs to wrap the native plugin array, since the user might have
+ * actual plugins installed. Firefox doesn't let us enumerate the array, though,
+ * which has some consequences. Namely, we can't actually perfectly wrap the
+ * native plugin array, at least unless there's some secret "unresolved object
+ * property name handler" that I've never known before in JS...
+ *
+ * We can still wrap `namedItem` perfectly at least.
+ *
+ * We also expose a method called `install` which adds a new plugin. This is
+ * used to falsify Flash detection. If the existing `navigator.plugins` has an
+ * `install` method, you should not use `RufflePluginArray` as some other plugin
+ * emulator is already present.
+ */
+class RufflePluginArray {
+    constructor(plugins) {
+        this.__plugins = [];
+        this.__namedPlugins = {};
+        for (let i = 0; i < plugins.length; i++) {
+            this.install(plugins[i]);
+        }
+    }
+    install(plugin) {
+        const index = this.__plugins.length;
+        this.__plugins.push(plugin);
+        this.__namedPlugins[plugin.name] = plugin;
+        this[plugin.name] = plugin;
+        this[index] = plugin;
+    }
+    item(index) {
+        // This behavior is done to emulate a 32-bit uint,
+        // which browsers use. Cloudflare's anti-bot
+        // checks rely on this.
+        return this.__plugins[index >>> 0];
+    }
+    namedItem(name) {
+        return this.__namedPlugins[name];
+    }
+    refresh() {
+        // Nothing to do, we just need to define the method.
+    }
+    [Symbol.iterator]() {
+        return this.__plugins[Symbol.iterator]();
+    }
+    get length() {
+        return this.__plugins.length;
+    }
+}
+/**
+ * A fake plugin designed to trigger Flash detection scripts.
+ */
+const FLASH_PLUGIN = new RufflePlugin("Shockwave Flash", "Shockwave Flash 32.0 r0", "ruffle.js");
+FLASH_PLUGIN.install({
+    type: FUTURESPLASH_MIMETYPE,
+    description: "Shockwave Flash",
+    suffixes: "spl",
+    enabledPlugin: FLASH_PLUGIN,
+});
+FLASH_PLUGIN.install({
+    type: FLASH_MIMETYPE,
+    description: "Shockwave Flash",
+    suffixes: "swf",
+    enabledPlugin: FLASH_PLUGIN,
+});
+FLASH_PLUGIN.install({
+    type: FLASH7_AND_8_MIMETYPE,
+    description: "Shockwave Flash",
+    suffixes: "swf",
+    enabledPlugin: FLASH_PLUGIN,
+});
+FLASH_PLUGIN.install({
+    type: FLASH_MOVIE_MIMETYPE,
+    description: "Shockwave Flash",
+    suffixes: "swf",
+    enabledPlugin: FLASH_PLUGIN,
+});
+/**
+ * Install a fake plugin such that detectors will see it in `navigator.plugins`.
+ *
+ * This function takes care to check if the existing implementation of
+ * `navigator.plugins` already accepts fake plugin entries. If so, it will use
+ * that version of the plugin array. This allows the plugin polyfill to compose
+ * across multiple plugin emulators with the first emulator's polyfill winning.
+ *
+ * @param plugin The plugin to install
+ */
+function installPlugin(plugin) {
+    if (!("install" in navigator.plugins) || !navigator.plugins["install"]) {
+        Object.defineProperty(navigator, "plugins", {
+            value: new RufflePluginArray(navigator.plugins),
+            writable: false,
+        });
+    }
+    const plugins = navigator.plugins;
+    plugins.install(plugin);
+    if (plugin.length > 0 &&
+        (!("install" in navigator.mimeTypes) || !navigator.mimeTypes["install"])) {
+        Object.defineProperty(navigator, "mimeTypes", {
+            value: new RuffleMimeTypeArray(navigator.mimeTypes),
+            writable: false,
+        });
+    }
+    const mimeTypes = navigator.mimeTypes;
+    for (let i = 0; i < plugin.length; i += 1) {
+        mimeTypes.install(plugin[i]);
+    }
+}
+
+;// CONCATENATED MODULE: ./src/plugin-polyfill.ts
+// This file is compiled and then injected into content.ts's compiled form.
+
+installPlugin(FLASH_PLUGIN);
+
+/******/ })()
+;</script><script charset="utf-8" src="mof_files/ruffle.js"></script><head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async="" src="mof_files/google-analytics_analytics.js"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-0LJDBVTJ9Z');
+    </script>
+
+    <link rel="shortcut icon" href="https://account.dragonfable.com/images/DF/favicon.ico">
+    <title>DF Character Page</title>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="mof_files/custom-DF.min.css" rel="stylesheet">
+    <link href="mof_files/font-awesome-5.15.4.all.css" rel="stylesheet" type="text/css">
+    
+    <style type="text/css">
+        label {
+            font-weight: 700;
+        }
+        .card {
+            background-color: #F1E8A5;
+            color: black;
+        }
+
+        .amulet {
+            color: #5F0145;
+            font-weight: 600;
+        }
+
+        .coins {
+            color: #339933;
+            font-weight: 600;
+        }
+
+        .artifact {
+            color: #01A9A8;
+            font-weight: 600;
+        }
+
+        .warlabel {
+            font-weight: 600;
+        }
+    </style>
+
+<link href="data:text/css,%3Ais(%5Bid*%3D'google_ads_iframe'%5D%2C%5Bid*%3D'taboola-'%5D%2C.taboolaHeight%2C.taboola-placeholder%2C%23credential_picker_container%2C%23credentials-picker-container%2C%23credential_picker_iframe%2C%5Bid*%3D'google-one-tap-iframe'%5D%2C%23google-one-tap-popup-container%2C.google-one-tap-modal-div%2C%23amp_floatingAdDiv%2C%23ez-content-blocker-container)%20%7Bdisplay%3Anone!important%3Bmin-height%3A0!important%3Bheight%3A0!important%3B%7D" rel="stylesheet" type="text/css"></head>
+<body>
+    <div class="background-pretty pb-4">
+        <div class="container">
+
+            <div class="row">
+                <div class="col-12 mx-auto text-center py-2">
+                    <img class="img-fluid" src="mof_files/logo-lg-DF.png" alt="logo">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12 mx-auto p-0 pb-2 rounded">
+                    
+
+
+
+
+
+
+
+<div id="charpagedetails" class="card-columns mx-auto">
+
+        <div class="card">
+            <div class="card-header">
+                <h1>Mof                 </h1>
+            </div>
+            <div class="card-body">
+                    <label>Dragon Amulet Owner</label><br>
+
+                    <label>Master Doom Knight</label><br>
+
+                    <label>Dragon:</label> <span>Runescape (Ice Dragon)</span><br>
+                <label>Level:</label> 90<br>
+                <label>Gold:</label> 149227301<br>
+                <label>Last Played:</label> Friday, December 8, 2023<br>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4>Inventory</h4>
+            </div>
+            <div class="card-body">
+                    <span class="coins">Nick's Toasty Cape VIII</span><br>
+                    <span class="amulet">Defender's Dragon Ring XXXII</span><br>
+                    <span class="amulet">Ancient DragonLord Helm III</span><br>
+                    <span class="amulet">Defender's Dragon Necklace XXXV</span><br>
+                    <span class="coins">Elemental Unity Defender XV</span><br>
+                    <span class="amulet">Ogorek's Treasure</span><br>
+                    <span class="coins">Frostscythe III</span><br>
+                    <span class="artifact">Draconic Glowtooth</span><br>
+                    <span class="coins">Chronomancer Armor</span><br>
+                    <span class="amulet">DoomKnight Variant One</span><br>
+                    <span class="coins">Reforged Archivist</span><br>
+                    <span class="coins">Reforged ShadowWalker of Time</span><br>
+                    <span class="coins">Atealan Providence</span><br>
+                    <span class="coins">Chaosweaver's Cloak III</span><br>
+                    <span class="coins">DragonKnight Cape</span><br>
+                    <span class="coins">Elpis</span><br>
+                    <span class="amulet">Lagohmcraft Protector (Gold) VI</span><br>
+                    <span class="coins">Reforged ShadowWalker's Trail</span><br>
+                    <span class="coins">Reforged Wings of Time</span><br>
+                    <span class="coins">Retroclear Soulcloak</span><br>
+                    <span class="coins">Retroclear Soulcloak (CC)</span><br>
+                    <span class="coins">Summer's Shade</span><br>
+                    <span class="amulet">The Hidebehind VIII</span><br>
+                    <span class="coins">Wings of the Unraveler III</span><br>
+                    <span class="amulet">Akaz's Ampoule Ring IX</span><br>
+                    <span class="coins">Dreamglass Ring IX</span><br>
+                    <span class="amulet">Relic DeathKnight Circlet</span><br>
+                    <span class="amulet">Soulforged Ring (Blue)</span><br>
+                    <span class="amulet">UWE Championship Ring V</span><br>
+                    <span class="coins">Chaosweaver's Hood III</span><br>
+                    <span class="coins">Cute Chickencow Hat</span><br>
+                    <span class="coins">Distorted Doom Visage III</span><br>
+                    <span class="coins">DragonKnight Helm</span><br>
+                    <span class="coins">Drop Bear Hat IX</span><br>
+                    <span class="coins">Helm of Old Aulore</span><br>
+                    <span class="coins">Reforged Crown of Time</span><br>
+                    <span class="coins">Reforged ShadowWalker's Mantle</span><br>
+                    <span class="coins">Retroclear Aventail</span><br>
+                    <span class="coins">Retroclear Aventail (CC)</span><br>
+                    <span class="coins">ShadowWalker's Visage IV</span><br>
+                    <span class="amulet">Tytanvisage Helm (Gold) VII</span><br>
+                    <span class="coins">Vilmor's Helm III</span><br>
+                    <span class="coins">Shattered Amulet VII</span><br>
+                    <span class="gold">Slimy Necklace</span><br>
+                    <span class="gold">Defender's Medal (x112)</span><br>
+                    <span class="amulet">Defender Cannon Mk. IV</span><br>
+                    <span class="amulet">Seven "Lucky" Wishbones</span><br>
+                    <span class="amulet">A Void-ance Belt</span><br>
+                    <span class="amulet">Defender's Dragon Belt XXIII</span><br>
+                    <span class="coins">Mage's Challenger Belt V</span><br>
+                    <span class="coins">Warrior's Challenger Belt V</span><br>
+                    <span class="amulet">Ancient Dragon Amulet Scythe of the Elements</span><br>
+                    <span class="coins">Antithesis Edge IX</span><br>
+                    <span class="coins">Bone Caster's Staff</span><br>
+                    <span class="coins">Bone Caster’s Staff</span><br>
+                    <span class="coins">Commemorative DragonCoin</span><br>
+                    <span class="coins">Conflux Seeker</span><br>
+                    <span class="coins">Draconic Dimshadow IX</span><br>
+                    <span class="amulet">Dragon Amulet Cleaver of the Elements IX</span><br>
+                    <span class="coins">DragonCoin</span><br>
+                    <span class="coins">DragonKnight Blade</span><br>
+                    <span class="amulet">Elite Wand of the Sunken Rose III</span><br>
+                    <span class="coins">Exalted Apotheosis</span><br>
+                    <span class="amulet">Ice Scythe</span><br>
+                    <span class="amulet">Ink Spire III</span><br>
+                    <span class="coins">Lucky Hammer</span><br>
+                    <span class="coins">Reforged Archivist's Focus</span><br>
+                    <span class="coins">Reforged Glaive of Meanwhile</span><br>
+                    <span class="coins">Reforged ShadowWalker's Chakram</span><br>
+                    <span class="coins">Refreshing Cleaver</span><br>
+                    <span class="coins">Refreshing Pole</span><br>
+                    <span class="coins">Refreshing Stinger</span><br>
+                    <span class="coins">Retroclear Translucence</span><br>
+                    <span class="coins">Retroclear Translucence (CC)</span><br>
+                    <span class="amulet">SoulForged Scythe</span><br>
+                    <span class="coins">Stormrider’s Dagger</span><br>
+                    <span class="amulet">The Quadstaff III</span><br>
+                    <span class="gold">The Scranton Branch</span><br>
+                    <span class="amulet">Verraad III</span><br>
+                    <span class="coins">Vile Infused Rose Spear IX</span><br>
+                    <span class="coins">Warlic's Gift III</span><br>
+                    <span class="artifact">Corrupted Doom Cassette</span><br>
+                    <span class="artifact">Epocharina</span><br>
+                    <span class="artifact">Eternal Locket</span><br>
+                    <span class="coins">Legion Bracer</span><br>
+                    <span class="artifact">The Eraglass</span><br>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4>Bank Items</h4>
+            </div>
+            <div class="card-body">
+                    <span class="amulet">20-Watt Brightbulb</span><br>
+                    <span class="amulet">Ace of Clubs</span><br>
+                    <span class="amulet">Ace of Diamonds</span><br>
+                    <span class="amulet">Ace of Hearts</span><br>
+                    <span class="amulet">Ace of Spades</span><br>
+                    <span class="amulet">Ahab's Antique Hooks</span><br>
+                    <span class="gold">Ahab's Rusty Harpoon</span><br>
+                    <span class="amulet">Amaranthine Poncho</span><br>
+                    <span class="coins">Ancient Exosuit</span><br>
+                    <span class="amulet">Ancient Ninja Terrapin</span><br>
+                    <span class="gold">Angler</span><br>
+                    <span class="coins">Antithesis Point IX</span><br>
+                    <span class="coins">Antithesis Staff IX</span><br>
+                    <span class="coins">Apsaydaaun Bubble Mask</span><br>
+                    <span class="gold">Apsaydaaun Harvester III</span><br>
+                    <span class="coins">Archivist</span><br>
+                    <span class="amulet">Arena Fighter Dagger</span><br>
+                    <span class="amulet">Arena Fighter Staff</span><br>
+                    <span class="amulet">Arena Fighter Sword</span><br>
+                    <span class="coins">Ascended ChickenCow Armor</span><br>
+                    <span class="coins">Ascended Cover</span><br>
+                    <span class="coins">Ascended Spear </span><br>
+                    <span class="coins">Ascended Wings</span><br>
+                    <span class="amulet">Ashitan Shari Avi</span><br>
+                    <span class="coins">Aspenvale Academy Uniform</span><br>
+                    <span class="coins">Atrea Dream Helm IX</span><br>
+                    <span class="amulet">Atrea Dream Rod VI</span><br>
+                    <span class="coins">Atrea Dream Wings VIII</span><br>
+                    <span class="amulet">Aubergine Helm</span><br>
+                    <span class="coins">Augahim's Visage</span><br>
+                    <span class="coins">Aurite Blades IX</span><br>
+                    <span class="coins">Aurite Claymore IX</span><br>
+                    <span class="coins">Aurite Staff IX</span><br>
+                    <span class="amulet">Aurora</span><br>
+                    <span class="amulet">Aurum Blade</span><br>
+                    <span class="coins">Autumn's Cull IX</span><br>
+                    <span class="coins">Autumn's Grace IX</span><br>
+                    <span class="coins">Avatar of Time</span><br>
+                    <span class="coins">Avatar of Time</span><br>
+                    <span class="amulet">Azaveyran Farewell III</span><br>
+                    <span class="coins">Baby Chimera</span><br>
+                    <span class="coins">Baby Kraken VI</span><br>
+                    <span class="coins">Baby Twilly Mask</span><br>
+                    <span class="amulet">Bacon Storm</span><br>
+                    <span class="artifact">Baltael's Aventail (END/WIS) II</span><br>
+                    <span class="artifact">Baltael's Aventail (INT) II</span><br>
+                    <span class="artifact">Baltael's Aventail (STR) II</span><br>
+                    <span class="coins">Baron Cat</span><br>
+                    <span class="coins">Baron Kitten</span><br>
+                    <span class="amulet">Battlespire Brawler Dagger</span><br>
+                    <span class="amulet">Battlespire Brawler Staff</span><br>
+                    <span class="amulet">Battlespire Brawler Sword</span><br>
+                    <span class="amulet">Battlespire Novice Dagger</span><br>
+                    <span class="amulet">Battlespire Novice Staff</span><br>
+                    <span class="amulet">Battlespire Novice Sword</span><br>
+                    <span class="amulet">Beryl Cowl</span><br>
+                    <span class="amulet">Bit-O-Wax Helm</span><br>
+                    <span class="amulet">Black Cowboy Hat</span><br>
+                    <span class="amulet">Blade of Awe</span><br>
+                    <span class="gold">Blade of Destiny</span><br>
+                    <span class="gold">Blade of Forgiveness</span><br>
+                    <span class="gold">Blade of Glory</span><br>
+                    <span class="amulet">Blazing Blade of the Primal Fire</span><br>
+                    <span class="coins">Blessing of Kyanos IX</span><br>
+                    <span class="amulet">Blessing of the Northern Wind</span><br>
+                    <span class="amulet">Blizzard's Breath</span><br>
+                    <span class="coins">Bloodfarer Cape IX</span><br>
+                    <span class="coins">Bloodfarer Visage IX</span><br>
+                    <span class="coins">Blue Dahlia Cloak VIII</span><br>
+                    <span class="coins">Blue Dahlia Cowl VIII</span><br>
+                    <span class="coins">Blue Dahlia Reaper VIII</span><br>
+                    <span class="amulet">Bluelight Special</span><br>
+                    <span class="amulet">Bluelight Special</span><br>
+                    <span class="amulet">BOOM-Voice Brew</span><br>
+                    <span class="coins">Bound Terror Mask</span><br>
+                    <span class="coins">Bounty Hunter Mask</span><br>
+                    <span class="amulet">Boxhat IX</span><br>
+                    <span class="coins">Brand of Emryhs VIII</span><br>
+                    <span class="gold">Braughlmurk Binding</span><br>
+                    <span class="coins">BraveSirRobin Cat</span><br>
+                    <span class="coins">BraveSirRobin Kitten</span><br>
+                    <span class="amulet">BraveSirRobins Fearless Helm</span><br>
+                    <span class="coins">Braydenball</span><br>
+                    <span class="coins">Braytes San Mask</span><br>
+                    <span class="amulet">Brilliant Bloodstone Ring</span><br>
+                    <span class="gold">Broken Blade</span><br>
+                    <span class="amulet">Broken Experimental Visage</span><br>
+                    <span class="gold">Broken Hilt</span><br>
+                    <span class="coins">Broken Soulclaw</span><br>
+                    <span class="gold">Bronze Ninja Token (x2346)</span><br>
+                    <span class="amulet">Brrrrzerker blade</span><br>
+                    <span class="coins">Bullseye Spear</span><br>
+                    <span class="coins">Caitiff's Notes</span><br>
+                    <span class="gold">Candy Cane</span><br>
+                    <span class="amulet">Candybucket Mask</span><br>
+                    <span class="coins">Carved Dragon Scale V</span><br>
+                    <span class="amulet">Celestia's Blade IV</span><br>
+                    <span class="amulet">Celestia's Staff IV</span><br>
+                    <span class="amulet">Celestia's Thorn IV</span><br>
+                    <span class="coins">Chains of Augahim</span><br>
+                    <span class="amulet">Chainsaw of the Black Rogue</span><br>
+                    <span class="amulet">Chainsaw of the Red Rogue</span><br>
+                    <span class="amulet">Chainsaw Sword</span><br>
+                    <span class="coins">Chaos Sentry Cape VI</span><br>
+                    <span class="coins">Chaosweaver Armor</span><br>
+                    <span class="amulet">Chi Blast</span><br>
+                    <span class="coins">Chibi Envy</span><br>
+                    <span class="coins">Chibi Gluttony</span><br>
+                    <span class="coins">Chibi Greed</span><br>
+                    <span class="coins">Chibi Lust</span><br>
+                    <span class="coins">Chibi Pandora (C)</span><br>
+                    <span class="coins">Chibi Pandora (P)</span><br>
+                    <span class="coins">Chibi Sloth</span><br>
+                    <span class="coins">Chibi Wrath</span><br>
+                    <span class="amulet">Chompers the Piranha</span><br>
+                    <span class="coins">Chronoblade</span><br>
+                    <span class="coins">Chronocape</span><br>
+                    <span class="coins">Chronocorrupter Edge</span><br>
+                    <span class="coins">Chronocorruptor</span><br>
+                    <span class="amulet">Chronos Cross III</span><br>
+                    <span class="coins">Chronovisage</span><br>
+                    <span class="coins">ChronoZ</span><br>
+                    <span class="coins">ChronoZ Visor Version M.0</span><br>
+                    <span class="amulet">Circle of Nature</span><br>
+                    <span class="amulet">Circuit Slicer III</span><br>
+                    <span class="amulet">Classic Morningstar</span><br>
+                    <span class="coins">Claw of the Enigmatic Star</span><br>
+                    <span class="coins">Cloak of Change</span><br>
+                    <span class="coins">Cloak of Hyonix</span><br>
+                    <span class="coins">Cloak of Hyonix (Dragonsoul)</span><br>
+                    <span class="coins">Cloak of The Tulip IX</span><br>
+                    <span class="artifact">Cloak Scrap</span><br>
+                    <span class="amulet">Clockwork Dirk</span><br>
+                    <span class="gold">Clump of Wolf Fur</span><br>
+                    <span class="amulet">Cold Fright</span><br>
+                    <span class="amulet">Commemorative Birthday Dagger</span><br>
+                    <span class="amulet">Commemorative Birthday Dagger II</span><br>
+                    <span class="amulet">Commemorative Birthday Dagger III</span><br>
+                    <span class="amulet">Commemorative Birthday Dagger IV</span><br>
+                    <span class="amulet">Commemorative Birthday Dagger V</span><br>
+                    <span class="amulet">Commemorative Birthday Dagger VI</span><br>
+                    <span class="amulet">Commemorative Birthday Dagger VII</span><br>
+                    <span class="amulet">Commemorative Birthday Daggers IX</span><br>
+                    <span class="amulet">Commemorative Birthday Daggers VIII</span><br>
+                    <span class="amulet">Commemorative Birthday Daggers X</span><br>
+                    <span class="amulet">Commemorative Birthday Daggers XI</span><br>
+                    <span class="amulet">Commemorative Birthday Daggers XII</span><br>
+                    <span class="amulet">Commemorative Birthday Helm</span><br>
+                    <span class="amulet">Commemorative Birthday Helm II</span><br>
+                    <span class="amulet">Commemorative Birthday Helm III</span><br>
+                    <span class="amulet">Commemorative Birthday Helm IV</span><br>
+                    <span class="amulet">Commemorative Birthday Helm V</span><br>
+                    <span class="amulet">Commemorative Birthday Helm VI</span><br>
+                    <span class="amulet">Commemorative Birthday Helm VII</span><br>
+                    <span class="amulet">Commemorative Birthday Staff</span><br>
+                    <span class="amulet">Commemorative Birthday Staff II</span><br>
+                    <span class="amulet">Commemorative Birthday Staff III</span><br>
+                    <span class="amulet">Commemorative Birthday Staff IV</span><br>
+                    <span class="amulet">Commemorative Birthday Staff IX</span><br>
+                    <span class="amulet">Commemorative Birthday Staff V</span><br>
+                    <span class="amulet">Commemorative Birthday Staff VI</span><br>
+                    <span class="amulet">Commemorative Birthday Staff VII</span><br>
+                    <span class="amulet">Commemorative Birthday Staff VIII</span><br>
+                    <span class="amulet">Commemorative Birthday Staff X</span><br>
+                    <span class="amulet">Commemorative Birthday Staff XI</span><br>
+                    <span class="amulet">Commemorative Birthday Staff XII</span><br>
+                    <span class="amulet">Commemorative Birthday Sword</span><br>
+                    <span class="amulet">Commemorative Birthday Sword II</span><br>
+                    <span class="amulet">Commemorative Birthday Sword III</span><br>
+                    <span class="amulet">Commemorative Birthday Sword IV</span><br>
+                    <span class="amulet">Commemorative Birthday Sword IX</span><br>
+                    <span class="amulet">Commemorative Birthday Sword V</span><br>
+                    <span class="amulet">Commemorative Birthday Sword VI</span><br>
+                    <span class="amulet">Commemorative Birthday Sword VII</span><br>
+                    <span class="amulet">Commemorative Birthday Sword VIII</span><br>
+                    <span class="amulet">Commemorative Birthday Sword X</span><br>
+                    <span class="amulet">Commemorative Birthday Sword XI</span><br>
+                    <span class="amulet">Commemorative Birthday Sword XII</span><br>
+                    <span class="amulet">Conductor Rod III</span><br>
+                    <span class="amulet">Conehead Mask</span><br>
+                    <span class="amulet">Consuming Adept Catalyst</span><br>
+                    <span class="amulet">Contamination</span><br>
+                    <span class="amulet">Contender Dagger</span><br>
+                    <span class="amulet">Contender Staff</span><br>
+                    <span class="amulet">Contender Sword</span><br>
+                    <span class="coins">CorDemi Battledrone</span><br>
+                    <span class="amulet">Corruption</span><br>
+                    <span class="amulet">Cowboy Hat</span><br>
+                    <span class="coins">Creatioux Claw III</span><br>
+                    <span class="amulet">Creepy Orange Cloak</span><br>
+                    <span class="amulet">Crimson Hero's Cape</span><br>
+                    <span class="amulet">Crymson Tear III</span><br>
+                    <span class="coins">Cuddles</span><br>
+                    <span class="coins">Cumulonimbus Caller</span><br>
+                    <span class="amulet">Cysero's Green Cape</span><br>
+                    <span class="coins">Cysero's Hamsterclysm</span><br>
+                    <span class="coins">Daatael's Wings</span><br>
+                    <span class="coins">Dage's Desolation</span><br>
+                    <span class="coins">Dagger of Unity IX</span><br>
+                    <span class="amulet">Damask Belt of the Emperor</span><br>
+                    <span class="coins">Dark Enchanted Esoterica</span><br>
+                    <span class="amulet">Darth Laser</span><br>
+                    <span class="amulet">Death's Cowl</span><br>
+                    <span class="gold">Death's Dour Mantle</span><br>
+                    <span class="amulet">Death's Dragon Cowl</span><br>
+                    <span class="amulet">Death's Scythe</span><br>
+                    <span class="coins">Deatharrows Cat</span><br>
+                    <span class="amulet">Deatharrows Courageous Helm</span><br>
+                    <span class="coins">Deatharrows Kitten</span><br>
+                    <span class="coins">Debris Appendages</span><br>
+                    <span class="coins">Decadere Youngling</span><br>
+                    <span class="amulet">DeepWater Ring</span><br>
+                    <span class="amulet">Defender Cannon Mk. I</span><br>
+                    <span class="amulet">Defender Cannon Mk. II</span><br>
+                    <span class="amulet">Defender Cannon Mk. III</span><br>
+                    <span class="amulet">Demento's Axe</span><br>
+                    <span class="amulet">Demento's Brilliant Axe</span><br>
+                    <span class="amulet">Demento's Brilliant Dagger</span><br>
+                    <span class="amulet">Demento's Brilliant Staff</span><br>
+                    <span class="amulet">Demento's Dagger</span><br>
+                    <span class="amulet">Demento's Gleaming Dagger</span><br>
+                    <span class="amulet">Demento's Gleaming Staff</span><br>
+                    <span class="coins">Demnra's Deception IX</span><br>
+                    <span class="amulet">Desert Camouflage Wrap</span><br>
+                    <span class="amulet">Desert Concealment Wrap</span><br>
+                    <span class="amulet">Dessert Mask</span><br>
+                    <span class="amulet">DewDancer's Wings</span><br>
+                    <span class="amulet">Diamond Chakram</span><br>
+                    <span class="amulet">Diamond Ring of the Emperor</span><br>
+                    <span class="coins">Dimensional Transphaser</span><br>
+                    <span class="amulet">Dire ShadowReaper of Doom</span><br>
+                    <span class="amulet">Dire ShadowReaper of Doom</span><br>
+                    <span class="amulet">Dire ShadowReaper of Doom</span><br>
+                    <span class="amulet">Dire ShadowReaper of Doom</span><br>
+                    <span class="amulet">Dire ShadowReaper of Doom</span><br>
+                    <span class="coins">Doom Blade of Sorrows</span><br>
+                    <span class="amulet">Doom Dragon Scythe</span><br>
+                    <span class="coins">Doom Figmini</span><br>
+                    <span class="amulet">Doombunny Mask</span><br>
+                    <span class="amulet">Doomed Dragon Amulet Scythe of Elementals</span><br>
+                    <span class="amulet">Doomed Dragon Amulet Scythe of the Elements IX</span><br>
+                    <span class="coins">Doomed Longsword</span><br>
+                    <span class="coins">Doomed Poleaxe</span><br>
+                    <span class="amulet">DoomKnight Armor</span><br>
+                    <span class="amulet">DoomKnight Cloak</span><br>
+                    <span class="amulet">DoomKnight Helm</span><br>
+                    <span class="gold">Doomwood Badge (TGH)</span><br>
+                    <span class="coins">Draconic Brightspark IX</span><br>
+                    <span class="amulet">Dragon Blade</span><br>
+                    <span class="amulet">Dragon CC Ninja Mask</span><br>
+                    <span class="coins">Dragon Clan Scythe</span><br>
+                    <span class="coins">Dragon Control Sword</span><br>
+                    <span class="amulet">Dragon Gray Ninja Mask</span><br>
+                    <span class="amulet">Dragon Orbit V</span><br>
+                    <span class="amulet">Dragon's Bulwark</span><br>
+                    <span class="coins">Dragon's Eternal Flame VII</span><br>
+                    <span class="coins">Dragon's Luminous Hood VII</span><br>
+                    <span class="amulet">Dragon's Patience</span><br>
+                    <span class="coins">Dragon's Plume VI</span><br>
+                    <span class="amulet">Dragon's Rage</span><br>
+                    <span class="gold">Dragon's Wing IV</span><br>
+                    <span class="coins">Dragon's Wing VI</span><br>
+                    <span class="amulet">Dragon's Wrath</span><br>
+                    <span class="amulet">DragonCrest</span><br>
+                    <span class="amulet">DragonLord Captain's Helm IV</span><br>
+                    <span class="coins">DragonLord Vath Helm</span><br>
+                    <span class="coins">DragonLord Vath Sword</span><br>
+                    <span class="coins">DragonLord Vath Wings</span><br>
+                    <span class="amulet">Dragonlord's Loss</span><br>
+                    <span class="amulet">Dragonlord's Prize</span><br>
+                    <span class="amulet">DragonLord's Travel Cloak IV</span><br>
+                    <span class="amulet">DragonLord's Wings</span><br>
+                    <span class="coins">Dragonoid Saber V</span><br>
+                    <span class="coins">Dragonoid Staff V</span><br>
+                    <span class="amulet">Dragons Ex's Calibur VII</span><br>
+                    <span class="amulet">Dragontooth Blade</span><br>
+                    <span class="amulet">Dragontooth Dagger</span><br>
+                    <span class="amulet">Dragontooth Staff</span><br>
+                    <span class="amulet">Dravalkyrie VIII</span><br>
+                    <span class="coins">Dravir Warhelm VIII</span><br>
+                    <span class="amulet">Dravir Wings VII</span><br>
+                    <span class="coins">Dreadwyrm Katana V</span><br>
+                    <span class="gold">Dream Whisper</span><br>
+                    <span class="coins">Dreaming Togslayer Armor</span><br>
+                    <span class="coins">DRGN-C4P4C170R IX</span><br>
+                    <span class="coins">DRGN-C74W IX</span><br>
+                    <span class="coins">DRGN-V1Z0R VIII</span><br>
+                    <span class="amulet">Dual Nature</span><br>
+                    <span class="amulet">Duke's Cerulean Cape</span><br>
+                    <span class="coins">Earthvessel Dagger IX</span><br>
+                    <span class="coins">Earthvessel Harpoon IX</span><br>
+                    <span class="coins">Earthvessel Rapier IX</span><br>
+                    <span class="amulet">Electric Dragon Staff</span><br>
+                    <span class="amulet">Elite Dagger</span><br>
+                    <span class="coins">Elite Mechpilot Helmet</span><br>
+                    <span class="amulet">Elite Staff</span><br>
+                    <span class="amulet">Elite Sword</span><br>
+                    <span class="coins">Emerald Scythe of Purity</span><br>
+                    <span class="coins">Empty Warrior Mask</span><br>
+                    <span class="coins">Enigmato Mask</span><br>
+                    <span class="coins">enTropy</span><br>
+                    <span class="coins">Epoch</span><br>
+                    <span class="coins">Escherion Cape</span><br>
+                    <span class="coins">Escherion Hood</span><br>
+                    <span class="coins">Escherion Mask</span><br>
+                    <span class="coins">Escherion's Staff</span><br>
+                    <span class="amulet">Evil Pumpkin Head</span><br>
+                    <span class="coins">Exalted Biomass (x4)</span><br>
+                    <span class="coins">Exalted Cloth (x2)</span><br>
+                    <span class="coins">Exalted Forgemetal (x2)</span><br>
+                    <span class="coins">Exalted Spear</span><br>
+                    <span class="coins">Extra Fluffy Tog III</span><br>
+                    <span class="amulet">Extra Spooky Orange Cloak</span><br>
+                    <span class="amulet">Extremely Spooky Orange Cloak</span><br>
+                    <span class="amulet">Eye Scream</span><br>
+                    <span class="coins">Eyes of the Seer</span><br>
+                    <span class="coins">Ezrajal Mask</span><br>
+                    <span class="coins">Facet of Hyonix IX</span><br>
+                    <span class="amulet">Fading Ume</span><br>
+                    <span class="amulet">Faerie Floss Helm</span><br>
+                    <span class="amulet">Fallen Arbitrator VIII</span><br>
+                    <span class="coins">Fancy Witch's Hat VI</span><br>
+                    <span class="coins">Far Darrig IV</span><br>
+                    <span class="amulet">Fathom's Deep</span><br>
+                    <span class="coins">Feathers of Pride</span><br>
+                    <span class="coins">Feathers of Pride A</span><br>
+                    <span class="coins">Feathers of Pride B</span><br>
+                    <span class="coins">Feathers of Pride L</span><br>
+                    <span class="coins">Feathers of Pride NB</span><br>
+                    <span class="coins">Feathers of Pride P</span><br>
+                    <span class="coins">Feathers of Pride T</span><br>
+                    <span class="coins">Festive Gift Opener</span><br>
+                    <span class="amulet">Fierce Baron Cat</span><br>
+                    <span class="amulet">Fierce BraveSirRobin Cat</span><br>
+                    <span class="amulet">Fierce Deatharrows Cat</span><br>
+                    <span class="amulet">Fierce DragonLord Helm</span><br>
+                    <span class="amulet">Fierce Josh Cat</span><br>
+                    <span class="amulet">Fierce LFAL Cat</span><br>
+                    <span class="amulet">Fierce Prius Cat</span><br>
+                    <span class="coins">Fierce Prius Cat Mask</span><br>
+                    <span class="amulet">Fire Soul I</span><br>
+                    <span class="amulet">Fire Soul II</span><br>
+                    <span class="amulet">Fire Soul III</span><br>
+                    <span class="amulet">Fire Soul IV</span><br>
+                    <span class="amulet">Fire Soul V</span><br>
+                    <span class="amulet">Fire Soul VI</span><br>
+                    <span class="amulet">Fire Soul VII</span><br>
+                    <span class="amulet">Firefly Staff</span><br>
+                    <span class="gold">Firmament Stability Core</span><br>
+                    <span class="gold">Firmament Stability Core</span><br>
+                    <span class="amulet">FishyFish</span><br>
+                    <span class="coins">Flamestop</span><br>
+                    <span class="amulet">Flamewrath Phoenix Wings</span><br>
+                    <span class="coins">Flight of the Engineer</span><br>
+                    <span class="amulet">Flightless Dagger</span><br>
+                    <span class="coins">Forced Reflection VII</span><br>
+                    <span class="amulet">Frankenblade</span><br>
+                    <span class="amulet">Frankenblade II</span><br>
+                    <span class="amulet">Frankenblade III</span><br>
+                    <span class="amulet">Frankenblade IV</span><br>
+                    <span class="amulet">Frankenblade V</span><br>
+                    <span class="amulet">Frankenblade VI</span><br>
+                    <span class="amulet">Frankenblade VII</span><br>
+                    <span class="amulet">FrankenEyes Staff</span><br>
+                    <span class="amulet">FrankenEyes Staff II</span><br>
+                    <span class="amulet">FrankenEyes Staff III</span><br>
+                    <span class="amulet">FrankenEyes Staff IV</span><br>
+                    <span class="amulet">FrankenEyes Staff V</span><br>
+                    <span class="amulet">FrankenEyes Staff VI</span><br>
+                    <span class="amulet">FrankenEyes Staff VII</span><br>
+                    <span class="amulet">FrankenFinger</span><br>
+                    <span class="amulet">FrankenFinger II</span><br>
+                    <span class="amulet">FrankenFinger III</span><br>
+                    <span class="amulet">FrankenFinger IV</span><br>
+                    <span class="amulet">FrankenFinger V</span><br>
+                    <span class="amulet">FrankenFinger VI</span><br>
+                    <span class="amulet">FrankenFinger VII</span><br>
+                    <span class="amulet">Freezing Dragon Hat</span><br>
+                    <span class="amulet">Freezing Point</span><br>
+                    <span class="coins">Frost Moglin Slayer Blade</span><br>
+                    <span class="coins">Frost Moglin Slayer Staff</span><br>
+                    <span class="amulet">Frosted Tips</span><br>
+                    <span class="coins">Frostreaver</span><br>
+                    <span class="amulet">Frosty Dragon Hat</span><br>
+                    <span class="amulet">Frozen Claymore</span><br>
+                    <span class="amulet">Frozen Spirit Dagger IX</span><br>
+                    <span class="amulet">Frozen Spirit Staff IX</span><br>
+                    <span class="amulet">Frozen Spirit Sword IX</span><br>
+                    <span class="amulet">Frozen Starfire</span><br>
+                    <span class="amulet">Full Silver</span><br>
+                    <span class="coins">Furious Flame Claw Scythe</span><br>
+                    <span class="coins">Furious Gale Scythe</span><br>
+                    <span class="gold">Galaxy Cloak III</span><br>
+                    <span class="amulet">Gargoyle Helm</span><br>
+                    <span class="amulet">Garnet Cowl</span><br>
+                    <span class="amulet">Gasher</span><br>
+                    <span class="coins">Gean Canach IV</span><br>
+                    <span class="amulet">Gearsword</span><br>
+                    <span class="amulet">Gedaur</span><br>
+                    <span class="coins">Generous Mask</span><br>
+                    <span class="amulet">Ghastly ShadowReaper of Doom</span><br>
+                    <span class="amulet">Ghostly Green Cape</span><br>
+                    <span class="amulet">Glacial Dragon Helm</span><br>
+                    <span class="coins">Globus Lux</span><br>
+                    <span class="coins">Glow of Emryhs VIII</span><br>
+                    <span class="coins">Glowing Starlight Staff</span><br>
+                    <span class="amulet">Glowing Tree Scythe</span><br>
+                    <span class="amulet">Gnarly Guitar of Doom IV</span><br>
+                    <span class="coins">Gnomish Personal Steamtank Mk II</span><br>
+                    <span class="gold">Gold Ninja Token (x4767)</span><br>
+                    <span class="amulet">Golden Arcs</span><br>
+                    <span class="amulet">Golden Arctic IX</span><br>
+                    <span class="amulet">Golden Arctic VIII</span><br>
+                    <span class="amulet">Golden Arctic X</span><br>
+                    <span class="amulet">Golden Arctic XI</span><br>
+                    <span class="coins">Golden Chickcalf VII</span><br>
+                    <span class="amulet">Golden Crustacea</span><br>
+                    <span class="amulet">Golden Death IX</span><br>
+                    <span class="amulet">Golden Death VIII</span><br>
+                    <span class="amulet">Golden Death X</span><br>
+                    <span class="amulet">Golden Death XI</span><br>
+                    <span class="amulet">Golden Monolith IX</span><br>
+                    <span class="amulet">Golden Monolith VIII</span><br>
+                    <span class="amulet">Golden Monolith X</span><br>
+                    <span class="amulet">Golden Monolith XI</span><br>
+                    <span class="amulet">Golden Rage IX</span><br>
+                    <span class="amulet">Golden Rage VIII</span><br>
+                    <span class="amulet">Golden Rage X</span><br>
+                    <span class="amulet">Golden Rage XI</span><br>
+                    <span class="coins">Goldfish Knight VII</span><br>
+                    <span class="amulet">Gooney Helm</span><br>
+                    <span class="coins">Goose Mask</span><br>
+                    <span class="amulet">Grand Master Dagger</span><br>
+                    <span class="amulet">Grand Master Staff</span><br>
+                    <span class="amulet">Grand Master Staff</span><br>
+                    <span class="amulet">Grand Master Sword</span><br>
+                    <span class="amulet">Great White Charko</span><br>
+                    <span class="amulet">Greater Dragontooth Dagger</span><br>
+                    <span class="amulet">Greater Dragontooth Staff</span><br>
+                    <span class="amulet">Greater Dragontooth Sword</span><br>
+                    <span class="amulet">Greedling Pet</span><br>
+                    <span class="coins">Groundhog Wings IV</span><br>
+                    <span class="coins">Grove Tender Blade</span><br>
+                    <span class="coins">Grove Tender Twigs</span><br>
+                    <span class="coins">Grove Tender Visage</span><br>
+                    <span class="coins">Hacked Magi Drone</span><br>
+                    <span class="amulet">Hail Warning</span><br>
+                    <span class="coins">Hanzamune Dragon Koi Blade</span><br>
+                    <span class="amulet">Harmonized Cowbell 1001</span><br>
+                    <span class="amulet">Harvest Reaper IV</span><br>
+                    <span class="amulet">Harvest Reaper V</span><br>
+                    <span class="amulet">Harvest Reaper VI</span><br>
+                    <span class="amulet">Harvest Reaper VII</span><br>
+                    <span class="gold">Heart Scale</span><br>
+                    <span class="coins">Heart's Whisper IX</span><br>
+                    <span class="coins">Heartseeker's Helm IX</span><br>
+                    <span class="coins">Helm of Autumn's Call IX</span><br>
+                    <span class="coins">Helm of Hyonix</span><br>
+                    <span class="coins">Helm of Hyonix (Dragonsoul)</span><br>
+                    <span class="amulet">Helper's Mingling Cap</span><br>
+                    <span class="amulet">Helper's Tingling Cap</span><br>
+                    <span class="amulet">Hematite Hood</span><br>
+                    <span class="gold">Hero's Brick</span><br>
+                    <span class="coins">HeroPoint</span><br>
+                    <span class="amulet">High DewDancer's Wings</span><br>
+                    <span class="amulet">High Flightless Dagger</span><br>
+                    <span class="amulet">High Nightweaver's Wings</span><br>
+                    <span class="amulet">High Orbed Axe</span><br>
+                    <span class="amulet">High Orbed Staff</span><br>
+                    <span class="amulet">Hinnos Shari Avi</span><br>
+                    <span class="coins">Hive Ranger's Halberd</span><br>
+                    <span class="coins">Hive Ranger's Helm</span><br>
+                    <span class="coins">Hive Ranger's Wings</span><br>
+                    <span class="amulet">Honda's Legacy</span><br>
+                    <span class="coins">Hooded Greed</span><br>
+                    <span class="coins">Horn of Dolaas</span><br>
+                    <span class="coins">Horn of Hatir</span><br>
+                    <span class="coins">Hourglass of the Dead X</span><br>
+                    <span class="amulet">Hydra's Bane</span><br>
+                    <span class="amulet">Hydra's Curse</span><br>
+                    <span class="amulet">Hydra's Woe</span><br>
+                    <span class="amulet">Ice Elf Chakram</span><br>
+                    <span class="amulet">Ice Elf Knife</span><br>
+                    <span class="amulet">Ice Gem</span><br>
+                    <span class="amulet">Ice Spike Helm</span><br>
+                    <span class="coins">Icebound Axe</span><br>
+                    <span class="coins">Icebound Crown</span><br>
+                    <span class="coins">Icebound Hood</span><br>
+                    <span class="coins">Icebound Revenant</span><br>
+                    <span class="coins">Icebound Wings</span><br>
+                    <span class="amulet">IceScythe</span><br>
+                    <span class="coins">Illumina's Wings</span><br>
+                    <span class="coins">Incandescent Fortune</span><br>
+                    <span class="coins">Inert Mana Gem</span><br>
+                    <span class="gold">Infected Stability Core</span><br>
+                    <span class="coins">Infused Sheathed Rose Blade</span><br>
+                    <span class="amulet">Inlaid Trithril Belt</span><br>
+                    <span class="coins">Intaym Mask</span><br>
+                    <span class="amulet">Irismancer's Staff</span><br>
+                    <span class="coins">Isandel V</span><br>
+                    <span class="gold">Jack O' Boy VIII</span><br>
+                    <span class="amulet">Jacksparrow</span><br>
+                    <span class="coins">Jade Cleaver of the Lone Tree</span><br>
+                    <span class="coins">Jadesoul Tiger Cloak</span><br>
+                    <span class="amulet">Jeweled Seal Ring of Wall</span><br>
+                    <span class="coins">Jolly Eternity Joy</span><br>
+                    <span class="coins">Josh Cat</span><br>
+                    <span class="coins">Josh Kitten</span><br>
+                    <span class="coins">Jova's Wrath</span><br>
+                    <span class="amulet">Kaaros Alleri</span><br>
+                    <span class="amulet">Kaaros Alleri Avi</span><br>
+                    <span class="amulet">Kaaros Garada</span><br>
+                    <span class="amulet">Kaaros Garada Avi</span><br>
+                    <span class="amulet">Kaaros Xera</span><br>
+                    <span class="amulet">Kaaros Xera Avi</span><br>
+                    <span class="amulet">Karot Dagger</span><br>
+                    <span class="coins">Kathool Adept Armor</span><br>
+                    <span class="amulet">Kelplet Beltlet</span><br>
+                    <span class="amulet">Killick's Point</span><br>
+                    <span class="amulet">King Blade of Clubs</span><br>
+                    <span class="amulet">King Blade of Diamonds</span><br>
+                    <span class="amulet">King Blade of Hearts</span><br>
+                    <span class="amulet">King Blade of Spades</span><br>
+                    <span class="amulet">King Dirk of Clubs</span><br>
+                    <span class="amulet">King Dirk of Diamonds</span><br>
+                    <span class="amulet">King Dirk of Hearts</span><br>
+                    <span class="amulet">King Dirk of Spades</span><br>
+                    <span class="coins">King Dragon Blade of Spades</span><br>
+                    <span class="amulet">King Staff of Clubs</span><br>
+                    <span class="amulet">King Staff of Diamonds</span><br>
+                    <span class="amulet">King Staff of Hearts</span><br>
+                    <span class="amulet">King Staff of Spades</span><br>
+                    <span class="coins">Kitsune Mask</span><br>
+                    <span class="coins">Krampy</span><br>
+                    <span class="amulet">Lavish Vampire Cape</span><br>
+                    <span class="coins">Leaf of Flux III</span><br>
+                    <span class="coins">Leanan Sidhe IV</span><br>
+                    <span class="coins">Leechscale Binding VII</span><br>
+                    <span class="coins">Legion Fiend Blade IX</span><br>
+                    <span class="coins">Legion Fiend Spear IX</span><br>
+                    <span class="coins">Legion Slasher IX</span><br>
+                    <span class="coins">Legion Sunderer IX</span><br>
+                    <span class="coins">Leorilla Mane Belt IV</span><br>
+                    <span class="coins">LFAL Cat</span><br>
+                    <span class="coins">LFAL Kitten</span><br>
+                    <span class="amulet">Li'l Inferno V</span><br>
+                    <span class="amulet">Li'l Squall V</span><br>
+                    <span class="amulet">Li'l Typhoon V</span><br>
+                    <span class="amulet">Lich's Blackwyn Axe</span><br>
+                    <span class="amulet">Lich's Blackwyn Daggers</span><br>
+                    <span class="amulet">Lich's Blackwyn Staff</span><br>
+                    <span class="amulet">Light of Destiny</span><br>
+                    <span class="coins">Lightblade Caliburn X</span><br>
+                    <span class="coins">LightGlaive Orden</span><br>
+                    <span class="amulet">Linked Bands of Nature's Bounty</span><br>
+                    <span class="coins">Lockblade IX</span><br>
+                    <span class="coins">Loser's Club IX</span><br>
+                    <span class="coins">Lost Starhelm of Destiny</span><br>
+                    <span class="coins">Lost Starhelm of Doom</span><br>
+                    <span class="coins">Lost Starsword of Destiny</span><br>
+                    <span class="coins">Lost Starsword of Destiny</span><br>
+                    <span class="coins">Lost Starsword of Doom</span><br>
+                    <span class="coins">Lost Starsword of Doom</span><br>
+                    <span class="amulet">Lovely Time Tome X</span><br>
+                    <span class="amulet">Lucky Water Dragon Scythe</span><br>
+                    <span class="amulet">Lucky Water Dragon Staff</span><br>
+                    <span class="coins">Lust Mask</span><br>
+                    <span class="coins">Mace of the North IX</span><br>
+                    <span class="amulet">MagePriest Hood </span><br>
+                    <span class="amulet">Magi Guard Helm III</span><br>
+                    <span class="amulet">Magi Sentinel Helm III</span><br>
+                    <span class="amulet">Magicalllll Frostval Cloak</span><br>
+                    <span class="coins">Mahanaem Mask</span><br>
+                    <span class="coins">Majjical Owl Wings VII</span><br>
+                    <span class="coins">Maker-Touched Zweihander III</span><br>
+                    <span class="gold">Malifact's DOOM</span><br>
+                    <span class="coins">Manabelle Mask</span><br>
+                    <span class="amulet">Manahunter Cloak VIII</span><br>
+                    <span class="coins">Masamune</span><br>
+                    <span class="coins">Master CorDemi Codex</span><br>
+                    <span class="amulet">Master's Hood</span><br>
+                    <span class="coins">Mechanical Ring VII</span><br>
+                    <span class="amulet">Medewwsa's Head</span><br>
+                    <span class="gold">Memory Fragment I</span><br>
+                    <span class="gold">Memory Fragment II</span><br>
+                    <span class="gold">Memory Fragment III</span><br>
+                    <span class="gold">Memory Fragment IV</span><br>
+                    <span class="gold">Memory Fragment V</span><br>
+                    <span class="gold">Memory Fragment VI</span><br>
+                    <span class="gold">Memory Fragment VII</span><br>
+                    <span class="coins">Meowphant's Mettle IV</span><br>
+                    <span class="amulet">Mephitic Dagger</span><br>
+                    <span class="amulet">Miasma</span><br>
+                    <span class="amulet">Midnight Talon</span><br>
+                    <span class="gold">Miniphage</span><br>
+                    <span class="coins">MiniVolt VII</span><br>
+                    <span class="gold">Minor Axe-Blade of Aww</span><br>
+                    <span class="amulet">Mirror Eye Trinket</span><br>
+                    <span class="amulet">Mirrored DragonLord Helm</span><br>
+                    <span class="coins">Moglinberry Masher IX</span><br>
+                    <span class="amulet">Moonridge Assist</span><br>
+                    <span class="coins">Mosscrystal Pendant VI</span><br>
+                    <span class="coins">Mother's Love</span><br>
+                    <span class="amulet">Mottoro Shari Avi</span><br>
+                    <span class="coins">Mr. Nameless Mask</span><br>
+                    <span class="amulet">My Little Pegasus</span><br>
+                    <span class="coins">Mystical Katana</span><br>
+                    <span class="coins">Myx Mask</span><br>
+                    <span class="coins">Nec-snow-mancer's Cowl</span><br>
+                    <span class="coins">Necro Paragon Armor</span><br>
+                    <span class="coins">Necro Paragon Cape IV</span><br>
+                    <span class="coins">Necro Paragon Helm IV</span><br>
+                    <span class="amulet">Necro Paragon Soulblade IV</span><br>
+                    <span class="amulet">Necrotic Sword of Doom</span><br>
+                    <span class="amulet">Neela Paani Blade VI</span><br>
+                    <span class="amulet">Neela Paani Dagger VI</span><br>
+                    <span class="amulet">Neela Paani Staff VI</span><br>
+                    <span class="amulet">Nightweaver's Wings</span><br>
+                    <span class="coins">Nivalis Mask</span><br>
+                    <span class="amulet">Northern Butterfly Wings</span><br>
+                    <span class="amulet">Not-So-Tiny Bubbles</span><br>
+                    <span class="gold">Notha's Fatecaster</span><br>
+                    <span class="gold">Notha's Fatecrusher</span><br>
+                    <span class="gold">Notha's Fatepiercer</span><br>
+                    <span class="coins">Notha's Mechanical Assistant</span><br>
+                    <span class="coins">Notha's Spell III</span><br>
+                    <span class="gold">Nothing</span><br>
+                    <span class="coins">Nova Phoenix's Aspect</span><br>
+                    <span class="coins">Nova Phoenix's Feathers</span><br>
+                    <span class="coins">Nova Phoenix's Lance</span><br>
+                    <span class="amulet">Now-n-Forever Helm</span><br>
+                    <span class="amulet">Noxious Doom Harvester Wings</span><br>
+                    <span class="coins">Obsidian DragonBlade VIII</span><br>
+                    <span class="amulet">Octopieces</span><br>
+                    <span class="coins">On Wings Of Bacon</span><br>
+                    <span class="amulet">Opalescent Cowl</span><br>
+                    <span class="amulet">Orbed Axe</span><br>
+                    <span class="amulet">Orbed Staff</span><br>
+                    <span class="amulet">Ornamented Seal Ring of the Papermancers</span><br>
+                    <span class="gold">Ornate Guardian Blade</span><br>
+                    <span class="amulet">Ornate Vampire Cape</span><br>
+                    <span class="coins">Ostara's Guard IX</span><br>
+                    <span class="coins">Ostara's Verge VIII</span><br>
+                    <span class="coins">Ostromir Mask</span><br>
+                    <span class="amulet">Overclocked Charge</span><br>
+                    <span class="coins">Oversized Undead Fork VIII</span><br>
+                    <span class="coins">Oversized Undead Knife VIII</span><br>
+                    <span class="coins">Oversized Undead Spoon VIII</span><br>
+                    <span class="amulet">Pactogonal Blade</span><br>
+                    <span class="amulet">Pandora's Scythe III</span><br>
+                    <span class="coins">Paper Boat Dagger IX</span><br>
+                    <span class="amulet">Party Tog</span><br>
+                    <span class="amulet">Pearl Rod V</span><br>
+                    <span class="artifact">Peculiar Visor</span><br>
+                    <span class="amulet">Personal Feargeist</span><br>
+                    <span class="coins">Pick of the North IX</span><br>
+                    <span class="amulet">Pillartrope</span><br>
+                    <span class="coins">Pirate's Bane V</span><br>
+                    <span class="amulet">Pirate's Booty</span><br>
+                    <span class="amulet">Pirate's Curse</span><br>
+                    <span class="amulet">Pit Fighter Dagger</span><br>
+                    <span class="amulet">Pit Fighter Staff</span><br>
+                    <span class="amulet">Pit Fighter Sword</span><br>
+                    <span class="amulet">Platinum Morningstar</span><br>
+                    <span class="gold">Platinum Ninja Token (x382)</span><br>
+                    <span class="amulet">Platinum Twistedtooth Bear Claw</span><br>
+                    <span class="amulet">Plushie Artix</span><br>
+                    <span class="coins">Plushie Cysero</span><br>
+                    <span class="coins">Plushie Escherion</span><br>
+                    <span class="coins">Plushie Frostscythe</span><br>
+                    <span class="coins">Plushie Ghost</span><br>
+                    <span class="coins">Plushie Noxus</span><br>
+                    <span class="coins">Plushie Nythera</span><br>
+                    <span class="coins">Plushie Rolith</span><br>
+                    <span class="amulet">Plushie Seppy</span><br>
+                    <span class="coins">Plushie Thyton</span><br>
+                    <span class="amulet">Plushie Tomix</span><br>
+                    <span class="coins">Plushie True Mortal</span><br>
+                    <span class="coins">Plushie Xan</span><br>
+                    <span class="amulet">Post-Adolescent Ninja Terrapin</span><br>
+                    <span class="gold">Present on a Stick</span><br>
+                    <span class="amulet">Pressureblade</span><br>
+                    <span class="amulet">Pressureknife</span><br>
+                    <span class="amulet">Pressurestaff</span><br>
+                    <span class="coins">PrideBox Mask</span><br>
+                    <span class="amulet">Primal Corrupt Essence (x40)</span><br>
+                    <span class="amulet">Prince Eulin Facsimile</span><br>
+                    <span class="amulet">Pristine Blinding Light of Destiny</span><br>
+                    <span class="amulet">Pristine Blinding Light of Destiny</span><br>
+                    <span class="amulet">Pristine Blinding Light of Destiny</span><br>
+                    <span class="amulet">Pristine Blinding Light of Destiny</span><br>
+                    <span class="amulet">Pristine Blinding Light of Destiny</span><br>
+                    <span class="amulet">Pristine Blinding Light of Destiny</span><br>
+                    <span class="amulet">Pristine Dragon Snowman</span><br>
+                    <span class="coins">Prius Cat</span><br>
+                    <span class="coins">Prius Kitten</span><br>
+                    <span class="gold">Proclamation Medal (DW) (x5)</span><br>
+                    <span class="coins">Profane Spineripper</span><br>
+                    <span class="amulet">Professional Dagger</span><br>
+                    <span class="amulet">Professional Staff</span><br>
+                    <span class="amulet">Professional Sword</span><br>
+                    <span class="amulet">Psionic Ratchet III</span><br>
+                    <span class="amulet">Pumpkin Helm</span><br>
+                    <span class="amulet">Pumpkinator</span><br>
+                    <span class="coins">Pure Golden Death XI</span><br>
+                    <span class="amulet">Pure Shard of the Dawn (x2)</span><br>
+                    <span class="amulet">Purple Rain(drop)</span><br>
+                    <span class="amulet">Puzzling Cards</span><br>
+                    <span class="coins">Pyromancer</span><br>
+                    <span class="coins">Radiant Crown of Sek Duat</span><br>
+                    <span class="amulet">Radiant Providence</span><br>
+                    <span class="amulet">Radiant Shimmer</span><br>
+                    <span class="coins">Radiant Wings of Light</span><br>
+                    <span class="amulet">Rainbow Saber VIII</span><br>
+                    <span class="coins">Rainbow's Edge</span><br>
+                    <span class="coins">Rathon - Focus of Change IX</span><br>
+                    <span class="amulet">Really Spooky Orange Cloak</span><br>
+                    <span class="coins">Reflective Polygonal Sphere of Many Lights</span><br>
+                    <span class="coins">Reforged Avatar of Time</span><br>
+                    <span class="coins">Reforged Chronocorruptor</span><br>
+                    <span class="coins">Reforged Chronomancer</span><br>
+                    <span class="coins">Reforged ChronoZ</span><br>
+                    <span class="coins">Reforged TimeKiller</span><br>
+                    <span class="coins">Refraction Pendant VII</span><br>
+                    <span class="amulet">Relic DeathKnight Amulet</span><br>
+                    <span class="amulet">Relic DeathKnight Belt</span><br>
+                    <span class="amulet">Relic DeathKnight Blade</span><br>
+                    <span class="amulet">Relic DeathKnight Cloak</span><br>
+                    <span class="amulet">Relic DeathKnight Helm</span><br>
+                    <span class="coins">Relic of Zeclem</span><br>
+                    <span class="coins">Remthalas Mask</span><br>
+                    <span class="amulet">Revolving Rifleblade</span><br>
+                    <span class="amulet">Rhunatoir</span><br>
+                    <span class="amulet">Righteous Blinding Light of Destiny</span><br>
+                    <span class="amulet">Ring of Light</span><br>
+                    <span class="amulet">Ring of Otherworld III</span><br>
+                    <span class="amulet">Ring of the Earthmover</span><br>
+                    <span class="amulet">Ring of the Ember</span><br>
+                    <span class="coins">Ring of Thorns IX</span><br>
+                    <span class="amulet">Robble</span><br>
+                    <span class="gold">RoboTog</span><br>
+                    <span class="coins">Rogue's Challenger Belt V</span><br>
+                    <span class="amulet">Rose Cloak V</span><br>
+                    <span class="amulet">Rose Legacy Staff XI</span><br>
+                    <span class="amulet">Rose Legacy Sword XI</span><br>
+                    <span class="coins">Rose Pillow VII</span><br>
+                    <span class="amulet">Royal Astravian Catalyst</span><br>
+                    <span class="coins">Ruby Mask</span><br>
+                    <span class="amulet">Runestone</span><br>
+                    <span class="amulet">Runic Enchantment</span><br>
+                    <span class="gold">Rush of Zardlings</span><br>
+                    <span class="amulet">Rusted DragonKnight Guard VIII</span><br>
+                    <span class="coins">Ruuma Mask</span><br>
+                    <span class="coins">Samaranth Mask</span><br>
+                    <span class="coins">San Robin Mask</span><br>
+                    <span class="amulet">Sand Claw</span><br>
+                    <span class="amulet">Sand Spear</span><br>
+                    <span class="amulet">Sand Sword</span><br>
+                    <span class="amulet">Sanguine Skullstaff of Doom</span><br>
+                    <span class="amulet">Sapphire Hood</span><br>
+                    <span class="amulet">Sardasil</span><br>
+                    <span class="amulet">Savant Dagger</span><br>
+                    <span class="amulet">Savant Staff</span><br>
+                    <span class="amulet">Savant Sword</span><br>
+                    <span class="amulet">Scarab Band</span><br>
+                    <span class="amulet">Scarab Hood</span><br>
+                    <span class="gold">Scaredy Bear Cub</span><br>
+                    <span class="coins">Scarf of Pride</span><br>
+                    <span class="coins">Scarf of Pride A</span><br>
+                    <span class="coins">Scarf of Pride B</span><br>
+                    <span class="coins">Scarf of Pride L</span><br>
+                    <span class="coins">Scarf of Pride NB</span><br>
+                    <span class="coins">Scarf of Pride P</span><br>
+                    <span class="coins">Scarf of Pride T</span><br>
+                    <span class="coins">Scary Doll</span><br>
+                    <span class="amulet">Scepter of the Emporer</span><br>
+                    <span class="coins">Sciuridaehotep Mask</span><br>
+                    <span class="gold">Scrap metal (x4)</span><br>
+                    <span class="coins">Scythe of the Dark Amulet</span><br>
+                    <span class="coins">Scythe of the New Dawn IX</span><br>
+                    <span class="coins">Scythe of the Soul's Song</span><br>
+                    <span class="coins">Scythe of the Unhallowed IX</span><br>
+                    <span class="amulet">Sea Chicken's Conquest III</span><br>
+                    <span class="coins">Sentog Helm IV</span><br>
+                    <span class="coins">Sepulchure's Locket</span><br>
+                    <span class="amulet">Serene Staff of Primal Water</span><br>
+                    <span class="coins">Serenity's Grace</span><br>
+                    <span class="coins">Severice Scythe</span><br>
+                    <span class="gold">Shadow Bone Shard (x11)</span><br>
+                    <span class="coins">Shadow Mage Armor</span><br>
+                    <span class="amulet">Shadowfire Axe</span><br>
+                    <span class="artifact">Shadowheart Bracer</span><br>
+                    <span class="coins">Shadowscythe Bane</span><br>
+                    <span class="coins">Shadowscythe Reaper</span><br>
+                    <span class="coins">ShadowWalker of Time</span><br>
+                    <span class="coins">ShadowWalker's Chakram IV</span><br>
+                    <span class="coins">ShadowWalker's TimeScythe IV</span><br>
+                    <span class="coins">Shapeless Idol V</span><br>
+                    <span class="gold">Shattered Blade</span><br>
+                    <span class="amulet">Shimmering Scythe</span><br>
+                    <span class="amulet">Shining Blinding Light of Destiny</span><br>
+                    <span class="amulet">Shining Blinding Light of Destiny</span><br>
+                    <span class="amulet">Shining Blinding Light of Destiny</span><br>
+                    <span class="amulet">Shining Blinding Light of Destiny</span><br>
+                    <span class="amulet">Shining Eternal Hourglass Cape V</span><br>
+                    <span class="amulet">Shining Eternal Hourglass Staff VII</span><br>
+                    <span class="amulet">Shining Eternal Hourglass Sword VI</span><br>
+                    <span class="coins">Shiny Frostskull Mace V</span><br>
+                    <span class="coins">Shiny Skull Wand V</span><br>
+                    <span class="coins">Shocked Twilly Mask</span><br>
+                    <span class="amulet">Sickly Sickle</span><br>
+                    <span class="gold">Silver Ninja Token (x528)</span><br>
+                    <span class="coins">Simple Eternal Flame VII</span><br>
+                    <span class="coins">Simple Luminous Hood VII</span><br>
+                    <span class="coins">Sinnocence's Torment</span><br>
+                    <span class="amulet">Sir Jing's Staff IX</span><br>
+                    <span class="amulet">Sir Pent's Steel</span><br>
+                    <span class="coins">Sirius Mask</span><br>
+                    <span class="amulet">Skull Crusher Blaster</span><br>
+                    <span class="amulet">Slasher Mask</span><br>
+                    <span class="coins">Sloth Mask</span><br>
+                    <span class="coins">Sluagh Sidhe IV</span><br>
+                    <span class="coins">Sneegion Sword of DOOM</span><br>
+                    <span class="amulet">Sneevil Mask</span><br>
+                    <span class="amulet">Sneevil Ninja Buddy</span><br>
+                    <span class="amulet">Snowman's Arms</span><br>
+                    <span class="coins">SnugglePanda</span><br>
+                    <span class="coins">Snuggles</span><br>
+                    <span class="amulet">Sooty Villain's Cape</span><br>
+                    <span class="amulet">Soul Purifier</span><br>
+                    <span class="amulet">Soulforged Ring (Red)</span><br>
+                    <span class="amulet">SoulForged Staff</span><br>
+                    <span class="amulet">SoulForged Staff</span><br>
+                    <span class="amulet">SoulForged Sword</span><br>
+                    <span class="amulet">Soulmender's Cloak III</span><br>
+                    <span class="amulet">Soulmender's Hood III</span><br>
+                    <span class="amulet">Soulsmith's Cloak III</span><br>
+                    <span class="amulet">Soulsmith's Hood III</span><br>
+                    <span class="amulet">Sparky</span><br>
+                    <span class="amulet">Speargun</span><br>
+                    <span class="amulet">Special Vampire Cape</span><br>
+                    <span class="amulet">Spectral DeathKnight Catalyst</span><br>
+                    <span class="coins">Spectral Miasmal Staff</span><br>
+                    <span class="coins">Speedy Mask</span><br>
+                    <span class="amulet">Spider Web Cape</span><br>
+                    <span class="amulet">Spinning Death</span><br>
+                    <span class="gold">Spirit Cast</span><br>
+                    <span class="amulet">Spirit of the Wind Scythe VI</span><br>
+                    <span class="amulet">Splashy Mask</span><br>
+                    <span class="coins">Sporcaling</span><br>
+                    <span class="coins">Squirrel Tentacle IV</span><br>
+                    <span class="amulet">Staff of Coldness</span><br>
+                    <span class="gold">Staff of Forgiveness</span><br>
+                    <span class="coins">Staff of Inversion IX</span><br>
+                    <span class="amulet">Staff of the Dragonlords</span><br>
+                    <span class="coins">Staff of the North IX</span><br>
+                    <span class="coins">Staff of Unity IX</span><br>
+                    <span class="gold">Stan the ScanOrb</span><br>
+                    <span class="coins">Star Prince Mask</span><br>
+                    <span class="coins">Static Sphere VII</span><br>
+                    <span class="gold">Stone of Falconreach Tower</span><br>
+                    <span class="amulet">Stormhawk VII</span><br>
+                    <span class="coins">Stormhawk VIII</span><br>
+                    <span class="coins">Stretchy Candy Cape IX</span><br>
+                    <span class="amulet">Summon Gem - Ayauhnqui EX</span><br>
+                    <span class="amulet">Summon Gem - Illumina EX</span><br>
+                    <span class="amulet">Summon Gem - Intaym EX</span><br>
+                    <span class="amulet">Summon Gem - Reaver EX</span><br>
+                    <span class="amulet">Summon Gem - Ricterild EX</span><br>
+                    <span class="amulet">Summon Gem - Roktoru EX</span><br>
+                    <span class="amulet">Sumptous Vampire Cape</span><br>
+                    <span class="coins">Sun God Cape</span><br>
+                    <span class="coins">Sun God Scythe</span><br>
+                    <span class="coins">Sun God Visor</span><br>
+                    <span class="coins">Sunken Plunderer IX</span><br>
+                    <span class="amulet">Super Spooky Orange Cloak</span><br>
+                    <span class="coins">Superbia Mask</span><br>
+                    <span class="coins">Suspicious Mask</span><br>
+                    <span class="coins">Swamp Katana X</span><br>
+                    <span class="amulet">Sword of the Amulet</span><br>
+                    <span class="coins">Sword of Unity IX</span><br>
+                    <span class="coins">Tangled Essence of Sinnocence</span><br>
+                    <span class="amulet">Tarrir</span><br>
+                    <span class="amulet">Tasty Swordfish</span><br>
+                    <span class="amulet">Tenacity</span><br>
+                    <span class="coins">Tentacle of the Dominion III</span><br>
+                    <span class="coins">Thawsprout Blade</span><br>
+                    <span class="coins">Thawsprout Dagger</span><br>
+                    <span class="coins">Thawsprout Staff</span><br>
+                    <span class="amulet">The Baroness Courageous Helm</span><br>
+                    <span class="amulet">The Barons Courageous Helm</span><br>
+                    <span class="amulet">The Cloak of the Deepest Depths III</span><br>
+                    <span class="amulet">The Corrupted Seven</span><br>
+                    <span class="coins">The Engineer Mask</span><br>
+                    <span class="coins">The Great Grey One V</span><br>
+                    <span class="amulet">The King's Mask</span><br>
+                    <span class="coins">The Massive Axe XL</span><br>
+                    <span class="gold">The Necsnowmancer</span><br>
+                    <span class="coins">The Professor's Safety Helm IV</span><br>
+                    <span class="coins">The Puppetmaster I</span><br>
+                    <span class="coins">The Puppetmaster X</span><br>
+                    <span class="coins">The Threadcutter I</span><br>
+                    <span class="coins">The Threadcutter IX</span><br>
+                    <span class="coins">The Tulip's Cowl IX</span><br>
+                    <span class="amulet">Thorn Replica VI</span><br>
+                    <span class="coins">Thread of the Unraveler (x3)</span><br>
+                    <span class="amulet">Ticktock</span><br>
+                    <span class="coins">Time Reaper's Cowl X</span><br>
+                    <span class="coins">Time's Harvest IX</span><br>
+                    <span class="coins">TimeKiller</span><br>
+                    <span class="amulet">Timewarped Medal (x90)</span><br>
+                    <span class="coins">Timewarped Trophy</span><br>
+                    <span class="coins">Tizheruk Scale IX</span><br>
+                    <span class="amulet">Tragic Cloak</span><br>
+                    <span class="coins">Tranquility of the Self</span><br>
+                    <span class="amulet">Tribal Mask</span><br>
+                    <span class="amulet">Tricolor Glowstaff</span><br>
+                    <span class="amulet">Tropical Bugmonkee</span><br>
+                    <span class="coins">Turdraken Wyvernling</span><br>
+                    <span class="amulet">Twilly Mask</span><br>
+                    <span class="amulet">Twilly's Staff</span><br>
+                    <span class="gold">Twin Blades of Doom</span><br>
+                    <span class="coins">Twisted Balloon Staff IX</span><br>
+                    <span class="amulet">Two Headed Hammer</span><br>
+                    <span class="coins">Tyr - Lance of Change IX</span><br>
+                    <span class="coins">Tytanbone Pack IX</span><br>
+                    <span class="amulet">Uaanta's Blaster IV (Amalgam)</span><br>
+                    <span class="coins">Ultimate Blade Pieces</span><br>
+                    <span class="amulet">Ultimate Blinding Light of Destiny</span><br>
+                    <span class="amulet">Ultimate Dragon Amulet Scythe of Elementals</span><br>
+                    <span class="amulet">Ultimate DragonStaff of Destiny</span><br>
+                    <span class="amulet">Ultimate Star of Glory</span><br>
+                    <span class="amulet">Ultimate Twin Blades of Destiny</span><br>
+                    <span class="amulet">Ultimate Twin Blades of Glory</span><br>
+                    <span class="gold">Ultra OmniKnight Blade</span><br>
+                    <span class="coins">Unael Protectorate IX</span><br>
+                    <span class="amulet">Uncalabra III</span><br>
+                    <span class="amulet">Undead Chickencow</span><br>
+                    <span class="amulet">Unhallowed DeathKnight Circlet IV</span><br>
+                    <span class="coins">Unholy Ripper Wings</span><br>
+                    <span class="coins">Unholy Skull Ripper Helm</span><br>
+                    <span class="amulet">Unlucky Clover VIII</span><br>
+                    <span class="amulet">Unlucky Doom Essence (x5)</span><br>
+                    <span class="coins">Unnecessarily Ornate Useless Weapon Just For Show</span><br>
+                    <span class="amulet">Unreal ShadowReaper of Doom</span><br>
+                    <span class="amulet">Unreal Skullstaff of Doom</span><br>
+                    <span class="amulet">Unreal Twin Blades of Doom</span><br>
+                    <span class="amulet">Upright Blinding Light of Destiny</span><br>
+                    <span class="amulet">Uragiri III</span><br>
+                    <span class="coins">Uthuluc Mask</span><br>
+                    <span class="coins">Vaal's Ego</span><br>
+                    <span class="amulet">Vampire Cape</span><br>
+                    <span class="amulet">Vanilla Ice Katana</span><br>
+                    <span class="coins">Vayhu Mask</span><br>
+                    <span class="coins">Vell - Edge of Change IX</span><br>
+                    <span class="coins">Verlyrus Mask</span><br>
+                    <span class="amulet">Verraad II</span><br>
+                    <span class="coins">Visage of Change</span><br>
+                    <span class="coins">Visage of Fear</span><br>
+                    <span class="coins">Visage of the Unraveler</span><br>
+                    <span class="coins">Void Chitin Band IV</span><br>
+                    <span class="gold">Void Pony Hobby Horse</span><br>
+                    <span class="gold">Void Pony Shank</span><br>
+                    <span class="amulet">Void Rift Cover</span><br>
+                    <span class="amulet">Void Rift Wings</span><br>
+                    <span class="amulet">Voidwoven Belt V</span><br>
+                    <span class="amulet">Volcano's Heart</span><br>
+                    <span class="coins">Voyna Mask</span><br>
+                    <span class="coins">Vseslava Mask</span><br>
+                    <span class="amulet">Waning Silver</span><br>
+                    <span class="coins">Warbeast Residue (x66)</span><br>
+                    <span class="coins">Warden Mask</span><br>
+                    <span class="coins">Warding Girdle</span><br>
+                    <span class="coins">Wargoth's Forged Visage IV</span><br>
+                    <span class="amulet">Waxing Silver</span><br>
+                    <span class="coins">Weaver's Facade I</span><br>
+                    <span class="coins">Weaver's Facade X</span><br>
+                    <span class="amulet">Whimsical Wand</span><br>
+                    <span class="amulet">Whispering Lotus</span><br>
+                    <span class="amulet">Wings of Ezrajal III</span><br>
+                    <span class="amulet">Wings of the Chosen</span><br>
+                    <span class="coins">Wings of The Thousand Infernos</span><br>
+                    <span class="coins">Winter's Harbinger IX</span><br>
+                    <span class="coins">Winter's Shawl IX</span><br>
+                    <span class="coins">Wishing Khopesh</span><br>
+                    <span class="amulet">Withering Cherry Blossom</span><br>
+                    <span class="coins">Wolfwing's Wings</span><br>
+                    <span class="amulet">Wondrous Gift Box</span><br>
+                    <span class="amulet">Wooden Sword of Doom IV</span><br>
+                    <span class="gold">Wrapped Dagger</span><br>
+                    <span class="gold">Wrapped Staff</span><br>
+                    <span class="gold">Wrapped Sword</span><br>
+                    <span class="coins">X-Boost: Unlimited (x10)</span><br>
+                    <span class="amulet">Xan Mask</span><br>
+                    <span class="amulet">Yaga Mask</span><br>
+                    <span class="coins">Yalla Mask</span><br>
+                    <span class="coins">Yalla's Wings</span><br>
+                    <span class="coins">Yaphael Mask</span><br>
+                    <span class="coins">Yarek's Staff IX</span><br>
+                    <span class="amulet">Zappy</span><br>
+                    <span class="coins">Zardbie Katana</span><br>
+                    <span class="amulet">Zardbirillaomgiphant</span><br>
+                    <span class="gold">Zhoom Plushie</span><br>
+                    <span class="amulet">Zorbak's Staff</span><br>
+                    <span class="amulet">Zorchy</span><br>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4>War Records</h4>
+            </div>
+            <div class="card-body">
+                    <span class="warlabel">The Maleurous: Reawakening</span><br>
+                    <span class="mx-2 d-inline-block">3592 waves, 197 Waves Defeated </span><br>
+                    <span class="warlabel">The Grand Snowfight</span><br>
+                    <span class="mx-2 d-inline-block">10001 waves, 1140 Waves Defeated </span><br>
+                    <span class="warlabel">The Maleurous: Reckoning</span><br>
+                    <span class="mx-2 d-inline-block">1783 waves, 213 Waves Defeated </span><br>
+                    <span class="warlabel">The Siege of Haven</span><br>
+                    <span class="mx-2 d-inline-block">7 waves, 0 Waves Defeated </span><br>
+                    <span class="warlabel">A Friendly Contest</span><br>
+                    <span class="mx-2 d-inline-block">1737 waves, 76 Waves Defeated </span><br>
+                    <span class="warlabel">The Great Giftnapping</span><br>
+                    <span class="mx-2 d-inline-block">444 waves, 43 Gifts Liberated </span><br>
+                    <span class="warlabel">The Angel of Azaveyr</span><br>
+                    <span class="mx-2 d-inline-block">2046 waves, 168 Waves Defeated </span><br>
+                    <span class="warlabel">Archive E-189-L</span><br>
+                    <span class="mx-2 d-inline-block">10001 waves, 282 Paths Cleared </span><br>
+                    <span class="warlabel">Frostval 2019</span><br>
+                    <span class="mx-2 d-inline-block">1 waves, 0 Waves Defeated </span><br>
+                    <span class="warlabel">Song of the Ateala</span><br>
+                    <span class="mx-2 d-inline-block">9214 waves, 51 Waves Defeated </span><br>
+                    <span class="warlabel">The Maleurous: Sinnocence</span><br>
+                    <span class="mx-2 d-inline-block">8072 waves, 265 Waves Defeated </span><br>
+                    <span class="warlabel">Serenity Before The Storm</span><br>
+                    <span class="mx-2 d-inline-block">1 waves, 0 Waves Defeated </span><br>
+                    <span class="warlabel">DragonRider War</span><br>
+                    <span class="mx-2 d-inline-block">1 waves, 0 Waves Defeated </span><br>
+                    <span class="warlabel">War at the Core</span><br>
+                    <span class="mx-2 d-inline-block">1 waves, 0 Waves Defeated </span><br>
+                    <span class="warlabel">13th 13th</span><br>
+                    <span class="mx-2 d-inline-block">1 waves, 0 Waves Defeated </span><br>
+                    <span class="warlabel">War of The Dragon Roses</span><br>
+                    <span class="mx-2 d-inline-block">937 waves, 21 Rose Waves </span><br>
+                    <span class="warlabel">War of the Dragon Roses</span><br>
+                    <span class="mx-2 d-inline-block">461 waves, 11 Dragon Waves </span><br>
+                    <span class="warlabel">Turducken</span><br>
+                    <span class="mx-2 d-inline-block">1 waves, 0 Turducken Waves </span><br>
+                    <span class="warlabel">Wrath of Wargoth</span><br>
+                    <span class="mx-2 d-inline-block">52 waves, 0 Wrath Wave </span><br>
+                    <span class="warlabel">Rising Fire</span><br>
+                    <span class="mx-2 d-inline-block">140 waves, 0 Waves Defeated </span><br>
+                    <span class="warlabel">Lucky Day War 2012</span><br>
+                    <span class="mx-2 d-inline-block">192 waves, 0 Waves Defeated </span><br>
+                    <span class="warlabel">Rift War</span><br>
+                    <span class="mx-2 d-inline-block">234 waves, 2 Waves Defeated </span><br>
+                    <span class="warlabel">Zardbie War 2011</span><br>
+                    <span class="mx-2 d-inline-block">2 waves, 0 Waves Defeated </span><br>
+                    <span class="warlabel">Friday the 13th 2011</span><br>
+                    <span class="mx-2 d-inline-block">1001 waves, 8 Waves Defeated </span><br>
+                    <span class="warlabel">Hiding the Blade of Awe</span><br>
+                    <span class="mx-2 d-inline-block">373 waves, 0 Locations Searched </span><br>
+                    <span class="warlabel">Lucky Day War 2011</span><br>
+                    <span class="mx-2 d-inline-block">1 waves, 0 Rainbow Shards </span><br>
+            </div>
+        </div>
+
+
+        <div class="card">
+            <div class="card-header">
+                <h4>Houses</h4>
+            </div>
+            <div class="card-body">
+Nieboheim House<br>
+Hamelin Style II<br>
+DragonLord Castle<br>
+Nieboheim House<br>
+Obsidian Home<br>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4>House Items</h4>
+            </div>
+            <div class="card-body">
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Book Pile<br>
+Dragon Nest<br>
+Shadow of the Wind Village<br>
+Osprey Cove<br>
+Sandsea<br>
+Vault<br>
+Magic Mirror<br>
+Armor Closet<br>
+Orb Of Saving<br>
+Somean Lion Figurine<br>
+Hydra Memorial Poster<br>
+Miniature Minotaur<br>
+Memento Mori<br>
+Miniature Hind-in-a-Box<br>
+Not Ur Minion!<br>
+Time Travel Fairy Time Tours statue<br>
+The Purple Fireplace<br>
+Ravenloss Plushie Cabinet<br>
+Meltface Akriloth Figurine<br>
+Storybook Collection<br>
+Portrait of Timmy<br>
+Portrait of Timmy<br>
+Armor Portal Statue<br>
+Armor Portal Statue<br>
+Greenscreen Mirror<br>
+Pile of Gold<br>
+Pile of Dragon Coins<br>
+            </div>
+        </div>
+
+
+</div>
+                </div>
+            </div>
+        </div>
+        <br>
+        <br>
+    </div>
+
+    
+
+<footer class="footer py-3">
+    <div class="container">
+        <div class="text-center mt-3">
+            <a class="d-inline-block" target="_blank" href="https://www.artix.com/">
+                <img class="img-fluid" src="mof_files/logo-artixdragon-red.png" alt="Artix Entertainment">
+            </a>
+            <p class="text-muted small">
+                Copyright © 2023
+                <br>
+                All games and characters are trademarks of <a href="https://www.artix.com/">Artix Entertainment</a>, LLC.
+            </p>
+            <a class="btn btn-link" target="_terms" href="https://www.artix.com/policy-terms">Terms of Service</a>
+            <a class="btn btn-link" target="_terms" href="https://www.artix.com/policy-privacy">Privacy Policy</a>
+            <a class="btn btn-link" target="_terms" href="https://www.artix.com/policy-privacy-ca">California Privacy Rights</a>
+            <a class="btn btn-link" target="_terms" href="https://www.artix.com/policy-cookies">Cookies Policy</a>
+            <a class="btn btn-link" target="_terms" href="https://www.artix.com/about/contact/">Contact</a>
+        </div>
+    </div>
+
+    
+
+</footer>
+
+    <script src="mof_files/jquerybootstrap.js"></script>
+
+    
+
+    <script type="text/javascript">
+    </script>
+
+
+</body></html>

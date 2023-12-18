@@ -1,8 +1,8 @@
 use crate::embeds::not_found_embed;
-use crate::lookup_df::LookupState;
+use crate::lookup_df::{LookupCategory, LookupState};
+use crate::parsing::CharacterFetcher;
 use crate::requests::CHARPAGE;
 use crate::{Context, Error};
-use crate::parsing::{HttpFetcher,DataFetcher,ParsingCategory};
 use color_eyre::Result;
 use poise::serenity_prelude::User;
 use regex::Regex;
@@ -15,18 +15,19 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
     let author = &ctx.author().name;
     let mut user_id = user.id.0 as i64;
     query!("INSERT INTO users (discord_id,discord_name,registered_by) VALUES ($1,$2,$3) ON CONFLICT (discord_id) DO NOTHING",user_id,user.name,author).execute(pool).await?;
-    let lookupstate = HttpFetcher::new_character_page(df_id).fetch_and_parse_data(ParsingCategory::CharacterPage).await?;
+    let lookupstate = CharacterFetcher::new(df_id, LookupCategory::CharacterPage)
+        .fetch_data()
+        .await?
+        .to_lookupstate()?;
     let character = match lookupstate {
         LookupState::CharacterPage(char) => char.name,
         LookupState::FlashCharatcerPage(char) => char.get("Name").take().unwrap().to_owned(),
         LookupState::NotFound => return Ok(not_found_embed(ctx, df_id).await?),
         _ => panic!("Unexpected LookupState",),
     };
-    dbg!(&character);
     let res = query!("INSERT INTO df_characters (discord_id,df_id,character_name,registered_by) VALUES ($1,$2,$3,$4) ON CONFLICT (df_id) DO NOTHING",user_id,df_id,character,author).execute(pool).await?;
     let color: Color;
     let title: String;
-    let username: String;
     if res.rows_affected() == 0 {
         color = Color::DARK_RED;
         title = format!("Already Registered: {}", character);
@@ -40,9 +41,9 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
         user = ctx.http().get_user(user_id as u64).await?;
     } else {
         color = Color::DARK_GOLD;
-        title = format!("Sucessfully Registered: {}", character);
+        title = format!("Successfully Registered: {}", character);
     };
-    username = user.name.to_owned();
+    let username = user.name.to_owned();
     let icon_url = user.face();
     let chars_list = query!(
         "SELECT df_id,character_name FROM df_characters WHERE discord_id = $1",
@@ -61,8 +62,6 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
         })
         .collect::<Vec<String>>()
         .join("\n");
-    dbg!(&character);
-
     ctx.send(|f| {
         f.embed(|f| {
             f.title(title)
@@ -111,7 +110,6 @@ pub async fn delete_character(
     )
     .execute(pool)
     .await?;
-    dbg!(&res);
     let chars = query!(
         "SELECT df_id,character_name FROM df_characters WHERE discord_id = $1 order by created asc",
         user_id
@@ -120,6 +118,8 @@ pub async fn delete_character(
     .await?;
     let color: Color;
     let title: String;
+    let username = user.name.to_owned();
+    let icon_url = user.face();
     if res.rows_affected() == 0 {
         color = Color::DARK_RED;
         title = format!("NOT REGISTERED: {}", db_character.character_name);
@@ -128,6 +128,7 @@ pub async fn delete_character(
                 f.title(title)
                     .url(format!("{}{}", CHARPAGE, character))
                     .color(color)
+                    .author(|a| a.name(&username).icon_url(icon_url))
                     .description(format!(
                         "**DF ID:** {} [{}]({}{})",
                         db_character.df_id,
@@ -142,7 +143,7 @@ pub async fn delete_character(
         return Ok(());
     } else {
         color = Color::DARK_GOLD;
-        title = format!("Sucessfully DELETED: {}", db_character.character_name)
+        title = format!("Successfully DELETED: {}", db_character.character_name)
     }
     let chars_string = chars
         .iter()
@@ -162,6 +163,7 @@ pub async fn delete_character(
         f.embed(|f| {
             f.title(title)
                 .url(format!("{}{}", CHARPAGE, character))
+                .author(|a| a.name(&username).icon_url(icon_url))
                 .color(color)
                 .description(chars_string)
         })

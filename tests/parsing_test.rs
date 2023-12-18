@@ -4,19 +4,55 @@ mod tests {
     use achivit_rs::roles::*;
     use achivit_rs::{
         lookup_df::LookupState,
-        parsing::{DFCharacterData, FileFetcher, ParsingCategory},
+        parsing::{DFCharacterData, FileFetcher, ParsingCategory, WarList},
     };
     use color_eyre::Result;
+    use std::collections::{BTreeSet, HashSet};
     fn extract_data(lookup_state: LookupState) -> Result<DFCharacterData> {
         match lookup_state {
             LookupState::CharacterPage(data) => Ok(data),
             _ => panic!("No Item data for this LookupState"),
         }
     }
+    fn check_item(role: &Role, char_items: &BTreeSet<String>) -> bool {
+        let items = role
+            .required
+            .as_ref()
+            .expect("Item Role requires item list");
+        items.iter().all(|i| char_items.contains(i))
+    }
+    fn check_war(role: &Role, char: &DFCharacterData) -> bool {
+        let amount = role.amount.expect("War needs amount") as usize;
+        char.wars.wars().len() >= amount
+    }
+    fn check_item_amount(role: &Role, char_items: &BTreeSet<String>) -> bool {
+        let amount = role.amount().expect("Items/Amount Needs amount.");
+        let items = role
+            .required
+            .as_ref()
+            .expect("Item Role requires item list");
+        let count = items.iter().filter(|&i| char_items.contains(i)).count();
+        count as i32 >= amount
+    }
+    fn check_waves(role: &Role, wars: &WarList) -> bool {
+        let amount = role.amount().expect("Waves Needs amount.");
+        wars.war_list().iter().any(|w| w.waves_int() >= amount)
+    }
+    fn check_gold(role: &Role, gold: &i32) -> bool {
+        let amount = role.amount().expect("gold Needs amount.");
+        gold >= &amount
+    }
+    fn check_max_role(role: &Role, aquired_roles: &Vec<&Role>) -> bool {
+        let prereq_roles: &Vec<String> = role.prereqs().as_ref().expect("MAX role needs prereqs");
+        prereq_roles
+            .iter()
+            .all(|p| aquired_roles.iter().any(|r| r.name() == p))
+    }
+
     #[tokio::test]
     async fn parse_pages() -> Result<()> {
         let roles = get_roles("JSONS/roles.json")?;
-        let char = FileFetcher::new("htmls/ruleofnine.html")
+        let char = FileFetcher::new("htmls/3ach.html")
             .category(ParsingCategory::Items)
             .fetch_data()
             .await?
@@ -25,73 +61,30 @@ mod tests {
         let char_items = char.item_list.take().unwrap().all();
         let mut aquired_roles: Vec<&Role> = Vec::new();
         for role in roles.roles() {
-            let mut aquired = false;
-            match role.req_type {
-                ReqType::Wars => {
-                    let amount = role.amount.unwrap_or_default() as usize;
-                    if &char.wars.wars().len() >= &amount {
-                        aquired = true;
-                    }
-                }
-                ReqType::Item => {
-                    let items = role
-                        .required
-                        .as_ref()
-                        .expect("Item Role requires item list");
-                    aquired = items.iter().all(|i| char_items.contains(i));
-                }
-                ReqType::ItemsAmount => {
-                    let amount = role.amount().expect("Items/Amount Needs amount.");
-                    let items = role
-                        .required
-                        .as_ref()
-                        .expect("Item Role requires item list");
-                    let count = items.iter().filter(|&i| char_items.contains(i)).count();
-                    if count as i32 >= amount {
-                        aquired = true
-                    }
-                }
-                ReqType::Waves => {
-                    let amount = role.amount().expect("Waves Needs amount.");
-                    for war in char.wars().war_list() {
-                        if &war.waves_int() >= &amount {
-                            aquired = true;
-                            break;
-                        }
-                    }
-                }
-                ReqType::Gold => {
-                    let amount = role.amount().expect("gold Needs amount.");
-                    if char.gold() >= &amount {
-                        aquired = true;
-                    }
-                }
-                ReqType::Max => {
-                    let prereq_roles: &Vec<String> =
-                        role.prereqs().as_ref().expect("MAX role needs prereqs");
-                    if prereq_roles
-                        .iter()
-                        .all(|p| aquired_roles.iter().any(|r| r.name() == p))
-                    {
-                        aquired = true
-                    };
-                }
-            }
+            let aquired = match role.req_type {
+                ReqType::Wars => check_war(role, &char),
+                ReqType::Item => check_item(role, &char_items),
+                ReqType::ItemsAmount => check_item_amount(role, &char_items),
+                ReqType::Waves => check_waves(role, &char.wars),
+                ReqType::Gold => check_gold(role, &char.gold()),
+                ReqType::Max => check_max_role(role, &aquired_roles),
+            };
             if aquired {
                 aquired_roles.push(role)
             }
         }
-        let mut roles_clone = aquired_roles.clone();
-        for role in aquired_roles {
-            match role.prereqs() {
-                Some(reqs) => for req in reqs {
-                    roles_clone.retain(|r|&r.name!=req)
-                },
-                None => (),
+        let mut roles_to_remove = HashSet::new();
+        for role in &aquired_roles {
+            if let Some(reqs) = role.prereqs() {
+                for req in reqs {
+                    if aquired_roles.iter().any(|r| r.name() == req) {
+                        roles_to_remove.insert(req.clone());
+                    }
+                }
             }
         }
-        dbg!(&roles_clone);
-        dbg!(roles_clone.len());
+        aquired_roles.retain(|r| !roles_to_remove.contains(r.name()));
+        dbg!(aquired_roles.len());
         // let char2 = FileFetcher::new("htmls/3ach.html")
         //     .category(ParsingCategory::Compare)
         //     .fetch_data()

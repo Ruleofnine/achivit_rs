@@ -3,6 +3,7 @@ use crate::lookup_df::LookupState;
 use crate::requests::{
     fetch_page_with_user_agent, CHARPAGE, COLOR_SITE, FLASH_USER_AGENT, USER_AGENT,
 };
+use getset::Getters;
 use chrono::NaiveDate;
 use color_eyre::Result;
 use num_format::{Locale, ToFormattedString};
@@ -112,7 +113,8 @@ impl CharacterFetcher {
         })
     }
 }
-
+#[derive(Getters)]
+#[getset(get = "pub")]
 pub struct CharacterData {
     str: String,
     category: ParsingCategory,
@@ -136,7 +138,8 @@ pub fn convert_html_to_discord_format(input: &str) -> String {
     let re = Regex::new(r#"<a href="(?P<url>[^"]+)"[^>]*>(?P<text>[^<]+)</a>"#).unwrap();
     re.replace_all(input, "[${text}](${url})").to_string()
 }
-
+#[derive(Getters)]
+#[getset(get = "pub")]
 #[derive(Debug, Clone)]
 pub struct Dragon {
     pub name: String,
@@ -160,6 +163,8 @@ impl Dragon {
         Dragon { name, dragon_type }
     }
 }
+#[derive(Getters)]
+#[getset(get = "pub")]
 #[derive(Debug)]
 pub struct Items {
     pub nda: BTreeSet<String>,
@@ -202,7 +207,15 @@ impl Items {
             (&mut self.artifact, &mut other.artifact),
         ]
     }
+    pub fn all(mut self)->BTreeSet<String>{
+        self.dc.extend(self.da);
+        self.dc.extend(self.nda);
+        self.dc.extend(self.artifact);
+        self.dc
+    }
 }
+#[derive(Getters)]
+#[getset(get = "pub")]
 #[derive(Debug)]
 pub struct DFCharacterData {
     pub id: u32,
@@ -370,6 +383,8 @@ impl WarBuilder {
         )
     }
 }
+#[derive(Getters)]
+#[getset(get = "pub")]
 #[derive(Debug, Clone)]
 pub struct War {
     pub warlabel: String,
@@ -390,8 +405,12 @@ impl War {
     pub fn war_string(&self) -> String {
         format!("**{}**\n*{} ,{}*\n", self.warlabel, self.waves, self.rares)
     }
-}
-
+    pub fn waves_int(&self)->i32{
+    self.waves().replace(" waves", "").parse().unwrap()
+    }}
+ 
+#[derive(Getters)]
+#[getset(get = "pub")]
 #[derive(Debug, Clone)]
 pub struct WarList {
     war_list: Vec<War>,

@@ -9,7 +9,6 @@ pub struct Data {
     pub url: String,
     pub data: EventData,
 }
-
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize)]
 pub struct EventData {

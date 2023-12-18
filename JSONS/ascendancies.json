@@ -1,0 +1,747 @@
+{
+  "The Calender Gauntlet": {
+    "name": "The Calender Gauntlet",
+    "description": "Have ALL Calender Classes",
+    "type": "Item",
+    "prereqs": [
+      "Timeless"
+    ],
+    "required": [
+      "Chronomancer Armor",
+      "ChronoZ",
+      "TimeKiller",
+      "Avatar of Time",
+      "Chronocorruptor"
+    ]
+  },
+  "Timeless": {
+    "name": "Timeless",
+    "description": "Have 8 or more Calender Classes",
+    "type": "Item/Amount",
+    "prereqs": null,
+    "amount": 8,
+    "required": [
+      "Reforged Avatar of Time",
+      "Reforged Chronomancer",
+      "Reforged Chronocorruptor",
+      "Reforged TimeKiller",
+      "Reforged ChronoZ",
+      "Archivist",
+      "ShadowWalker of Time",
+      "Epoch",
+      "Eternal Locket",
+      "Corrupted Doom Cassette",
+      "The Eraglass",
+      "Draconic Glowtooth",
+      "Epocharina"
+    ]
+  },
+  "Arbitrator of Doom and Destiny": {
+    "name": "Arbitrator of Doom and Destiny",
+    "description": "Have ALL DA tagged DOOM and Destiny Weapons",
+    "type": "MAX",
+    "prereqs": [
+      "Doomed from the Start",
+      "Destined for Righteousness"
+    ],
+    "required": null
+  },
+  "Arbitrarily Innclined": {
+    "name": "Arbitrarily Innclined",
+    "description": "Have ALL A.A.R.G.H Weapons and Cometic Items",
+    "type": "Item",
+    "prereqs": [
+      "L-L-L-L-Ludicrously Arbitrary",
+      "Arbitrary Champion"
+    ],
+    "required": [
+      "Abominable Scythe",
+      "Exalted Spear",
+      "Fundamentals of Hitting Things Very Hard",
+      "Lightstaff of the Eternal",
+      "Sphere of Elemental Power",
+      "Vath's Dagger",
+      "Abominable Visage",
+      "Augahim's Visage",
+      "The AdventureFiend's Visage",
+      "Visage of the Unraveler",
+      "Chains of Augahim",
+      "Cryozen's Wings",
+      "Daatael's Wings",
+      "Flight of the Engineer",
+      "Frostscythe's Cape",
+      "Illumina's Wings",
+      "Sinnocence's Torment",
+      "The AdventureFiend's Tail",
+      "Vath's Cape",
+      "Yalla's Wings"
+    ]
+  },
+  "L-L-L-L-Ludicrously Arbitrary": {
+    "name": "L-L-L-L-Ludicrously Arbitrary",
+    "description": "Have ALL tiers of ALL A.A.R.G.H Weapons",
+    "type": "Item",
+    "prereqs": [
+      "Arbitrary Champion"
+    ],
+    "required": [
+      "Uragiri II",
+      "Uragiri I",
+      "Verraad II",
+      "Verraad I",
+      "Ink Spire II",
+      "Ink Spire I",
+      "Crymson Tear II",
+      "Crymson Tear I",
+      "Uncalabra II",
+      "Uncalabra I"
+    ]
+  },
+  "Arbitrary Champion": {
+    "name": "Arbitrary Champion",
+    "description": "Have ALL Fully upgraded A.A.R.G.H Weapons",
+    "type": "Item",
+    "prereqs": null,
+    "required": [
+      "Uragiri III",
+      "Verraad III",
+      "Ink Spire III",
+      "Crymson Tear III",
+      "Uncalabra III"
+    ]
+  },
+  "Destined for Righteousness": {
+    "name": "Destined for Righteousness",
+    "description": "Have ALL DA tagged Destiny Weapons",
+    "type": "Item",
+    "prereqs": null,
+    "required": [
+      "Shining Blinding Light of Destiny",
+      "Lucky Blinding Light of Destiny",
+      "Mighty Blinding Light of Destiny",
+      "Guided Blinding Light of Destiny",
+      "Brilliant Blinding Light of Destiny",
+      "Pristine Blinding Light of Destiny",
+      "Pure Blinding Light of Destiny",
+      "Key Blinding Light of Destiny",
+      "Upright Blinding Light of Destiny",
+      "Righteous Blinding Light of Destiny",
+      "Wondrous Blinding Light of Destiny",
+      "Imbued Blinding Light of Destiny",
+      "Penultimate Blinding Light of Destiny",
+      "Ultimate Blinding Light of Destiny",
+      "Lucky DragonStaff of Destiny",
+      "Mighty DragonStaff of Destiny",
+      "Guided DragonStaff of Destiny",
+      "Brilliant DragonStaff of Destiny",
+      "Pristine DragonStaff of Destiny",
+      "Binding DragonStaff of Destiny",
+      "Pure DragonStaff of Destiny",
+      "Key DragonStaff of Destiny",
+      "Upright DragonStaff of Destiny",
+      "Righteous DragonStaff of Destiny",
+      "Wondrous DragonStaff of Destiny",
+      "Imbued DragonStaff of Destiny",
+      "Penultimate DragonStaff of Destiny",
+      "Ultimate DragonStaff of Destiny",
+      "Lucky Twin Blades of Destiny",
+      "Mighty Twin Blades of Destiny",
+      "Guided Twin Blades of Destiny",
+      "Brilliant Twin Blades of Destiny",
+      "Pristine Twin Blades of Destiny",
+      "Binding Twin Blades of Destiny",
+      "Pure Twin Blades of Destiny",
+      "Key Twin Blades of Destiny",
+      "Upright Twin Blades of Destiny",
+      "Righteous Twin Blades of Destiny",
+      "Wondrous Twin Blades of Destiny",
+      "Imbued Twin Blades of Destiny",
+      "Penultimate Twin Blades of Destiny",
+      "Ultimate Twin Blades of Destiny"
+    ]
+  },
+  "Doomed from the Start": {
+    "name": "Doomed from the Start",
+    "description": "Have ALL DA tagged DOOM Weapons",
+    "type": "Item",
+    "prereqs": null,
+    "required": [
+      "Unlucky ShadowReaper of Doom",
+      "Mighty ShadowReaper of Doom",
+      "Dread ShadowReaper of Doom",
+      "Heartless ShadowReaper of Doom",
+      "Obsidian ShadowReaper of Doom",
+      "Forsaken ShadowReaper of Doom",
+      "Grim ShadowReaper of Doom",
+      "Dire ShadowReaper of Doom",
+      "Bone ShadowReaper of Doom",
+      "Horrific ShadowReaper of Doom",
+      "Ghastly ShadowReaper of Doom",
+      "Grisly ShadowReaper of Doom",
+      "Bloody ShadowReaper of Doom",
+      "Sanguine ShadowReaper of Doom",
+      "Corrupt ShadowReaper of Doom",
+      "Unreal ShadowReaper of Doom",
+      "Unlucky SkullStaff of Doom",
+      "Mighty SkullStaff of Doom",
+      "Dread SkullStaff of Doom",
+      "Heartless SkullStaff of Doom",
+      "Obsidian Skullstaff of Doom",
+      "Forsaken Skullstaff of Doom",
+      "Grim Skullstaff of Doom",
+      "Dire Skullstaff of Doom",
+      "Bone Skullstaff of Doom",
+      "Horrific Skullstaff of Doom",
+      "Ghastly Skullstaff of Doom",
+      "Grisly Skullstaff of Doom",
+      "Bloody Skullstaff of Doom",
+      "Sanguine Skullstaff of Doom",
+      "Corrupt Skullstaff of Doom",
+      "Unreal Skullstaff of Doom",
+      "Unlucky Twin Blades of Doom",
+      "Mighty Twin Blades of Doom",
+      "Dread Twin Blades of Doom",
+      "Heartless Twin Blades of Doom",
+      "Obsidian Twin Blades of Doom",
+      "Forsaken Twin Blades of Doom",
+      "Grim Twin Blades of Doom",
+      "Dire Twin Blades of Doom",
+      "Bone Twin Blades of Doom",
+      "Horrific Twin Blades of Doom",
+      "Ghastly Twin Blades of Doom",
+      "Grisly Twin Blades of Doom",
+      "Bloody Twin Blades of Doom",
+      "Sanguine Twin Blades of Doom",
+      "Corrupt Twin Blades of Doom",
+      "Unreal Twin Blades of Doom"
+    ]
+  },
+  "Exaltation of Will": {
+    "name": "Exaltation of Will",
+    "description": "Have ALL Weapons and Capes from The Exaltia Tower",
+    "type": "Item",
+    "prereqs": null,
+    "required": [
+      "Apostate Alpha",
+      "Apostate Omega",
+      "Apostate Ultima",
+      "Thaumaturgus Alpha",
+      "Thaumaturgus Omega",
+      "Thaumaturgus Ultima",
+      "Exalted Unity",
+      "Exalted Penultima",
+      "Exalted Apotheosis",
+      "Wings of Ezrajal I",
+      "Wings of Ezrajal II",
+      "Wings of Ezrajal III",
+      "Wings of Mahanaem I",
+      "Wings of Mahanaem II",
+      "Wings of Mahanaem III",
+      "Wings of Samaranth I",
+      "Wings of Samaranth II",
+      "Wings of Samaranth III",
+      "Wings of Yaphael I",
+      "Wings of Yaphael II",
+      "Wings of Yaphael III"
+    ]
+  },
+  "A Warped Mind": {
+    "name": "A Warped Mind",
+    "description": "Have 15 Timewarped Trophies and 125 Timewarped Medals",
+    "type": "Item",
+    "prereqs": null,
+    "required": [
+      "Timewarped Trophy (x15)",
+      "Timewarped Medal (x125)"
+    ]
+  },
+  "The Golden King": {
+    "name": "The Golden King",
+    "description": "Have over 10,000,000 Gold",
+    "type": "Gold",
+    "prereqs": null,
+    "required": 10000000
+  },
+  "GOLDEN PYCHO": {
+    "name": "GOLDEN PYCHO",
+    "description": "Have over 50,000,000 Gold",
+    "type": "Gold",
+    "prereqs": [
+      "The Golden King"
+    ],
+    "required": 50000000
+  },
+  "THE GOLDEN GOD": {
+    "name": "THE GOLDEN GOD",
+    "description": "Have over 100,000,000 Gold",
+    "type": "Gold",
+    "prereqs": [
+      "GOLDEN PYCHO",
+      "The Golden King"
+    ],
+    "required": 100000000
+  },
+  "Pretty Deep Pockets": {
+    "name": "Pretty Deep Pockets",
+    "description": "Have ALL DC Classes",
+    "type": "Item",
+    "prereqs": null,
+    "required": [
+      "Dimensional Transphaser",
+      "Chaosweaver Armor",
+      "Kathool Adept Armor",
+      "ChickenCow Armor",
+      "Evolved ChickenCow Armor",
+      "Ascended ChickenCow Armor",
+      "enTropy",
+      "Gnomish Personal Steamtank Mk II",
+      "Icebound Revenant",
+      "Pyromancer",
+      "Aspenvale Academy Uniform"
+    ]
+  },
+  "Limitless Pockets": {
+    "name": "Limitless Pockets",
+    "description": "Have ALL DC Classes and DoomKnight V2",
+    "type": "Item",
+    "prereqs": [
+      "Pretty Deep Pockets"
+    ],
+    "required": [
+      "DoomKnight Armor"
+    ]
+  },
+  "Artifact King": {
+    "name": "Artifact King",
+    "description": "Have ALL Artifacts and Customization Crystals",
+    "type": "Item",
+    "prereqs": null,
+    "required": [
+      "Cloak Scrap",
+      "Baltael's Aventail",
+      "Frost Moglin Knight's Helm VIII",
+      "Frost Moglin Knight's Cloak VIII",
+      "Shadowheart Bracer",
+      "Gnarly Guitar of Doom IV",
+      "Dragon's Bulwark",
+      "Dragon's Wrath",
+      "Navigator's Hat VI",
+      "Harmonized Cowbell 1001",
+      "Consuming Adept Catalyst",
+      "Spectral DeathKnight Catalyst",
+      "Royal Astravian Catalyst",
+      "Marauder Pirate Catalyst"
+    ]
+  },
+  "Hallow'd Where He Stands": {
+    "name": "Hallow'd Where He Stands",
+    "description": "Have ALL Hallow'd and Franken Weapons from the Mogloween storybook",
+    "type": "Item",
+    "prereqs": null,
+    "required": [
+      "Elevated Hallow'd Dagger",
+      "Elevated Hallow'd Edge",
+      "Elevated Hallow'd Staff",
+      "Glorious Hallow'd Dagger",
+      "Glorious Hallow'd Edge",
+      "Glorious Hallow'd Staff",
+      "Hallow'd Dagger",
+      "Hallow'd Edge",
+      "Hallow'd staff",
+      "High Hallow'd Dagger",
+      "High Hallow'd Edge",
+      "High Hallow'd Staff",
+      "Magnificent Hallow'd Dagger",
+      "Magnificent Hallow'd Edge",
+      "Magnificent Hallow'd Staff",
+      "Marvelous Hallow'd Dagger",
+      "Marvelous Hallow'd Edge",
+      "Marvelous Hallow'd Staff",
+      "Noble Hallow'd Staff",
+      "Potent Hallow'd Dagger",
+      "Potent Hallow'd Edge",
+      "Potent Hallow'd Staff",
+      "Frankenblade",
+      "Frankenblade II",
+      "Frankenblade III",
+      "Frankenblade IV",
+      "Frankenblade V",
+      "Frankenblade VI",
+      "Frankenblade VII",
+      "FrankenEyes Staff",
+      "FrankenEyes Staff II",
+      "FrankenEyes Staff III",
+      "FrankenEyes Staff IV",
+      "FrankenEyes Staff V",
+      "FrankenEyes Staff VI",
+      "FrankenEyes Staff VII",
+      "FrankenFinger",
+      "FrankenFinger II",
+      "FrankenFinger III",
+      "FrankenFinger IV",
+      "FrankenFinger V",
+      "FrankenFinger VI",
+      "FrankenFinger VII"
+    ]
+  },
+  "No Leftovers Today": {
+    "name": "No Leftovers Today",
+    "description": "Have ALL tiers of ALL Leftover Weapons and Butterbomb pets from the Thankstaking storybook",
+    "type": "Item",
+    "prereqs": null,
+    "required": [
+      "Leftover Dagger Mk. I",
+      "Leftover Dagger Mk. II",
+      "Leftover Dagger Mk. III",
+      "Leftover Dagger Mk. IV",
+      "Leftover Dagger Mk. V",
+      "Leftover Dagger Mk. VI",
+      "Leftover Dagger Mk. VII",
+      "Leftover Dagger Mk. VIII",
+      "Leftover Dagger Mk. IX",
+      "Leftover Dagger Mk. X",
+      "Leftover Staff Mk. I",
+      "Leftover Staff Mk. II",
+      "Leftover Staff Mk. III",
+      "Leftover Staff Mk. IV",
+      "Leftover Staff Mk. V",
+      "Leftover Staff Mk. VI",
+      "Leftover Staff Mk. VII",
+      "Leftover Staff Mk. VIII",
+      "Leftover Staff Mk. IX",
+      "Leftover Staff Mk. X",
+      "Leftover Sword Mk. I",
+      "Leftover Sword Mk. II",
+      "Leftover Sword Mk. III",
+      "Leftover Sword Mk. IV",
+      "Leftover Sword Mk. V",
+      "Leftover Sword Mk. VI",
+      "Leftover Sword Mk. VII",
+      "Leftover Sword Mk. VIII",
+      "Leftover Sword Mk. IX",
+      "Leftover Sword Mk. X",
+      "General Butterbomb",
+      "Lieutenant General Butterbomb",
+      "Major General Butterbomb ",
+      "Brigadier General Butterbomb",
+      "Colonel Butterbomb",
+      "2 Star General Butterbomb",
+      "3 Star General Butterbomb",
+      "4 Star General Butterbomb",
+      "5 Star General Butterbomb",
+      "6 Star General Butterbomb",
+      "7 Star General Butterbomb",
+      "8 Star General Butterbomb"
+    ]
+  },
+  "Ultra-Scrap King": {
+    "name": "Ultra-Scrap King",
+    "description": "Have 100 Ultra-Compressed Scrap Metal",
+    "type": "Item",
+    "prereqs": null,
+    "required": [
+      "Ultra-Compressed Scrap Metal (x100)"
+    ]
+  },
+  "True DOOM Knight": {
+    "name": "True DOOM Knight",
+    "description": "Have DoomKnight V1",
+    "type": "Item",
+    "prereqs": null,
+    "required": [
+      "DoomKnight Variant One"
+    ]
+  },
+  "Unique Hunter": {
+    "name": "Unique Hunter",
+    "description": "Have more than 500 Unique Items",
+    "type": "Item/Tag",
+    "prereqs": null,
+    "required": {
+      "amount": 500,
+      "Tag": "Unique_Items"
+    }
+  },
+  "Unique Enjoyer": {
+    "name": "Unique Enjoyer",
+    "description": "Have more than 1000 Unique Items",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Unique Hunter"
+    ],
+    "required": {
+      "amount": 1000,
+      "Tag": "Unique_Items"
+    }
+  },
+  "Unique Legend": {
+    "name": "Unique Legend",
+    "description": "Have more than 1500 Unique Items",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Unique Hunter",
+      "Unique Enjoyer"
+    ],
+    "required": {
+      "amount": 1500,
+      "Tag": "Unique_Items"
+    }
+  },
+  "Unique Apostle": {
+    "name": "Unique Apostle",
+    "description": "Have more than 2000 Unique Items",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Unique Hunter",
+      "Unique Enjoyer",
+      "Unique Legend"
+    ],
+    "required": {
+      "amount": 2000,
+      "Tag": "Unique_Items"
+    }
+  },
+  "Unique Messiah": {
+    "name": "Unique Messiah",
+    "description": "Have more than 2500 Unique Items",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Unique Hunter",
+      "Unique Enjoyer",
+      "Unique Legend",
+      "Unique Apostle"
+    ],
+    "required": {
+      "amount": 2500,
+      "Tag": "Unique_Items"
+    }
+  },
+  "Unique Apotheosis": {
+    "name": "Unique Apotheosis",
+    "description": "Have more than 3000 Unique Items",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Unique Hunter",
+      "Unique Enjoyer",
+      "Unique Legend",
+      "Unique Apostle",
+      "Unique Messiah"
+    ],
+    "required": {
+      "amount": 3000,
+      "Tag": "Unique_Items"
+    }
+  },
+  "Unique Quintessence": {
+    "name": "Unique Quintessence",
+    "description": "Have more than 3500 Unique Items",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Unique Hunter",
+      "Unique Enjoyer",
+      "Unique Legend",
+      "Unique Apostle",
+      "Unique Messiah",
+      "Unique Apotheosis"
+    ],
+    "required": {
+      "amount": 3500,
+      "Tag": "Unique_Items"
+    }
+  },
+  "Unique Void": {
+    "name": "Unique Void",
+    "description": "Have more than 4000 Unique Items",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Unique Hunter",
+      "Unique Enjoyer",
+      "Unique Legend",
+      "Unique Apostle",
+      "Unique Messiah",
+      "Unique Apotheosis",
+      "Unique Quintessence"
+    ],
+    "required": {
+      "amount": 4000,
+      "Tag": "Unique_Items"
+    }
+  },
+  "Gilded": {
+    "name": "Gilded",
+    "description": "Have more than 500 DC tagged Items",
+    "type": "Item/Tag",
+    "prereqs": null,
+    "required": {
+      "amount": 500,
+      "Tag": "DC_Items"
+    }
+  },
+  "Gold Plated Teeth": {
+    "name": "Gold Plated Teeth",
+    "description": "Have more than 1000 DC tagged Items",
+    "type": "Item/Tag",
+    "prereqs": ["Gilded"],
+    "required": {
+      "amount": 1000,
+      "Tag": "DC_Items"
+    }
+  },
+  "11 Gold Rings": {
+    "name": "11 Gold Rings",
+    "description": "Have more than 1500 DC tagged Items",
+    "type": "Item/Tag",
+    "prereqs": ["Gilded",
+    "Gold Plated Teeth"],
+    "required": {
+      "amount": 1500,
+      "Tag": "DC_Items"
+    }
+  },
+  "Golden Limo": {
+    "name": "Golden Limo",
+    "description": "Have more than 2000 DC tagged Items",
+    "type": "Item/Tag",
+    "prereqs": ["Gilded",
+    "Gold Plated Teeth",
+  "11 Gold Rings"],
+    "required": {
+      "amount": 2000,
+      "Tag": "DC_Items"
+    }
+  },
+  "Slim": {
+    "name": "Slim",
+    "description": "Have more than 500 items and no Duplicates",
+    "type": "Item/Tag",
+    "prereqs": null,
+    "required": {
+      "amount": 500,
+      "Tag": "Lean_Items"
+    }
+  },
+  "Some Definition": {
+    "name": "Some Definition",
+    "description": "Have more than 1000 items and no Duplicates",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Slim"
+    ],
+    "required": {
+      "amount": 1000,
+      "Tag": "Lean_Items"
+    }
+  },
+  "Six Pack": {
+    "name": "Six Pack",
+    "description": "Have more than 1500 items and no Duplicates",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Slim",
+      "Some Definition"
+    ],
+    "required": {
+      "amount": 1500,
+      "Tag": "Lean_Items"
+    }
+  },
+  "Career In Modeling": {
+    "name": "Career In Modeling",
+    "description": "Have more than 2000 items and no Duplicates",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Slim",
+      "Some Definition",
+      "Six Pack"
+    ],
+    "required": {
+      "amount": 2000,
+      "Tag": "Lean_Items"
+    }
+  },
+  "Superstar": {
+    "name": "Superstar",
+    "description": "Have more than 2500 items and no Duplicates",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Slim",
+      "Some Definition",
+      "Six Pack",
+      "Career In Modeling"
+    ],
+    "required": {
+      "amount": 2500,
+      "Tag": "Lean_Items"
+    }
+  },
+  "True Fitness Guru": {
+    "name": "True Fitness Guru",
+    "description": "Have more than 3000 items and no Duplicates",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Slim",
+      "Some Definition",
+      "Six Pack",
+      "Career In Modeling",
+      "Superstar"
+    ],
+    "required": {
+      "amount": 3000,
+      "Tag": "Lean_Items"
+    }
+  },
+  "President LEAN": {
+    "name": "President LEAN",
+    "description": "Have more than 3500 items and no Duplicates, Mr. President",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Slim",
+      "Some Definition",
+      "Six Pack",
+      "Career In Modeling",
+      "Superstar",
+      "True Fitness Guru"
+    ],
+    "required": {
+      "amount": 3500,
+      "Tag": "Lean_Items"
+    }
+  },
+  "Dalai Lama of LEAN": {
+    "name": "Dalai Lama of LEAN",
+    "description": "Have more than 4000 items and no Duplicates",
+    "type": "Item/Tag",
+    "prereqs": [
+      "Slim",
+      "Some Definition",
+      "Six Pack",
+      "Career In Modeling",
+      "Superstar",
+      "True Fitness Guru",
+      "President LEAN"
+    ],
+    "required": {
+      "amount": 4000,
+      "Tag": "Lean_Items"
+    }
+  },
+  "Count This":{
+    "name":"Count This",
+    "description":"Have more than 100k War waves cleared",
+    "type": "Item/Tag",
+    "prereqs":null,
+    "required":{"amount":100000,"Tag":"War_Waves"}
+  },
+  "War, War Never Changes":{
+    "name":"War, War Never Changes",
+    "description":"Participate in 25 or More Wars",
+    "type": "Item/Tag",
+    "prereqs":null,
+    "required":{"amount":25,"Tag":"Wars"}
+  },
+  "Innterdimensional Innsanity":{
+  "name":"Innterdimensional Innsanity",
+  "description":"Have ALL DC and DA tagged items from the IatEoT",
+  "type":"Inn",
+  "prereqs":["Exaltation of Will","Arbitrarily Innclined"]}
+}

@@ -93,11 +93,11 @@ pub async fn compare_df_characters(
     character2: i32,
 ) -> Result<(), Error> {
     let main_state = CharacterFetcher::new(character1,LookupCategory::CharacterPage)
-        .category(ParsingCategory::Compare)
+        .category(ParsingCategory::Items)
         .fetch_data()
         .await?.to_lookupstate()?;
     let second_state = CharacterFetcher::new(character2,LookupCategory::CharacterPage)
-        .category(ParsingCategory::Compare)
+        .category(ParsingCategory::Items)
         .fetch_data()
         .await?.to_lookupstate()?;
     let mut not_found:Vec<i32> = vec![];

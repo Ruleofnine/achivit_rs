@@ -1,4 +1,5 @@
 pub mod db;
+pub mod roles;
 pub mod dev_tools;
 pub mod embeds;
 pub mod error_handler;
@@ -51,4 +52,14 @@ println!("{}     {}{}",r#"   .8' `888.    d88' `"Y8  888P"Y88b  `888   `88.  .8'
 println!("{}     {}{} ",r#"  .88ooo8888.   888        888   888   888    `88..8'    888    888"#.style(achivit_style),"Description:".style(prefix_style),description.style(postfix_style));
 println!("{}   {}{}",r#" .8'     `888.  888   .o8  888   888   888     `888'     888    888 ."#.style(achivit_style),"Repository:".style(prefix_style),repo.style(postfix_style));
 println!("{}    {}{}",r#"o88o     o8888o `Y8bod8P' o888o o888o o888o     `8'     o888o   "888"#.style(achivit_style),"Discord:".style(prefix_style),"https://discord.gg/UrKUVDVCrv".style(postfix_style));
+}
+#[macro_export]
+macro_rules! create_getters {
+    ($($name:ident : $type:ty),*) => {
+        $(
+            pub fn $name(&self) -> &$type {
+                &self.$name
+            }
+        )*
+    };
 }

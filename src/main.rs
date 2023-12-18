@@ -8,7 +8,6 @@ use poise::serenity_prelude as serenity;
 use std::env;
 use std::time::Instant;
 #[tokio::main]
-
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_banner();
     dotenv().ok();

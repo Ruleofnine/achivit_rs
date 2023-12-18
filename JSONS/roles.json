@@ -1,0 +1,313 @@
+[
+  {
+    "name": "Timebound",
+    "description": "Have any Calender Class",
+    "type": "Item/Amount",
+    "amount": 1,
+    "required": [
+      "Chronomancer Armor",
+      "Reforged Avatar of Time",
+      "Reforged Chronomancer",
+      "Reforged Chronocorruptor",
+      "Reforged TimeKiller",
+      "Reforged ChronoZ",
+      "Avatar of Time",
+      "Archivist",
+      "ShadowWalker of Time",
+      "Epoch",
+      "Eternal Locket",
+      "Corrupted Doom Cassette",
+      "The Eraglass",
+      "Draconic Glowtooth",
+      "Epocharina"
+    ]
+  },
+  {
+    "name": "Arbitrary Victor",
+    "description": "Have a Fully upgraded A.A.R.G.H Weapon",
+    "type": "Item/Amount",
+    "amount": 1,
+    "required": [
+      "Uragiri III",
+      "Verraad III",
+      "Ink Spire III",
+      "Crymson Tear III",
+      "Uncalabra III"
+    ]
+  },
+  {
+    "name": "Lore's Defender",
+    "description": "Have max upgraded Defender's Gear",
+    "type": "Item",
+    "required": [
+      "Defender's Dragon Belt XXIII",
+      "Defender's Dragon Ring XXXII",
+      "Defender's Dragon Necklace XXXV",
+      "Elemental Unity Defender XV",
+      "Defender Cannon Mk. IV"
+    ]
+  },
+  {
+    "name": "Greedling",
+    "description": "Have over 1,000,000 Gold",
+    "type": "Gold",
+    "amount": 1000000
+  },
+  {
+    "name": "Toglodyte",
+    "description": "Get Dreaming Togslayer from the The Endless Invasion",
+    "type": "Item",
+    "required": [
+      "Dreaming Togslayer Armor"
+    ]
+  },
+  {
+    "name": "Master of Vice",
+    "description": "Obtain Pandora\u2019s Scythe from the Corrupt Seven Board",
+    "type": "Item",
+    "required": [
+      "Pandora's Scythe III"
+    ]
+  },
+  {
+    "name": "Beastmaster",
+    "description": "Obtain every available pet from The Inn at the Edge of Time",
+    "type": "Item",
+    "required": [
+      "Baby Chimera",
+      "Doom Figmini",
+      "Hacked Magi Drone",
+      "Krampy",
+      "Sporcaling",
+      "Extra Fluffy Tog (Extreme)"
+    ]
+  },
+  {
+    "name": "Soul of Fire",
+    "description": "Have any level or Fire Soul",
+    "type": "Item/Amount",
+    "amount": 1,
+    "required": [
+      "Fire Soul VII",
+      "Fire Soul VI",
+      "Fire Soul V",
+      "Fire Soul IV",
+      "Fire Soul III",
+      "Fire Soul II",
+      "Fire Soul I"
+    ]
+  },
+  {
+    "name": "Artifact Hunter",
+    "description": "Have 3 or more artifact's on your DF character page",
+    "type": "Item/Amount",
+    "amount": 3,
+    "required": [
+      "Cloak Scrap",
+      "Baltael's Aventail",
+      "Frost Moglin Knight's Helm VIII",
+      "Frost Moglin Knight's Cloak VIII",
+      "ShadowHeart Bracer",
+      "Draconic Glowtooth",
+      "Dragon's Bulwark",
+      "Dragon's Wrath",
+      "Navigator's Hat VI",
+      "Harmonized Cowbell 1001",
+      "Corrupted Doom Cassette",
+      "Eternal Locket",
+      "The Eraglass",
+      "Dragon's Rage",
+      "Dragon's Patience"
+    ]
+  },
+  {
+    "name": "Corrupted",
+    "description": "Have a Fully upgraded Doom Weapon",
+    "type": "Item/Amount",
+    "amount": 1,
+    "required": [
+      "Unreal ShadowReaper of Doom",
+      "Unreal Skullstaff of Doom",
+      "Unreal Twin Blades of Doom"
+    ]
+  },
+  {
+    "name": "Purified",
+    "description": "Have a Fully upgraded Destiny Weapon",
+    "type": "Item/Amount",
+    "amount": 1,
+    "required": [
+      "Ultimate Twin Blades of Destiny",
+      "Ultimate DragonStaff of Destiny",
+      "Ultimate Blinding Light of Destiny"
+    ]
+  },
+  {
+    "name": "Diverging Fates",
+    "description": "Have Fully upgraded versions of both Doom and destiny weapons",
+    "type": "MAX",
+    "prereqs": [
+      "Purified",
+      "Corrupted"
+    ]
+  },
+  {
+    "name": "Deep Pockets",
+    "description": "Own any DC class",
+    "type": "Item/Amount",
+    "amount": 1,
+    "required": [
+      "Dimensional Transphaser",
+      "Chaosweaver Armor",
+      "Kathool Adept Armor",
+      "ChickenCow Armor",
+      "Evolved ChickenCow Armor",
+      "Ascended ChickenCow Armor",
+      "enTropy",
+      "Gnomish Personal Steamtank Mk II",
+      "Icebound Revenant",
+      "Pyromancer",
+      "Aspenvale Academy Uniform"
+    ]
+  },
+  {
+    "name": "Doomed",
+    "description": "Own DoomKnight or Dmk V1",
+    "type": "Item/Amount",
+    "amount": 1,
+    "required": [
+      "DoomKnight Variant One",
+      "DoomKnight Armor"
+    ]
+  },
+  {
+    "name": "Archknight",
+    "description": "Have the Blade of Destiny",
+    "type": "Item",
+    "required": [
+      "Blade of Destiny"
+    ]
+  },
+  {
+    "name": "Draconic Deicide",
+    "description": "Have Ancient Dragon Scales or Ancient DragonLord Helm III",
+    "type": "Item/Amount",
+    "amount": 1,
+    "required": [
+      "Ancient Dragon Scales",
+      "Ancient DragonLord Helm III"
+    ]
+  },
+  {
+    "name": "The Last Stand",
+    "description": "Have an Exalted Artillery Shard or Exalted Apotheosis",
+    "type": "Item/Amount",
+    "amount": 1,
+    "required": [
+      "Exalted Apotheosis",
+      "Exalted Artillery Shard"
+    ]
+  },
+  {
+    "name": "Commander",
+    "description": "Participate in 5 or More Wars",
+    "type": "Wars",
+    "amount": 5,
+    "prereqs": null
+  },
+  {
+    "name": "General",
+    "description": "Participate in 10 or More Wars",
+    "type": "Wars",
+    "prereqs": [
+      "Commander"
+    ],
+    "amount": 10
+  },
+  {
+    "name": "Warmonger I",
+    "description": "500 waves or more in a single war cleared",
+    "type": "Waves",
+    "amount": 500,
+    "prereqs": null
+  },
+  {
+    "name": "Warmonger II",
+    "description": "1,000 waves or more in a single war cleared",
+    "type": "Waves",
+    "amount": 1000,
+    "prereqs": [
+      "Warmonger I"
+    ]
+  },
+  {
+    "name": "Warmonger III",
+    "description": "1,500 waves or more in a single war cleared",
+    "type": "Waves",
+    "prereqs": [
+      "Warmonger I",
+      "Warmonger II"
+    ],
+    "amount": 1500
+  },
+  {
+    "name": "Warmonger IV",
+    "description": "3,000 waves or more in a single war cleared",
+    "type": "Waves",
+    "prereqs": [
+      "Warmonger I",
+      "Warmonger II",
+      "Warmonger III"
+    ],
+    "amount": 3000
+  },
+  {
+    "name": "Warmonger V",
+    "description": "5,000 waves or more in a single war cleared",
+    "type": "Waves",
+    "prereqs": [
+      "Warmonger I",
+      "Warmonger II",
+      "Warmonger III",
+      "Warmonger IV"
+    ],
+    "amount": 5000
+  },
+  {
+    "name": "Warmonger VI",
+    "description": "7,500 waves or more in a single war cleared",
+    "type": "Waves",
+    "prereqs": [
+      "Warmonger I",
+      "Warmonger II",
+      "Warmonger III",
+      "Warmonger IV",
+      "Warmonger V"
+    ],
+    "amount": 7500
+  },
+  {
+    "name": "Avatar of War",
+    "description": "10,001 waves or more in a single war cleared",
+    "type": "Waves",
+    "prereqs": [
+      "Warmonger I",
+      "Warmonger II",
+      "Warmonger III",
+      "Warmonger IV",
+      "Warmonger V",
+      "Warmonger VI"
+    ],
+    "amount": 10001
+  },
+  {
+    "name": "Elegy of Madness",
+    "description": "Have the Debris 2 III and The Fool's Opus",
+    "type": "Item/Amount",
+    "amount": 2,
+    "required": [
+      "The Fool's Opus",
+      "Debris 2 III"
+    ]
+  }
+]

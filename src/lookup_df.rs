@@ -5,7 +5,7 @@ use crate::parsing::{DFCharacterData, WarList, CharacterFetcher, ParsingCategory
 use crate::serenity::Color;
 use crate::sheets::compare_sheet;
 use crate::{Context, Error};
-use color_eyre::Result;
+use color_eyre::{Result,eyre::eyre};
 use poise::serenity_prelude::User;
 use std::collections::HashMap;
 async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<()> {
@@ -43,6 +43,13 @@ pub enum LookupCategory {
     Wars,
     Duplicates,
 }
+impl LookupState{
+   pub fn extract_data(lookup_state: LookupState) -> Result<DFCharacterData> {
+        match lookup_state {
+            LookupState::CharacterPage(data) => Ok(data),
+            _ => Err(eyre!("No Item data for this LookupState")),
+        }
+    }    }
 
 /// Lookup a DF Character in various ways
 #[poise::command(slash_command)]

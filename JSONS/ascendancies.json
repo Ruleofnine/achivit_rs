@@ -1,5 +1,5 @@
-{
-  "The Calender Gauntlet": {
+[
+  {
     "name": "The Calender Gauntlet",
     "description": "Have ALL Calender Classes",
     "type": "Item",
@@ -14,7 +14,7 @@
       "Chronocorruptor"
     ]
   },
-  "Timeless": {
+  {
     "name": "Timeless",
     "description": "Have 8 or more Calender Classes",
     "type": "Item/Amount",
@@ -36,7 +36,7 @@
       "Epocharina"
     ]
   },
-  "Arbitrator of Doom and Destiny": {
+  {
     "name": "Arbitrator of Doom and Destiny",
     "description": "Have ALL DA tagged DOOM and Destiny Weapons",
     "type": "MAX",
@@ -46,7 +46,7 @@
     ],
     "required": null
   },
-  "Arbitrarily Innclined": {
+  {
     "name": "Arbitrarily Innclined",
     "description": "Have ALL A.A.R.G.H Weapons and Cometic Items",
     "type": "Item",
@@ -77,7 +77,7 @@
       "Yalla's Wings"
     ]
   },
-  "L-L-L-L-Ludicrously Arbitrary": {
+  {
     "name": "L-L-L-L-Ludicrously Arbitrary",
     "description": "Have ALL tiers of ALL A.A.R.G.H Weapons",
     "type": "Item",
@@ -97,7 +97,7 @@
       "Uncalabra I"
     ]
   },
-  "Arbitrary Champion": {
+  {
     "name": "Arbitrary Champion",
     "description": "Have ALL Fully upgraded A.A.R.G.H Weapons",
     "type": "Item",
@@ -110,7 +110,7 @@
       "Uncalabra III"
     ]
   },
-  "Destined for Righteousness": {
+  {
     "name": "Destined for Righteousness",
     "description": "Have ALL DA tagged Destiny Weapons",
     "type": "Item",
@@ -160,7 +160,7 @@
       "Ultimate Twin Blades of Destiny"
     ]
   },
-  "Doomed from the Start": {
+  {
     "name": "Doomed from the Start",
     "description": "Have ALL DA tagged DOOM Weapons",
     "type": "Item",
@@ -216,7 +216,7 @@
       "Unreal Twin Blades of Doom"
     ]
   },
-  "Exaltation of Will": {
+  {
     "name": "Exaltation of Will",
     "description": "Have ALL Weapons and Capes from The Exaltia Tower",
     "type": "Item",
@@ -245,7 +245,7 @@
       "Wings of Yaphael III"
     ]
   },
-  "A Warped Mind": {
+  {
     "name": "A Warped Mind",
     "description": "Have 15 Timewarped Trophies and 125 Timewarped Medals",
     "type": "Item",
@@ -255,23 +255,23 @@
       "Timewarped Medal (x125)"
     ]
   },
-  "The Golden King": {
+  {
     "name": "The Golden King",
     "description": "Have over 10,000,000 Gold",
     "type": "Gold",
     "prereqs": null,
-    "required": 10000000
+    "amount": 10000000
   },
-  "GOLDEN PYCHO": {
+  {
     "name": "GOLDEN PYCHO",
     "description": "Have over 50,000,000 Gold",
     "type": "Gold",
     "prereqs": [
       "The Golden King"
     ],
-    "required": 50000000
+    "amount": 50000000
   },
-  "THE GOLDEN GOD": {
+  {
     "name": "THE GOLDEN GOD",
     "description": "Have over 100,000,000 Gold",
     "type": "Gold",
@@ -279,9 +279,9 @@
       "GOLDEN PYCHO",
       "The Golden King"
     ],
-    "required": 100000000
+    "amount": 100000000
   },
-  "Pretty Deep Pockets": {
+  {
     "name": "Pretty Deep Pockets",
     "description": "Have ALL DC Classes",
     "type": "Item",
@@ -300,7 +300,7 @@
       "Aspenvale Academy Uniform"
     ]
   },
-  "Limitless Pockets": {
+  {
     "name": "Limitless Pockets",
     "description": "Have ALL DC Classes and DoomKnight V2",
     "type": "Item",
@@ -311,7 +311,7 @@
       "DoomKnight Armor"
     ]
   },
-  "Artifact King": {
+  {
     "name": "Artifact King",
     "description": "Have ALL Artifacts and Customization Crystals",
     "type": "Item",
@@ -333,7 +333,7 @@
       "Marauder Pirate Catalyst"
     ]
   },
-  "Hallow'd Where He Stands": {
+  {
     "name": "Hallow'd Where He Stands",
     "description": "Have ALL Hallow'd and Franken Weapons from the Mogloween storybook",
     "type": "Item",
@@ -384,7 +384,7 @@
       "FrankenFinger VII"
     ]
   },
-  "No Leftovers Today": {
+  {
     "name": "No Leftovers Today",
     "description": "Have ALL tiers of ALL Leftover Weapons and Butterbomb pets from the Thankstaking storybook",
     "type": "Item",
@@ -434,7 +434,7 @@
       "8 Star General Butterbomb"
     ]
   },
-  "Ultra-Scrap King": {
+  {
     "name": "Ultra-Scrap King",
     "description": "Have 100 Ultra-Compressed Scrap Metal",
     "type": "Item",
@@ -443,7 +443,7 @@
       "Ultra-Compressed Scrap Metal (x100)"
     ]
   },
-  "True DOOM Knight": {
+  {
     "name": "True DOOM Knight",
     "description": "Have DoomKnight V1",
     "type": "Item",
@@ -452,90 +452,73 @@
       "DoomKnight Variant One"
     ]
   },
-  "Unique Hunter": {
+  {
     "name": "Unique Hunter",
     "description": "Have more than 500 Unique Items",
-    "type": "Item/Tag",
+    "type": "Item/Unique",
     "prereqs": null,
-    "required": {
-      "amount": 500,
-      "Tag": "Unique_Items"
-    }
+    "amount": 500
   },
-  "Unique Enjoyer": {
+  {
     "name": "Unique Enjoyer",
     "description": "Have more than 1000 Unique Items",
-    "type": "Item/Tag",
+    "type": "Item/Unique",
+    "amount": 1000,
     "prereqs": [
       "Unique Hunter"
-    ],
-    "required": {
-      "amount": 1000,
-      "Tag": "Unique_Items"
-    }
+    ]
   },
-  "Unique Legend": {
+  {
     "name": "Unique Legend",
     "description": "Have more than 1500 Unique Items",
-    "type": "Item/Tag",
+    "type": "Item/Unique",
     "prereqs": [
       "Unique Hunter",
       "Unique Enjoyer"
     ],
-    "required": {
-      "amount": 1500,
-      "Tag": "Unique_Items"
-    }
+    "amount": 1500
   },
-  "Unique Apostle": {
+  {
     "name": "Unique Apostle",
     "description": "Have more than 2000 Unique Items",
-    "type": "Item/Tag",
+    "type": "Item/Unique",
+    "amount": 2000,
     "prereqs": [
       "Unique Hunter",
       "Unique Enjoyer",
       "Unique Legend"
-    ],
-    "required": {
-      "amount": 2000,
-      "Tag": "Unique_Items"
-    }
+    ]
   },
-  "Unique Messiah": {
+  {
     "name": "Unique Messiah",
     "description": "Have more than 2500 Unique Items",
-    "type": "Item/Tag",
+    "type": "Item/Unique",
+    "amount": 2500,
     "prereqs": [
       "Unique Hunter",
       "Unique Enjoyer",
       "Unique Legend",
       "Unique Apostle"
-    ],
-    "required": {
-      "amount": 2500,
-      "Tag": "Unique_Items"
-    }
+    ]
   },
-  "Unique Apotheosis": {
+  {
     "name": "Unique Apotheosis",
     "description": "Have more than 3000 Unique Items",
-    "type": "Item/Tag",
+    "type": "Item/Unique",
+    "amount": 3000,
     "prereqs": [
       "Unique Hunter",
       "Unique Enjoyer",
       "Unique Legend",
       "Unique Apostle",
       "Unique Messiah"
-    ],
-    "required": {
-      "amount": 3000,
-      "Tag": "Unique_Items"
-    }
+    ]
   },
-  "Unique Quintessence": {
+  {
     "name": "Unique Quintessence",
     "description": "Have more than 3500 Unique Items",
-    "type": "Item/Tag",
+    "type": "Item/Unique",
+    "amount": 3500,
     "prereqs": [
       "Unique Hunter",
       "Unique Enjoyer",
@@ -543,16 +526,13 @@
       "Unique Apostle",
       "Unique Messiah",
       "Unique Apotheosis"
-    ],
-    "required": {
-      "amount": 3500,
-      "Tag": "Unique_Items"
-    }
+    ]
   },
-  "Unique Void": {
+  {
     "name": "Unique Void",
     "description": "Have more than 4000 Unique Items",
-    "type": "Item/Tag",
+    "type": "Item/Unique",
+    "amount":4000,
     "prereqs": [
       "Unique Hunter",
       "Unique Enjoyer",
@@ -561,139 +541,112 @@
       "Unique Messiah",
       "Unique Apotheosis",
       "Unique Quintessence"
-    ],
-    "required": {
-      "amount": 4000,
-      "Tag": "Unique_Items"
-    }
+    ]
   },
-  "Gilded": {
+  {
     "name": "Gilded",
     "description": "Have more than 500 DC tagged Items",
-    "type": "Item/Tag",
+    "type": "Item/DC",
     "prereqs": null,
-    "required": {
-      "amount": 500,
-      "Tag": "DC_Items"
-    }
+    "amount": 500
   },
-  "Gold Plated Teeth": {
+  {
     "name": "Gold Plated Teeth",
     "description": "Have more than 1000 DC tagged Items",
-    "type": "Item/Tag",
-    "prereqs": ["Gilded"],
-    "required": {
-      "amount": 1000,
-      "Tag": "DC_Items"
-    }
+    "type": "Item/DC",
+    "amount": 1000,
+    "prereqs": [
+      "Gilded"
+    ]
   },
-  "11 Gold Rings": {
+  {
     "name": "11 Gold Rings",
     "description": "Have more than 1500 DC tagged Items",
-    "type": "Item/Tag",
-    "prereqs": ["Gilded",
-    "Gold Plated Teeth"],
-    "required": {
-      "amount": 1500,
-      "Tag": "DC_Items"
-    }
+    "type": "Item/DC",
+    "amount":1500,
+    "prereqs": [
+      "Gilded",
+      "Gold Plated Teeth"
+    ]
   },
-  "Golden Limo": {
+  {
     "name": "Golden Limo",
     "description": "Have more than 2000 DC tagged Items",
-    "type": "Item/Tag",
-    "prereqs": ["Gilded",
-    "Gold Plated Teeth",
-  "11 Gold Rings"],
-    "required": {
-      "amount": 2000,
-      "Tag": "DC_Items"
-    }
+    "type": "Item/DC",
+    "amount":2000,
+    "prereqs": [
+      "Gilded",
+      "Gold Plated Teeth",
+      "11 Gold Rings"
+    ]
   },
-  "Slim": {
+  {
     "name": "Slim",
     "description": "Have more than 500 items and no Duplicates",
-    "type": "Item/Tag",
-    "prereqs": null,
-    "required": {
-      "amount": 500,
-      "Tag": "Lean_Items"
-    }
+    "type": "Item/Lean",
+    "amount":500,
+    "prereqs": null
   },
-  "Some Definition": {
+  {
     "name": "Some Definition",
     "description": "Have more than 1000 items and no Duplicates",
-    "type": "Item/Tag",
+    "type": "Item/Lean",
+    "amount":1000,
     "prereqs": [
       "Slim"
-    ],
-    "required": {
-      "amount": 1000,
-      "Tag": "Lean_Items"
-    }
+    ]
   },
-  "Six Pack": {
+  {
     "name": "Six Pack",
     "description": "Have more than 1500 items and no Duplicates",
-    "type": "Item/Tag",
+    "type": "Item/Lean",
+    "amount":1500,
     "prereqs": [
       "Slim",
       "Some Definition"
-    ],
-    "required": {
-      "amount": 1500,
-      "Tag": "Lean_Items"
-    }
+    ]
   },
-  "Career In Modeling": {
+  {
     "name": "Career In Modeling",
     "description": "Have more than 2000 items and no Duplicates",
-    "type": "Item/Tag",
+    "type": "Item/Lean",
+    "amount":2000,
     "prereqs": [
       "Slim",
       "Some Definition",
       "Six Pack"
-    ],
-    "required": {
-      "amount": 2000,
-      "Tag": "Lean_Items"
-    }
+    ]
   },
-  "Superstar": {
+  {
     "name": "Superstar",
     "description": "Have more than 2500 items and no Duplicates",
-    "type": "Item/Tag",
+    "type": "Item/Lean",
+    "amount":2500,
     "prereqs": [
       "Slim",
       "Some Definition",
       "Six Pack",
       "Career In Modeling"
-    ],
-    "required": {
-      "amount": 2500,
-      "Tag": "Lean_Items"
-    }
+    ]
   },
-  "True Fitness Guru": {
+  {
     "name": "True Fitness Guru",
     "description": "Have more than 3000 items and no Duplicates",
-    "type": "Item/Tag",
+    "type": "Item/Lean",
+    "amount":3000,
     "prereqs": [
       "Slim",
       "Some Definition",
       "Six Pack",
       "Career In Modeling",
       "Superstar"
-    ],
-    "required": {
-      "amount": 3000,
-      "Tag": "Lean_Items"
-    }
+    ]
   },
-  "President LEAN": {
+  {
     "name": "President LEAN",
     "description": "Have more than 3500 items and no Duplicates, Mr. President",
-    "type": "Item/Tag",
+    "type": "Item/Lean",
+    "amount":3500,
     "prereqs": [
       "Slim",
       "Some Definition",
@@ -701,16 +654,13 @@
       "Career In Modeling",
       "Superstar",
       "True Fitness Guru"
-    ],
-    "required": {
-      "amount": 3500,
-      "Tag": "Lean_Items"
-    }
+    ]
   },
-  "Dalai Lama of LEAN": {
+  {
     "name": "Dalai Lama of LEAN",
     "description": "Have more than 4000 items and no Duplicates",
-    "type": "Item/Tag",
+    "type": "Item/Lean",
+    "amount":4000,
     "prereqs": [
       "Slim",
       "Some Definition",
@@ -719,29 +669,29 @@
       "Superstar",
       "True Fitness Guru",
       "President LEAN"
-    ],
-    "required": {
-      "amount": 4000,
-      "Tag": "Lean_Items"
-    }
+    ]
   },
-  "Count This":{
-    "name":"Count This",
-    "description":"Have more than 100k War waves cleared",
-    "type": "Item/Tag",
-    "prereqs":null,
-    "required":{"amount":100000,"Tag":"War_Waves"}
+  {
+    "name": "Count This",
+    "description": "Have more than 100k War waves cleared",
+    "type": "Waves",
+    "amount":100000,
+    "prereqs": null
   },
-  "War, War Never Changes":{
-    "name":"War, War Never Changes",
-    "description":"Participate in 25 or More Wars",
-    "type": "Item/Tag",
-    "prereqs":null,
-    "required":{"amount":25,"Tag":"Wars"}
+  {
+    "name": "War, War Never Changes",
+    "description": "Participate in 25 or More Wars",
+    "type": "Wars",
+    "amount":25,
+    "prereqs": null
   },
-  "Innterdimensional Innsanity":{
-  "name":"Innterdimensional Innsanity",
-  "description":"Have ALL DC and DA tagged items from the IatEoT",
-  "type":"Inn",
-  "prereqs":["Exaltation of Will","Arbitrarily Innclined"]}
-}
+  {
+    "name": "Innterdimensional Innsanity",
+    "description": "Have ALL DC and DA tagged items from the IatEoT",
+    "type": "MAX",
+    "prereqs": [
+      "Exaltation of Will",
+      "Arbitrarily Innclined"
+    ]
+  }
+]

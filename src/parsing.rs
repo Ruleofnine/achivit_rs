@@ -3,9 +3,9 @@ use crate::lookup_df::LookupState;
 use crate::requests::{
     fetch_page_with_user_agent, CHARPAGE, COLOR_SITE, FLASH_USER_AGENT, USER_AGENT,
 };
-use getset::Getters;
 use chrono::NaiveDate;
 use color_eyre::Result;
+use getset::Getters;
 use num_format::{Locale, ToFormattedString};
 use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
@@ -13,7 +13,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::future::Future;
 use std::pin::Pin;
 use tokio::fs;
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub enum ParsingCategory {
     CharacterPage,
     FlashCharacterPage,
@@ -22,6 +22,8 @@ pub enum ParsingCategory {
     Inventory,
     Duplicates,
     Compare,
+    Roles,
+    Ascendancies,
 }
 pub trait IsFlash {
     fn is_flash(&self) -> bool;
@@ -51,6 +53,8 @@ impl From<&LookupCategory> for ParsingCategory {
             LookupCategory::Inventory => ParsingCategory::Inventory,
             LookupCategory::Wars => ParsingCategory::Wars,
             LookupCategory::Duplicates => ParsingCategory::Duplicates,
+            LookupCategory::Roles => ParsingCategory::Roles,
+            LookupCategory::Ascendancies => ParsingCategory::Ascendancies,
         }
     }
 }
@@ -126,10 +130,14 @@ impl CharacterData {
             ParsingCategory::CharacterPage => parse_df_character(&document),
             ParsingCategory::FlashCharacterPage => parse_df_character_flash(&document),
             ParsingCategory::Wars => parse_df_character_wars_only(&document),
-            ParsingCategory::Items => parse_df_character_with_items(&document),
             ParsingCategory::Duplicates => parse_df_character_duplicates(&document),
             ParsingCategory::Inventory => parse_df_character_inventory_only(&document),
-            ParsingCategory::Compare => parse_df_character_with_items(&document),
+            ParsingCategory::Items => parse_df_character_with_items(&document, self.category),
+            ParsingCategory::Compare => parse_df_character_with_items(&document, self.category),
+            ParsingCategory::Roles => parse_df_character_with_items(&document, self.category),
+            ParsingCategory::Ascendancies => {
+                parse_df_character_with_items(&document, self.category)
+            }
         })
     }
 }
@@ -171,15 +179,16 @@ pub struct Items {
     pub da: BTreeSet<String>,
     pub dc: BTreeSet<String>,
     pub artifact: BTreeSet<String>,
+    pub dups: i32,
 }
 impl Items {
-    pub fn text(num:usize)->String{
-        let str =match num{
+    pub fn text(num: usize) -> String {
+        let str = match num {
             0 => "NDA Items",
             1 => "DA Items",
             2 => "DC Items",
-            _ => "Artifacts"
-    };
+            _ => "Artifacts",
+        };
         str.to_string()
     }
     pub fn new() -> Items {
@@ -188,7 +197,11 @@ impl Items {
             da: BTreeSet::new(),
             dc: BTreeSet::new(),
             artifact: BTreeSet::new(),
+            dups: 0,
         }
+    }
+    fn dup(&mut self) {
+        self.dups += 1
     }
     pub fn count(&self) -> u16 {
         (self.nda.len() + self.dc.len() + self.da.len() + self.artifact.len()) as u16
@@ -207,7 +220,7 @@ impl Items {
             (&mut self.artifact, &mut other.artifact),
         ]
     }
-    pub fn all(mut self)->BTreeSet<String>{
+    pub fn all(mut self) -> BTreeSet<String> {
         self.dc.extend(self.da);
         self.dc.extend(self.nda);
         self.dc.extend(self.artifact);
@@ -405,10 +418,11 @@ impl War {
     pub fn war_string(&self) -> String {
         format!("**{}**\n*{} ,{}*\n", self.warlabel, self.waves, self.rares)
     }
-    pub fn waves_int(&self)->i32{
-    self.waves().replace(" waves", "").parse().unwrap()
-    }}
- 
+    pub fn waves_int(&self) -> i32 {
+        self.waves().replace(" waves", "").parse().unwrap()
+    }
+}
+
 #[derive(Getters)]
 #[getset(get = "pub")]
 #[derive(Debug, Clone)]
@@ -809,7 +823,7 @@ pub fn get_discord_embed_description_flash(
         up
     )
 }
-pub fn parse_df_character_with_items(document: &Html) -> LookupState {
+pub fn parse_df_character_with_items(document: &Html, category: ParsingCategory) -> LookupState {
     let mut character = DFCharacterData::default();
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let h1_selector = Selector::parse("h1").unwrap();
@@ -903,28 +917,36 @@ pub fn parse_df_character_with_items(document: &Html) -> LookupState {
     let mut warbuilder = WarBuilder::default();
     for span in document.select(&item_selector).into_iter() {
         let item_name = span.text().next().unwrap();
-        let item_name = match item_name.split_once(" (x"){
+        let item_name = match item_name.split_once(" (x") {
             None => item_name.to_string(),
-            Some(item) => item.0.to_string()
+            Some(item) => item.0.to_string(),
         };
         let mut classes = span.value().classes();
         if let Some(class) = classes.next() {
             match class {
                 "gold" => {
                     character.nda_count += 1;
-                    items.nda.insert(item_name);
+                    if !items.nda.insert(item_name) {
+                        items.dup()
+                    };
                 }
                 "coins" => {
                     character.dc_count += 1;
-                    items.dc.insert(item_name);
+                    if !items.dc.insert(item_name) {
+                        items.dup()
+                    };
                 }
                 "amulet" => {
                     character.da_count += 1;
-                    items.da.insert(item_name);
+                    if !items.da.insert(item_name) {
+                        items.dup()
+                    };
                 }
                 "artifact" => {
                     character.artifact_count += 1;
-                    items.artifact.insert(item_name);
+                    if items.artifact.insert(item_name){
+                        items.dup()
+                    };
                 }
                 "warlabel" => {
                     warbuilder.warlabel = Some(item_name);
@@ -946,5 +968,9 @@ pub fn parse_df_character_with_items(document: &Html) -> LookupState {
     character.unique_item_count = items.count();
     character.item_count = character.calc_item_count();
     character.item_list = Some(items);
-    LookupState::CharacterPage(character)
+    match category {
+        ParsingCategory::Roles => LookupState::Roles(character),
+        ParsingCategory::Ascendancies => LookupState::Ascendancies(character),
+        _ => LookupState::CharacterPage(character),
+    }
 }

@@ -1,7 +1,7 @@
 use crate::serenity::GuildId;
 use achivit_rs::error_handler::on_error;
 use achivit_rs::event_handler::event_handler;
-use achivit_rs::{Data, print_banner};
+use achivit_rs::{print_banner, Data};
 use dotenv::dotenv;
 use log::info;
 use poise::serenity_prelude as serenity;
@@ -36,9 +36,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         achivit_rs::manage_users::delete_character(),
         achivit_rs::lookup_df::lookup_df_character(),
         achivit_rs::lookup_df::compare_df_characters(),
+        achivit_rs::lookup_df::roles_list(),
         achivit_rs::guild_settings::set_roles(),
     ];
-    // let test_commands = vec![];
+    // let test_commands = vec![achivit_rs::lookup_df::lookup_df_roles()];
     let options = poise::FrameworkOptions {
         commands,
         event_handler: |ctx, event, framework, data| {
@@ -56,9 +57,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             })
         },
         prefix_options: poise::PrefixFrameworkOptions {
-                prefix: Some("|".into()),
-                ..Default::default()
-            },
+            prefix: Some("|".into()),
+            ..Default::default()
+        },
         ..Default::default()
     };
 
@@ -67,7 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .setup(move |ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                // poise::builtins::register_in_guild(ctx, &test_commands, guild_id).await?;
+                // poise::builtins::register_in_guild(ctx, &test_commands, _guild_id).await?;
                 let commands: Vec<String> = framework
                     .options()
                     .commands

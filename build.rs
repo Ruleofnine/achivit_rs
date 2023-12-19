@@ -58,9 +58,9 @@ async fn intitialize_db(db_url: &String) -> Result<(), sqlx::Error> {
         ALTER TABLE public.df_characters ADD CONSTRAINT fk_war_lb_df_id FOREIGN KEY (df_id) REFERENCES public.df_characters(df_id) ON DELETE CASCADE;
 
         CREATE TABLE public.guild_settings(
-        guild_id bigint NOT NULL,
+        guild_id bigint NOT NULL UNIQUE,
         guild_name character varying(100) NOT NULL,
-        roles_path character varying(117) NOT NULL
+        roles_path character varying(111) NOT NULL
         );
         ALTER TABLE public.guild_settings OWNER TO {0};
 "#,

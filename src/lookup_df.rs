@@ -1,13 +1,16 @@
 use crate::db::query_with_id;
 use crate::embeds::*;
+use crate::guild_settings::GuildSettings;
 use crate::manage_users::autocomplete_character;
-use crate::parsing::{DFCharacterData, WarList, CharacterFetcher, ParsingCategory};
+use crate::parsing::{CharacterFetcher, DFCharacterData, ParsingCategory, WarList};
+use crate::roles::{get_roles, RolesListType};
 use crate::serenity::Color;
 use crate::sheets::compare_sheet;
 use crate::{Context, Error};
-use color_eyre::{Result,eyre::eyre};
+use color_eyre::{eyre::eyre, Result};
 use poise::serenity_prelude::User;
 use std::collections::HashMap;
+
 async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<()> {
     match state {
         LookupState::NotFound => not_found_embed(ctx, df_id).await?,
@@ -22,6 +25,8 @@ async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<
         LookupState::Duplicates(name, dups) => {
             send_duplicates_embed(dups, df_id, name, ctx).await?
         }
+        LookupState::Roles(char) => send_roles_embed(df_id,char,ctx,RolesListType::Roles).await?,
+        LookupState::Ascendancies(char) => send_roles_embed(df_id,char,ctx,RolesListType::Ascend).await?
     };
     Ok(())
 }
@@ -32,24 +37,29 @@ pub enum LookupState {
     Inventory(String, Vec<String>),
     Wars(String, WarList),
     Duplicates(String, HashMap<String, i32>),
+    Roles(DFCharacterData),
+    Ascendancies(DFCharacterData),
     NotFound,
 }
 #[allow(non_camel_case_types)]
-#[derive(poise::ChoiceParameter, PartialEq)]
+#[derive(poise::ChoiceParameter, PartialEq,Debug)]
 pub enum LookupCategory {
     CharacterPage,
     FlashCharacterPage,
     Inventory,
     Wars,
     Duplicates,
+    Roles,
+    Ascendancies,
 }
-impl LookupState{
-   pub fn extract_data(lookup_state: LookupState) -> Result<DFCharacterData> {
-        match lookup_state {
+impl LookupState {
+    pub fn extract_data(self) -> Result<DFCharacterData> {
+        match self {
             LookupState::CharacterPage(data) => Ok(data),
-            _ => Err(eyre!("No Item data for this LookupState")),
+            _ => Err(eyre!("No data for this LookupState")),
         }
-    }    }
+    }
+}
 
 /// Lookup a DF Character in various ways
 #[poise::command(slash_command)]
@@ -82,10 +92,10 @@ pub async fn lookup_df_character(
             return Ok(());
         }
     };
-
-    let lookupstate = CharacterFetcher::new(df_id,category)
+    let lookupstate = CharacterFetcher::new(df_id, category)
         .fetch_data()
-        .await?.to_lookupstate()?;
+        .await?
+        .to_lookupstate()?;
     Ok(send_embed(lookupstate, ctx, df_id).await?)
 }
 /// Compare two DF Characters in various ways
@@ -99,37 +109,53 @@ pub async fn compare_df_characters(
     #[description = "character of selected user"]
     character2: i32,
 ) -> Result<(), Error> {
-    let main_state = CharacterFetcher::new(character1,LookupCategory::CharacterPage)
+    let main_state = CharacterFetcher::new(character1, LookupCategory::CharacterPage)
         .category(ParsingCategory::Items)
         .fetch_data()
-        .await?.to_lookupstate()?;
-    let second_state = CharacterFetcher::new(character2,LookupCategory::CharacterPage)
+        .await?
+        .to_lookupstate()?;
+    let second_state = CharacterFetcher::new(character2, LookupCategory::CharacterPage)
         .category(ParsingCategory::Items)
         .fetch_data()
-        .await?.to_lookupstate()?;
-    let mut not_found:Vec<i32> = vec![];
-    match (&main_state,&second_state){
-        (LookupState::NotFound,LookupState::NotFound)=>{not_found.extend(vec![character1,character2]);},
-        (LookupState::NotFound,_) =>{not_found.push(character1);},
-        (_,LookupState::NotFound) =>{not_found.push(character2)},
-        _ => ()
+        .await?
+        .to_lookupstate()?;
+    let mut not_found: Vec<i32> = vec![];
+    match (&main_state, &second_state) {
+        (LookupState::NotFound, LookupState::NotFound) => {
+            not_found.extend(vec![character1, character2]);
+        }
+        (LookupState::NotFound, _) => {
+            not_found.push(character1);
+        }
+        (_, LookupState::NotFound) => not_found.push(character2),
+        _ => (),
     };
-    match not_found.len(){
-        0 => {},
-        _ => {compare_not_found_embed(ctx, not_found).await?}
-
+    match not_found.len() {
+        0 => {}
+        _ => compare_not_found_embed(ctx, not_found).await?,
     };
     let sheet_data = compare_sheet(main_state, second_state).await?;
-    match sheet_data{
-        Some(sheet) =>send_compare_embed(sheet,ctx).await?,
-        None => ()
+    match sheet_data {
+        Some(sheet) => send_compare_embed(sheet, ctx).await?,
+        None => (),
     };
     Ok(())
 }
-/// Compare two DF Characters in various ways
+/// Get the DF role list for this server
 #[poise::command(slash_command)]
-pub async fn roles_list(ctx: Context<'_>,
-) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().expect("Not used in Guild");
-    Ok(())
+pub async fn roles_list(ctx: Context<'_>) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().expect("").0 as i64;
+    let pool = &ctx.data().db_connection;
+    let settings =
+        sqlx::query_as::<_, GuildSettings>("select * from guild_settings where guild_id = $1")
+            .bind(guild_id)
+            .fetch_optional(pool)
+            .await?;
+    let guild_settings = match settings {
+        None => return Ok(no_settings_embed(ctx).await?),
+        Some(settings) => settings,
+    };
+    let mut roles = get_roles(guild_settings.roles_path())?;
+    Ok(roles_embed(ctx, &mut roles).await?)
 }
+

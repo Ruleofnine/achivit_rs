@@ -6,6 +6,10 @@ use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::fs::File;
 use std::io::BufReader;
+pub enum RolesListType{
+    Roles,
+    Ascend
+}
 #[derive(Getters)]
 #[getset(get = "pub")]
 #[derive(Debug, Deserialize, Eq, Hash, PartialEq,Serialize)]
@@ -37,7 +41,7 @@ impl RoleList {
     fn sort(&mut self) {
         self.0.sort_by(|a, b| max_last(&a, &b))
     }
-    fn sort_alphabetical(&mut self){
+    pub fn sort_alphabetical(&mut self){
         self.0.sort_by(|a,b|a.name().cmp(b.name()))
 
     }
@@ -53,11 +57,19 @@ pub enum ReqType {
     #[serde(rename = "MAX")]
     Max,
     #[serde(rename = "Item/Amount")]
-    ItemsAmount,
+    ItemAmount,
+    #[serde(rename = "Item/Unique")]
+    ItemUnique,
+    #[serde(rename = "Item/Lean")]
+    ItemLean,
+    #[serde(rename = "Item/DC")]
+    ItemDC,
+
+
 }
 
 pub fn get_roles(path: &str) -> Result<RoleList> {
-    let file = File::open(path)?;
+    let file = File::open(format!("JSONS/{path}"))?;
     let reader = BufReader::new(file);
     let mut roles: RoleList = serde_json::from_reader(reader)?;
     roles.sort();
@@ -88,6 +100,7 @@ fn check_item_amount(role: &Role, char_items: &BTreeSet<String>) -> bool {
     let count = items.iter().filter(|&i| char_items.contains(i)).count();
     count as i32 >= amount
 }
+
 fn check_waves(role: &Role, wars: &WarList) -> bool {
     let amount = role.amount().expect("Waves Needs amount.");
     wars.war_list().iter().any(|w| w.waves_int() >= amount)
@@ -112,17 +125,23 @@ fn check_max_role(roles: &Vec<Role>, role: &Role, aquired_roles: &Vec<usize>) ->
     false
 }
 fn aquired_roles_indexes<'a>(roles: &mut RoleList, mut char: DFCharacterData) -> Vec<usize> {
-    let char_items = char.item_list.take().expect("expected char items").all();
+    let char_items = char.item_list.take().expect("expected char items");
+    let dups = *char_items.dups();
+    dbg!(dups);
+    let char_items = char_items.all();
     let roles_list = roles.roles();
     let mut roles_indexes_to_remove: Vec<usize> = vec![];
     for (i, role) in roles_list.iter().enumerate() {
         let aquired = match role.req_type {
             ReqType::Wars => check_war(role, &char),
             ReqType::Item => check_item(role, &char_items),
-            ReqType::ItemsAmount => check_item_amount(role, &char_items),
+            ReqType::ItemAmount => check_item_amount(role, &char_items),
             ReqType::Waves => check_waves(role, &char.wars),
             ReqType::Gold => check_gold(role, &char.gold()),
             ReqType::Max => check_max_role(roles_list, role, &roles_indexes_to_remove),
+            ReqType::ItemUnique => role.amount().expect(&format!("{} needs amount",role.name())) as u16 <= *char.unique_item_count(),
+            ReqType::ItemLean =>  role.amount().expect(&format!("{} needs amount",role.name())) as u16 <= *char.unique_item_count() && dups == 0,
+            ReqType::ItemDC => role.amount().expect(&format!("{} needs amount",role.name())) as u16 <= *char.dc_count(),
         };
         if aquired {
             roles_indexes_to_remove.push(i);
@@ -145,16 +164,18 @@ fn prereq_roles_to_remove(roles: &Vec<Role>) -> Vec<usize> {
     }
     prereq_roles
 }
-pub fn check_roles(char: DFCharacterData) -> Result<RoleList> {
-    let mut roles = get_roles("JSONS/roles.json")?;
+pub fn check_roles(char: DFCharacterData,path:&str) -> Result<RoleList> {
+    let mut roles = get_roles(path)?;
     let mut aquired_roles = aquired_roles_indexes(&mut roles, char);
     aquired_roles.sort_by(|a, b| b.cmp(a));
     let mut roles: Vec<Role> = aquired_roles
         .iter()
         .map(|i| roles.0.swap_remove(*i))
         .collect();
-    let prereq_roles = prereq_roles_to_remove(&roles);
-    prereq_roles.iter().for_each(|i| {
+    aquired_roles.sort_by(|a, b| b.cmp(a));
+    let mut prereq_roles = prereq_roles_to_remove(&roles);
+    prereq_roles.sort();
+    prereq_roles.iter().rev().for_each(|i| {
         roles.swap_remove(*i);
     });
     let mut role_list = RoleList(roles);

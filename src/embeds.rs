@@ -1,34 +1,75 @@
+use crate::guild_settings::GuildSettings;
 use crate::parsing::{get_discord_embed_description_flash, DFCharacterData, WarList};
-use crate::requests::{CHARPAGE, DA_IMGUR, NDA_IMGUR};
+use crate::requests::{CHARPAGE, DA_IMGUR, NDA_IMGUR,ROLE_DA_IMGUR,ASCEND_DA_IMGUR};
 use crate::rng::random_rgb;
-use crate::roles::RoleList;
-use crate::serenity::Color;
+use crate::roles::{check_roles, RoleList, RolesListType};
 use crate::sheets::SheetData;
-use crate::Context;
-use color_eyre::{Result,Report};
+use crate::{Context,serenity::Color};
+use color_eyre::{Report, Result};
 use poise::serenity_prelude;
 use std::collections::HashMap;
-pub async fn all_roles_embed(ctx: Context<'_>,roles:&RoleList)->Result<()>{
+pub async fn roles_embed(ctx: Context<'_>, roles: &mut RoleList) -> Result<()> {
     let mut description = String::new();
     let guild = ctx.guild().expect("expected guild");
-    let guild_name = &guild.name; 
-    let guild_icon = &guild.icon_url().unwrap_or(DA_IMGUR.to_owned()); 
-    for role in roles.roles(){
-        description+=format!("**{}**\n*{}*\n",role.name(),role.description).as_str()
+    let guild_name = &guild.name;
+    roles.sort_alphabetical();
+    for role in roles.roles() {
+        description += format!("**{}**\n*{}*\n", role.name(), role.description).as_str()
     }
-    ctx.send( |f| {
+    ctx.send(|f| {
         f.embed(|f| {
             f.title(format!("{guild_name} Roles"))
-                .color(Color::DARK_GREEN)
-                .thumbnail(guild_icon)
+                .color(Color::from_rgb(1, 214, 103))
+                .thumbnail(ROLE_DA_IMGUR,)
                 .description(description)
         })
     })
     .await?;
     Ok(())
 }
-pub async fn wrong_file_type(ctx: Context<'_>,file_type:&str) -> Result<()> {
-    ctx.send( |f| {
+pub async fn send_roles_embed(
+    df_id: i32,
+    char: DFCharacterData,
+    ctx: Context<'_>,
+    role_list_type: RolesListType,
+) -> Result<()> {
+    let guild_id = ctx.guild_id().expect("expected guild").0 as i64;
+    let pool = &ctx.data().db_connection;
+    let settings =
+        sqlx::query_as::<_, GuildSettings>("select * from guild_settings where guild_id = $1")
+            .bind(guild_id)
+            .fetch_optional(pool)
+            .await?;
+    let (thumbnail,color,path) = match role_list_type {
+        RolesListType::Roles => {
+            let guild_settings = match settings {
+                None => return Ok(no_settings_embed(ctx).await?),
+                Some(settings) => settings,
+            };
+            (ROLE_DA_IMGUR,Color::from_rgb(1, 162, 197),guild_settings.roles_path().clone())
+        }
+        RolesListType::Ascend => (ASCEND_DA_IMGUR,Color::from_rgb(0,214,11),"ascendancies.json".to_owned(),),
+    };
+    let name = char.name().to_owned();
+    let roles = check_roles(char, &path)?;
+    let mut description = String::new();
+    for role in roles.roles() {
+        description += format!("__**{}**__\n{}\n", role.name(), role.description).as_str()
+    }
+    ctx.send(|f| {
+        f.embed(|f| {
+            f.title(format!("{}'s Eligible Roles",name))
+                .url(format!("{CHARPAGE}{df_id}"))
+                .color(color)
+                .thumbnail(thumbnail)
+                .description(description)
+        })
+    })
+    .await?;
+    Ok(())
+}
+pub async fn wrong_file_type(ctx: Context<'_>, file_type: &str) -> Result<()> {
+    ctx.send(|f| {
         f.embed(|f| {
             f.title(format!("Wrong File Type! {file_type}"))
                 .color(Color::DARK_RED)
@@ -38,12 +79,25 @@ pub async fn wrong_file_type(ctx: Context<'_>,file_type:&str) -> Result<()> {
     .await?;
     Ok(())
 }
-pub async fn role_init_error(ctx: Context<'_>,role_error:Report) -> Result<()> {
-    ctx.send( |f| {
+pub async fn no_settings_embed(ctx: Context<'_>) -> Result<()> {
+    ctx.send(|f| {
+        f.embed(|f| {
+            f.title(format!("There are no Guild Settings for this guild!"))
+                .color(Color::DARK_RED)
+                .description("An administrator still needs to set up roles for this server!")
+        })
+    })
+    .await?;
+    Ok(())
+}
+pub async fn role_init_error(ctx: Context<'_>, role_error: Report) -> Result<()> {
+    ctx.send(|f| {
         f.embed(|f| {
             f.title("Error Parsing Roles!")
                 .color(Color::DARK_RED)
-                .description(format!("there was an error parsing roles! **Error:**\n{role_error}"))
+                .description(format!(
+                    "there was an error parsing roles! **Error:**\n{role_error}"
+                ))
         })
     })
     .await?;

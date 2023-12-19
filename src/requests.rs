@@ -8,6 +8,8 @@ pub const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb
 pub const CHARPAGE: &str = "https://account.dragonfable.com/CharPage?id=";
 pub const DA_IMGUR: &str = "https://i.imgur.com/70CNN80.png";
 pub const NDA_IMGUR: &str = "https://i.imgur.com/rBJt81B.png";
+pub const ROLE_DA_IMGUR: &str = "https://i.imgur.com/uxK6enN.png";
+pub const ASCEND_DA_IMGUR: &str = "https://i.imgur.com/MHJCKwE.png";
 pub const COLOR_SITE: &str = "https://www.color-hex.com/color/";
 pub async fn fetch_page_with_user_agent(user_agent: &str, url: &str) -> Result<String> {
     let client = reqwest::ClientBuilder::new()

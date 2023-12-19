@@ -1,14 +1,14 @@
 use crate::parsing::{DFCharacterData, WarList};
 use color_eyre::Result;
 use getset::Getters;
-use serde_derive::Deserialize;
+use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::fs::File;
 use std::io::BufReader;
 #[derive(Getters)]
 #[getset(get = "pub")]
-#[derive(Debug, Deserialize, Eq, Hash, PartialEq)]
+#[derive(Debug, Deserialize, Eq, Hash, PartialEq,Serialize)]
 pub struct Role {
     pub name: String,
     pub description: String,
@@ -27,7 +27,7 @@ fn max_last(a: &Role, b: &Role) -> Ordering {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug,Serialize)]
 pub struct RoleList(Vec<Role>);
 
 impl RoleList {
@@ -37,8 +37,12 @@ impl RoleList {
     fn sort(&mut self) {
         self.0.sort_by(|a, b| max_last(&a, &b))
     }
+    fn sort_alphabetical(&mut self){
+        self.0.sort_by(|a,b|a.name().cmp(b.name()))
+
+    }
 }
-#[derive(Debug, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Serialize,Debug, Deserialize, Eq, PartialEq, Hash)]
 #[allow(non_snake_case)]
 #[serde(rename_all = "PascalCase")]
 pub enum ReqType {
@@ -56,6 +60,11 @@ pub fn get_roles(path: &str) -> Result<RoleList> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
     let mut roles: RoleList = serde_json::from_reader(reader)?;
+    roles.sort();
+    Ok(roles)
+}
+pub fn get_roles_bytes(bytes: &Vec<u8>) -> Result<RoleList> {
+    let mut roles: RoleList = serde_json::from_slice(bytes)?;
     roles.sort();
     Ok(roles)
 }
@@ -148,5 +157,7 @@ pub fn check_roles(char: DFCharacterData) -> Result<RoleList> {
     prereq_roles.iter().for_each(|i| {
         roles.swap_remove(*i);
     });
-    Ok(RoleList(roles))
+    let mut role_list = RoleList(roles);
+    role_list.sort_alphabetical();
+    Ok(role_list)
 }

@@ -1,12 +1,54 @@
 use crate::parsing::{get_discord_embed_description_flash, DFCharacterData, WarList};
 use crate::requests::{CHARPAGE, DA_IMGUR, NDA_IMGUR};
 use crate::rng::random_rgb;
+use crate::roles::RoleList;
 use crate::serenity::Color;
 use crate::sheets::SheetData;
 use crate::Context;
-use color_eyre::Result;
+use color_eyre::{Result,Report};
 use poise::serenity_prelude;
 use std::collections::HashMap;
+pub async fn all_roles_embed(ctx: Context<'_>,roles:&RoleList)->Result<()>{
+    let mut description = String::new();
+    let guild = ctx.guild().expect("expected guild");
+    let guild_name = &guild.name; 
+    let guild_icon = &guild.icon_url().unwrap_or(DA_IMGUR.to_owned()); 
+    for role in roles.roles(){
+        description+=format!("**{}**\n*{}*\n",role.name(),role.description).as_str()
+    }
+    ctx.send( |f| {
+        f.embed(|f| {
+            f.title(format!("{guild_name} Roles"))
+                .color(Color::DARK_GREEN)
+                .thumbnail(guild_icon)
+                .description(description)
+        })
+    })
+    .await?;
+    Ok(())
+}
+pub async fn wrong_file_type(ctx: Context<'_>,file_type:&str) -> Result<()> {
+    ctx.send( |f| {
+        f.embed(|f| {
+            f.title(format!("Wrong File Type! {file_type}"))
+                .color(Color::DARK_RED)
+                .description("The File Type must be [application/json; charset=utf-8]")
+        })
+    })
+    .await?;
+    Ok(())
+}
+pub async fn role_init_error(ctx: Context<'_>,role_error:Report) -> Result<()> {
+    ctx.send( |f| {
+        f.embed(|f| {
+            f.title("Error Parsing Roles!")
+                .color(Color::DARK_RED)
+                .description(format!("there was an error parsing roles! **Error:**\n{role_error}"))
+        })
+    })
+    .await?;
+    Ok(())
+}
 pub async fn to_many_request_embed(ctx: Context<'_>) -> Result<()> {
     ctx.send( |f| {
         f.embed(|f| {

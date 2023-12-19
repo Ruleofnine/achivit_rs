@@ -56,6 +56,13 @@ async fn intitialize_db(db_url: &String) -> Result<(), sqlx::Error> {
         CREATE UNIQUE INDEX df_characters_df_id_key ON public.df_characters USING btree (df_id);
         ALTER TABLE public.df_characters ADD CONSTRAINT df_characters_discord_id_fkey FOREIGN KEY (discord_id) REFERENCES public.users(discord_id);
         ALTER TABLE public.df_characters ADD CONSTRAINT fk_war_lb_df_id FOREIGN KEY (df_id) REFERENCES public.df_characters(df_id) ON DELETE CASCADE;
+
+        CREATE TABLE public.guild_settings(
+        guild_id bigint NOT NULL,
+        guild_name character varying(100) NOT NULL,
+        roles_path character varying(117) NOT NULL
+        );
+        ALTER TABLE public.guild_settings OWNER TO {0};
 "#,
         username
     );

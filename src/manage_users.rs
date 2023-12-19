@@ -8,6 +8,7 @@ use poise::serenity_prelude::User;
 use regex::Regex;
 use serenity::utils::Color;
 use sqlx::query;
+
 /// Register Character by ID
 #[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
 pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) -> Result<(), Error> {

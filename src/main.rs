@@ -35,7 +35,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         achivit_rs::manage_users::register_character(),
         achivit_rs::manage_users::delete_character(),
         achivit_rs::lookup_df::lookup_df_character(),
-        achivit_rs::lookup_df::compare_df_characters()
+        achivit_rs::lookup_df::compare_df_characters(),
+        achivit_rs::guild_settings::set_roles(),
     ];
     // let test_commands = vec![];
     let options = poise::FrameworkOptions {
@@ -54,6 +55,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 info!("Executed command {}!", ctx.command().qualified_name);
             })
         },
+        prefix_options: poise::PrefixFrameworkOptions {
+                prefix: Some("|".into()),
+                ..Default::default()
+            },
         ..Default::default()
     };
 

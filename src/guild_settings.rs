@@ -1,0 +1,40 @@
+use std::fs;
+
+use poise::serenity_prelude::Attachment;
+use color_eyre::Result;
+use sqlx::query;
+use crate::{Context,Error, embeds, roles::get_roles_bytes};
+use serde::{Serialize, Deserialize};
+#[derive(Serialize, Deserialize)]
+pub struct GuildSettings{
+guild_name:String,
+guild_id:u64,
+roles_path:String
+}
+#[poise::command(prefix_command, required_permissions = "ADMINISTRATOR")]
+pub async fn set_roles(ctx: Context<'_>,file:Attachment) -> Result<(), Error> {
+    if let Some(file_type)=  &file.content_type{
+        if file_type != "application/json; charset=utf-8"{
+            return Ok(embeds::wrong_file_type(ctx, &file_type).await?)
+        }
+    }
+    let file = file.download().await?;
+    let roles = match get_roles_bytes(&file){
+        Ok(data) => data,
+        Err(e) => return Ok(embeds::role_init_error(ctx,e).await?)
+    };
+    let guild = ctx.guild().expect("expected guild");
+    let guild_name = guild.name.as_str();
+    let json_path = format!("JSONS/{guild_name}_roles.json"); 
+    let guild_setting = GuildSettings{
+        guild_name:guild.name.to_owned(),
+        guild_id:guild.id.0,
+        roles_path:json_path.to_owned()
+    };
+    embeds::all_roles_embed(ctx, &roles).await?;
+    let roles_json = serde_json::to_string(roles.roles())?;
+    fs::write(json_path,roles_json.as_bytes())?;
+    let pool = &ctx.data().db_connection;
+    query!("INSERT INTO guild_settings (guild_name,guild_id,roles_path) VALUES ($1,$2,$3)",guild_setting.guild_name,guild_setting.guild_id as i64,guild_setting.roles_path).execute(pool).await?;
+    Ok(())
+}

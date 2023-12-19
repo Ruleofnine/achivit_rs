@@ -12,6 +12,7 @@ pub mod rng;
 pub mod sheets;
 pub mod time;
 pub mod wiki;
+pub mod guild_settings;
 pub use crate::event_handler::event_handler;
 pub use dotenv::dotenv;
 pub use log::info;

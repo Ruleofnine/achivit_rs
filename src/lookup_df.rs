@@ -126,3 +126,10 @@ pub async fn compare_df_characters(
     };
     Ok(())
 }
+/// Compare two DF Characters in various ways
+#[poise::command(slash_command)]
+pub async fn roles_list(ctx: Context<'_>,
+) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().expect("Not used in Guild");
+    Ok(())
+}

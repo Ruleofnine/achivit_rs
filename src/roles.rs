@@ -1,18 +1,14 @@
-use crate::parsing::{DFCharacterData, WarList};
+use crate::parsing::{DFCharacterData, Items, WarList};
 use color_eyre::Result;
-use getset::Getters;
 use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::BTreeSet;
 use std::fs::File;
 use std::io::BufReader;
-pub enum RolesListType{
+pub enum RolesListType {
     Roles,
-    Ascend
+    Ascend,
 }
-#[derive(Getters)]
-#[getset(get = "pub")]
-#[derive(Debug, Deserialize, Eq, Hash, PartialEq,Serialize)]
+#[derive(Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct Role {
     pub name: String,
     pub description: String,
@@ -21,6 +17,30 @@ pub struct Role {
     #[serde(rename = "type")]
     pub req_type: ReqType,
     pub amount: Option<i32>,
+}
+impl Role {
+    pub fn name(&self) -> &String {
+        &self.name
+    }
+    pub fn description(&self) -> &String {
+        &self.description
+    }
+    pub fn prereqs(&self) -> &Vec<String> {
+        &self
+            .prereqs
+            .as_ref()
+            .expect(format!("Role: {} Expected 'prereqs'", self.name()).as_str())
+    }
+    pub fn required(&self) -> &Vec<String> {
+        &self
+            .required
+            .as_ref()
+            .expect(format!("Role: {} Expected 'required'", self.name()).as_str())
+    }
+    pub fn amount(&self) -> u16 {
+        self.amount
+            .expect(format!("Role: {} Expected 'required'", self.name()).as_str()) as u16
+    }
 }
 fn max_last(a: &Role, b: &Role) -> Ordering {
     match (&a.req_type, &b.req_type) {
@@ -31,7 +51,7 @@ fn max_last(a: &Role, b: &Role) -> Ordering {
     }
 }
 
-#[derive(Deserialize, Debug,Serialize)]
+#[derive(Deserialize, Debug, Serialize)]
 pub struct RoleList(Vec<Role>);
 
 impl RoleList {
@@ -41,12 +61,11 @@ impl RoleList {
     fn sort(&mut self) {
         self.0.sort_by(|a, b| max_last(&a, &b))
     }
-    pub fn sort_alphabetical(&mut self){
-        self.0.sort_by(|a,b|a.name().cmp(b.name()))
-
+    pub fn sort_alphabetical(&mut self) {
+        self.0.sort_by(|a, b| a.name().cmp(b.name()))
     }
 }
-#[derive(Serialize,Debug, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Serialize, Debug, Deserialize, Eq, PartialEq, Hash)]
 #[allow(non_snake_case)]
 #[serde(rename_all = "PascalCase")]
 pub enum ReqType {
@@ -64,8 +83,8 @@ pub enum ReqType {
     ItemLean,
     #[serde(rename = "Item/DC")]
     ItemDC,
-
-
+    #[serde(rename = "Item/Stackable")]
+    ItemStackable,
 }
 
 pub fn get_roles(path: &str) -> Result<RoleList> {
@@ -80,7 +99,7 @@ pub fn get_roles_bytes(bytes: &Vec<u8>) -> Result<RoleList> {
     roles.sort();
     Ok(roles)
 }
-fn check_item(role: &Role, char_items: &BTreeSet<String>) -> bool {
+fn check_item(role: &Role, char_items: &Items) -> bool {
     let items = role
         .required
         .as_ref()
@@ -91,26 +110,28 @@ fn check_war(role: &Role, char: &DFCharacterData) -> bool {
     let amount = role.amount.expect("War needs amount") as usize;
     char.wars.wars().len() >= amount
 }
-fn check_item_amount(role: &Role, char_items: &BTreeSet<String>) -> bool {
-    let amount = role.amount().expect("Items/Amount Needs amount.");
+fn check_item_amount(role: &Role, char_items: &Items) -> bool {
+    let amount = role.amount();
     let items = role
         .required
         .as_ref()
         .expect("Item Role requires item list");
     let count = items.iter().filter(|&i| char_items.contains(i)).count();
-    count as i32 >= amount
+    count as u16 >= amount
 }
 
 fn check_waves(role: &Role, wars: &WarList) -> bool {
-    let amount = role.amount().expect("Waves Needs amount.");
-    wars.war_list().iter().any(|w| w.waves_int() >= amount)
+    let amount = role.amount();
+    wars.war_list()
+        .iter()
+        .any(|w| w.waves_int() as u16 >= amount)
 }
 fn check_gold(role: &Role, gold: &i32) -> bool {
-    let amount = role.amount().expect("gold Needs amount.");
-    gold >= &amount
+    let amount = role.amount();
+    *gold as u16 >= amount
 }
 fn check_max_role(roles: &Vec<Role>, role: &Role, aquired_roles: &Vec<usize>) -> bool {
-    let prereqs = role.prereqs().as_ref().expect("expected prereqs");
+    let prereqs = role.prereqs();
     let amount = prereqs.len();
     let mut has = 0;
     for index in aquired_roles {
@@ -124,11 +145,38 @@ fn check_max_role(roles: &Vec<Role>, role: &Role, aquired_roles: &Vec<usize>) ->
     }
     false
 }
+fn check_item_stackable(role: &Role, items: &Items) -> bool {
+    let required: Vec<(String, i32)> = role
+        .required()
+        .iter()
+        .map(|i| {
+            let split_item = i.split_once(" (x");
+            let name = split_item
+                .as_ref()
+                .expect("expected item in stackable")
+                .0
+                .to_string();
+            let amount = split_item
+                .as_ref()
+                .expect("Expected Stackable Item to have (x ..))")
+                .1
+                .trim_end_matches(")")
+                .parse()
+                .expect("failed to parse stackable amount");
+            (name, amount)
+        })
+        .collect();
+    dbg!(&required);
+    required.iter().all(|(item, amount)| {
+        items
+            .items()
+            .iter()
+            .any(|i| i.0.name() == item && dbg!(*i.1 >= *amount))
+    })
+}
 fn aquired_roles_indexes<'a>(roles: &mut RoleList, mut char: DFCharacterData) -> Vec<usize> {
     let char_items = char.item_list.take().expect("expected char items");
-    let dups = *char_items.dups();
-    dbg!(dups);
-    let char_items = char_items.all();
+    let dups = char_items.dups();
     let roles_list = roles.roles();
     let mut roles_indexes_to_remove: Vec<usize> = vec![];
     for (i, role) in roles_list.iter().enumerate() {
@@ -139,9 +187,10 @@ fn aquired_roles_indexes<'a>(roles: &mut RoleList, mut char: DFCharacterData) ->
             ReqType::Waves => check_waves(role, &char.wars),
             ReqType::Gold => check_gold(role, &char.gold()),
             ReqType::Max => check_max_role(roles_list, role, &roles_indexes_to_remove),
-            ReqType::ItemUnique => role.amount().expect(&format!("{} needs amount",role.name())) as u16 <= *char.unique_item_count(),
-            ReqType::ItemLean =>  role.amount().expect(&format!("{} needs amount",role.name())) as u16 <= *char.unique_item_count() && dups == 0,
-            ReqType::ItemDC => role.amount().expect(&format!("{} needs amount",role.name())) as u16 <= *char.dc_count(),
+            ReqType::ItemUnique => role.amount() as u16 <= *char.unique_item_count(),
+            ReqType::ItemLean => role.amount() as u16 <= *char.unique_item_count() && !dups,
+            ReqType::ItemDC => role.amount() as u16 <= *char.dc_count(),
+            ReqType::ItemStackable => check_item_stackable(role, &char_items),
         };
         if aquired {
             roles_indexes_to_remove.push(i);
@@ -152,7 +201,7 @@ fn aquired_roles_indexes<'a>(roles: &mut RoleList, mut char: DFCharacterData) ->
 fn prereq_roles_to_remove(roles: &Vec<Role>) -> Vec<usize> {
     let mut prereq_roles = Vec::new();
     for role in roles {
-        if let Some(prereqs) = role.prereqs().as_ref() {
+        if let Some(prereqs) = &role.prereqs {
             for prereq in prereqs {
                 for (i, checking_role) in roles.iter().enumerate() {
                     if prereq == checking_role.name() && !prereq_roles.contains(&i) {
@@ -164,7 +213,7 @@ fn prereq_roles_to_remove(roles: &Vec<Role>) -> Vec<usize> {
     }
     prereq_roles
 }
-pub fn check_roles(char: DFCharacterData,path:&str) -> Result<RoleList> {
+pub fn check_roles(char: DFCharacterData, path: &str) -> Result<RoleList> {
     let mut roles = get_roles(path)?;
     let mut aquired_roles = aquired_roles_indexes(&mut roles, char);
     aquired_roles.sort_by(|a, b| b.cmp(a));

@@ -1,5 +1,3 @@
-use std::collections::BTreeSet;
-
 use crate::{lookup_df::LookupState, parsing::Items};
 use crate::parsing::DFCharacterData;
 use color_eyre::{eyre::eyre, Result};
@@ -8,10 +6,11 @@ fn write_items_to_sheet(worksheet:&mut Worksheet,list:&Items,row:u16,name:&str)-
     let mut spacing = 0;
     worksheet.write_string(0, row, name)?;
     worksheet.write_string(2, row, format!("Unique Amount: {}",list.count()))?;
-    for(i,list) in list.iter().enumerate(){
+    for(i,list) in list.split_list().enumerate(){
+        let list_len = list.len();
         worksheet.write_string(3+spacing,row,Items::text(i))?;
         worksheet.write_column(5+spacing,row,list)?;
-        spacing += 4 + list.len() as u32;
+        spacing += 4 + list_len as u32;
     };
     Ok(())
 }
@@ -59,13 +58,8 @@ pub async fn compare_sheet(
     let (mut list1, mut list2) = list1
         .zip(list2)
         .ok_or_else(|| eyre!("Character had no items"))?;
-    for (x,y) in list1.iter_mut_zip(&mut list2){
-        let common:BTreeSet<String> =  x.intersection(&y).cloned().collect();
-        for item in &common {
-        x.remove(item);
-        y.remove(item);
-        }
-    }
+    list1.items_mut().retain(|item,_|!list2.items().contains_key(item));
+    list2.items_mut().retain(|item,_|!list1.items().contains_key(item));
     write_items_to_sheet(worksheet, &list1, 0,&char1.name)?;
     write_items_to_sheet(worksheet, &list2, 5,&char2.name)?;
     let buf = workbook.save_to_buffer()?;

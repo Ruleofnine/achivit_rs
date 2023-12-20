@@ -40,17 +40,17 @@ pub async fn send_roles_embed(
             .bind(guild_id)
             .fetch_optional(pool)
             .await?;
-    let (thumbnail,color,path) = match role_list_type {
+    let name = char.name().to_owned();
+    let (thumbnail,color,path,title) = match role_list_type {
         RolesListType::Roles => {
             let guild_settings = match settings {
                 None => return Ok(no_settings_embed(ctx).await?),
                 Some(settings) => settings,
             };
-            (ROLE_DA_IMGUR,Color::from_rgb(1, 162, 197),guild_settings.roles_path().clone())
+            (ROLE_DA_IMGUR,Color::from_rgb(1, 162, 197),guild_settings.roles_path().clone(),format!("{}'s Eligible Roles",name))
         }
-        RolesListType::Ascend => (ASCEND_DA_IMGUR,Color::from_rgb(0,214,11),"ascendancies.json".to_owned(),),
+        RolesListType::Ascend => (ASCEND_DA_IMGUR,Color::from_rgb(0,214,11),"ascendancies.json".to_owned(),format!("{}'s Acendancies",name)),
     };
-    let name = char.name().to_owned();
     let roles = check_roles(char, &path)?;
     let mut description = String::new();
     for role in roles.roles() {
@@ -58,7 +58,7 @@ pub async fn send_roles_embed(
     }
     ctx.send(|f| {
         f.embed(|f| {
-            f.title(format!("{}'s Eligible Roles",name))
+            f.title(title)
                 .url(format!("{CHARPAGE}{df_id}"))
                 .color(color)
                 .thumbnail(thumbnail)

@@ -9,10 +9,14 @@ use getset::Getters;
 use num_format::{Locale, ToFormattedString};
 use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use tokio::fs;
+pub trait HashItem {
+// fn name(&self)->&String;
+}
+
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum ParsingCategory {
     CharacterPage,
@@ -171,17 +175,68 @@ impl Dragon {
         Dragon { name, dragon_type }
     }
 }
+#[derive(Debug,Eq,PartialEq,Hash)]
+pub enum ItemTag {
+    NDA,
+    DA,
+    DC,
+    ARTIFACT,
+}
 #[derive(Getters)]
 #[getset(get = "pub")]
+#[derive(Debug,Eq, PartialEq,Hash)]
+pub struct Item {
+    name: String,
+    tag: ItemTag,
+    stackable:bool,
+}
+impl Item{
+    fn new(name:String,tag:ItemTag,stackable:bool)-> Item{
+        Item {name,tag,stackable}
+    }
+}
+#[derive(Getters)]
+#[getset(get = "pub",get_mut="pub")]
 #[derive(Debug)]
 pub struct Items {
-    pub nda: BTreeSet<String>,
-    pub da: BTreeSet<String>,
-    pub dc: BTreeSet<String>,
-    pub artifact: BTreeSet<String>,
-    pub dups: i32,
+    items:HashMap<Item,i32>,
 }
 impl Items {
+    fn new_item(&mut self,name:String,tag:ItemTag,stackable:bool,amount:i32){
+       let item = Item::new(name,tag,stackable);
+        self.insert(item,amount);
+    }
+    pub fn items_mut(&mut self)->&mut HashMap<Item,i32>{
+        &mut self.items
+    }
+    pub fn contains(&self,item:&String)->bool{
+        self.items().iter().any(|i|i.0.name()==item)
+    }
+    pub fn dups(&self)->bool{
+        self.items().iter().any(|i|*i.1>1&& !i.0.stackable())
+    }
+    pub fn split_list(&self)->impl Iterator<Item = Vec<&String>>{
+        let mut da_iter = Vec::new();
+        let mut dc_iter = Vec::new();
+        let mut nda_iter = Vec::new();
+        let mut artifact_iter = Vec::new();
+        self.items().iter().for_each(|i| match i.0.tag{
+            ItemTag::NDA => nda_iter.push(&i.0.name),
+            ItemTag::DA => da_iter.push(&i.0.name),
+            ItemTag::DC => dc_iter.push(&i.0.name),
+            ItemTag::ARTIFACT => artifact_iter.push(&i.0.name)
+        });
+        vec![nda_iter,da_iter,dc_iter,artifact_iter].into_iter()
+
+
+
+    }
+    fn insert(&mut self,item:Item,amount:i32 ){
+        match self.items.get_mut(&item){
+            Some(item)=> {*item+=1;},
+            None => {self.items.insert(item, amount);}
+        };
+    }
     pub fn text(num: usize) -> String {
         let str = match num {
             0 => "NDA Items",
@@ -193,45 +248,18 @@ impl Items {
     }
     pub fn new() -> Items {
         Items {
-            nda: BTreeSet::new(),
-            da: BTreeSet::new(),
-            dc: BTreeSet::new(),
-            artifact: BTreeSet::new(),
-            dups: 0,
+            items:HashMap::new(),
         }
     }
-    fn dup(&mut self) {
-        self.dups += 1
-    }
     pub fn count(&self) -> u16 {
-        (self.nda.len() + self.dc.len() + self.da.len() + self.artifact.len()) as u16
-    }
-    pub fn iter(&self) -> impl Iterator<Item = &BTreeSet<String>> {
-        vec![&self.nda, &self.da, &self.dc, &self.artifact].into_iter()
-    }
-    pub fn iter_mut_zip<'a>(
-        &'a mut self,
-        other: &'a mut Self,
-    ) -> Vec<(&'a mut BTreeSet<String>, &'a mut BTreeSet<String>)> {
-        vec![
-            (&mut self.nda, &mut other.nda),
-            (&mut self.da, &mut other.da),
-            (&mut self.dc, &mut other.dc),
-            (&mut self.artifact, &mut other.artifact),
-        ]
-    }
-    pub fn all(mut self) -> BTreeSet<String> {
-        self.dc.extend(self.da);
-        self.dc.extend(self.nda);
-        self.dc.extend(self.artifact);
-        self.dc
+       self.items.len() as u16
     }
 }
 #[derive(Getters)]
 #[getset(get = "pub")]
 #[derive(Debug)]
 pub struct DFCharacterData {
-    pub id: u32,
+    pub id: i32,
     pub name: String,
     pub dragon: Option<Dragon>,
     pub dragon_amulet: bool,
@@ -439,9 +467,9 @@ impl WarList {
     fn push_war(&mut self, war: War) {
         self.war_list.push(war);
     }
-    pub fn calc_waves_cleared(&self) -> u32 {
+    pub fn calc_waves_cleared(&self) -> i32 {
         self.war_list.iter().fold(0, |c, x| {
-            x.waves.replace(" waves", "").parse::<u32>().unwrap() + c
+            x.waves.replace(" waves", "").parse::<i32>().unwrap() + c
         })
     }
     pub fn is_empty(&self) -> bool {
@@ -917,36 +945,34 @@ pub fn parse_df_character_with_items(document: &Html, category: ParsingCategory)
     let mut warbuilder = WarBuilder::default();
     for span in document.select(&item_selector).into_iter() {
         let item_name = span.text().next().unwrap();
-        let item_name = match item_name.split_once(" (x") {
-            None => item_name.to_string(),
-            Some(item) => item.0.to_string(),
+        let (item_name, amount,stackable) = match item_name.split_once(" (x") {
+            None => (item_name.to_string(), 1,false),
+            Some(item) => {
+                let x_str = item.1;
+                let amount = x_str[..x_str.len() - 1]
+                    .parse::<i32>()
+                    .expect("failed to parse stack amount");
+                (item.0.to_string(), amount,true)
+            }
         };
         let mut classes = span.value().classes();
         if let Some(class) = classes.next() {
             match class {
                 "gold" => {
                     character.nda_count += 1;
-                    if !items.nda.insert(item_name) {
-                        items.dup()
-                    };
+                    items.new_item(item_name,ItemTag::NDA,stackable,amount);
                 }
                 "coins" => {
                     character.dc_count += 1;
-                    if !items.dc.insert(item_name) {
-                        items.dup()
-                    };
+                    items.new_item(item_name,ItemTag::DC,stackable,amount);
                 }
                 "amulet" => {
                     character.da_count += 1;
-                    if !items.da.insert(item_name) {
-                        items.dup()
-                    };
+                    items.new_item(item_name,ItemTag::DA,stackable,amount);
                 }
                 "artifact" => {
                     character.artifact_count += 1;
-                    if items.artifact.insert(item_name){
-                        items.dup()
-                    };
+                    items.new_item(item_name,ItemTag::ARTIFACT,stackable,amount);
                 }
                 "warlabel" => {
                     warbuilder.warlabel = Some(item_name);

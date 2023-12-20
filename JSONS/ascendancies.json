@@ -248,7 +248,7 @@
   {
     "name": "A Warped Mind",
     "description": "Have 15 Timewarped Trophies and 125 Timewarped Medals",
-    "type": "Item",
+    "type": "Item/Stackable",
     "prereqs": null,
     "required": [
       "Timewarped Trophy (x15)",
@@ -437,7 +437,7 @@
   {
     "name": "Ultra-Scrap King",
     "description": "Have 100 Ultra-Compressed Scrap Metal",
-    "type": "Item",
+    "type": "Item/Stackable",
     "prereqs": null,
     "required": [
       "Ultra-Compressed Scrap Metal (x100)"
@@ -615,6 +615,7 @@
       "Slim",
       "Some Definition",
       "Six Pack"
+
     ]
   },
   {

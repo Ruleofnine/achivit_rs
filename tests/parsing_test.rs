@@ -8,17 +8,25 @@ mod tests {
     #[tokio::test]
     async fn test() -> Result<()> {
 
-        let char = FileFetcher::new("htmls/3ach.html")
+        let char = FileFetcher::new("htmls/ruleofnine.html")
             .category(ParsingCategory::Items)
             .fetch_data()
             .await?
             .to_lookupstate()?;
-        let data = LookupState::extract_data(char)?;
-        let inn_reqs = get_InnList()?;
-        let reqs = inn_reqs.reqs();
+        // let data = LookupState::extract_data(char)?;
+        // let inn_reqs = get_InnList()?;
+        // let reqs = inn_reqs.reqs();
+        // for (_,i) in reqs{
+        //     for y in i.reqs() {
+        //         let bool =data.item_list().as_ref().unwrap().contains(y);
+        //         match bool{
+        //             true => (),
+        //             false => {dbg!(y);}
+        //         }
+        //         
+        //     }
+        // }
         // reqs.iter().all(|req|req.1.reqs().iter().all(|i|data.item_list());
-
-        dbg!(data.item_list().as_ref().unwrap());
         // let roles = check_roles(data,"ascendancies.json")?;       // let char1 = extract_data(char1)?;
         // dbg!(roles.roles());
         // dbg!(roles.roles().len());

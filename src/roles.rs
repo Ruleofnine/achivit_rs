@@ -1,8 +1,8 @@
 use crate::parsing::{DFCharacterData, Items, WarList};
-use std::collections::HashMap;
 use color_eyre::Result;
 use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 pub enum RolesListType {
@@ -86,29 +86,28 @@ pub enum ReqType {
     ItemDC,
     #[serde(rename = "Item/Stackable")]
     ItemStackable,
-    Inn
+    Inn,
 }
 #[derive(Debug, Deserialize, Serialize)]
-pub struct InnList{
+pub struct InnList {
     #[serde(flatten)]
-    list:HashMap<String,InnReq>
+    list: HashMap<String, InnReq>,
 }
-impl InnList{
-    pub fn reqs(&self)->&HashMap<String,InnReq>{
+impl InnList {
+    pub fn reqs(&self) -> &HashMap<String, InnReq> {
         &self.list
     }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct InnReq{
-    required:Vec<String>
+pub struct InnReq {
+    required: Vec<String>,
 }
-impl InnReq{
-    pub fn reqs(&self)->&Vec<String>{
+impl InnReq {
+    pub fn reqs(&self) -> &Vec<String> {
         &self.required
     }
 }
-
 
 pub fn get_InnList() -> Result<InnList> {
     let file = File::open("JSONS/InnList.json")?;
@@ -142,10 +141,7 @@ fn check_war(role: &Role, char: &DFCharacterData) -> bool {
 }
 fn check_item_amount(role: &Role, char_items: &Items) -> bool {
     let amount = role.amount();
-    let items = role
-        .required
-        .as_ref()
-        .expect("Item Role requires item list");
+    let items = role.required();
     let count = items.iter().filter(|&i| char_items.contains(i)).count();
     count as u16 >= amount
 }
@@ -200,8 +196,14 @@ fn check_item_stackable(role: &Role, items: &Items) -> bool {
         items
             .items()
             .iter()
-            .any(|(name,item)| name == req_item && item.amount() >= req_amount)
+            .any(|(name, item)| name == req_item && item.amount() >= req_amount)
     })
+}
+fn check_all_inn_reqs(items: &Items) -> bool {
+    let list = get_InnList().expect("failed to get inn list");
+    list.reqs()
+        .iter()
+        .all(|(_, innreq)| innreq.reqs().iter().all(|i| {dbg!(i);items.contains(i)}))
 }
 fn aquired_roles_indexes<'a>(roles: &mut RoleList, mut char: DFCharacterData) -> Vec<usize> {
     let char_items = char.item_list.take().expect("expected char items");
@@ -220,7 +222,10 @@ fn aquired_roles_indexes<'a>(roles: &mut RoleList, mut char: DFCharacterData) ->
             ReqType::ItemLean => role.amount() as u16 <= *char.unique_item_count() && !dups,
             ReqType::ItemDC => role.amount() as u16 <= *char.dc_count(),
             ReqType::ItemStackable => check_item_stackable(role, &char_items),
-            ReqType::Inn => check_max_role(roles_list,role, &roles_indexes_to_remove),
+            ReqType::Inn => {
+                check_max_role(roles_list, role, &roles_indexes_to_remove)
+                    && check_all_inn_reqs(&char_items)
+            }
         };
         if aquired {
             roles_indexes_to_remove.push(i);

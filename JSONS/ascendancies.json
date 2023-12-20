@@ -689,7 +689,7 @@
   {
     "name": "Innterdimensional Innsanity",
     "description": "Have ALL DC and DA tagged items from the IatEoT",
-    "type": "MAX",
+    "type": "Inn",
     "prereqs": [
       "Exaltation of Will",
       "Arbitrarily Innclined"

@@ -14,7 +14,7 @@ use std::future::Future;
 use std::pin::Pin;
 use tokio::fs;
 pub trait HashItem {
-// fn name(&self)->&String;
+    // fn name(&self)->&String;
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
@@ -175,7 +175,7 @@ impl Dragon {
         Dragon { name, dragon_type }
     }
 }
-#[derive(Debug,Eq,PartialEq,Hash)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub enum ItemTag {
     NDA,
     DA,
@@ -184,57 +184,64 @@ pub enum ItemTag {
 }
 #[derive(Getters)]
 #[getset(get = "pub")]
-#[derive(Debug,Eq, PartialEq,Hash)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Item {
-    name: String,
     tag: ItemTag,
-    stackable:bool,
+    stackable: bool,
+    amount: i32,
 }
-impl Item{
-    fn new(name:String,tag:ItemTag,stackable:bool)-> Item{
-        Item {name,tag,stackable}
+impl Item {
+    fn new(tag: ItemTag, stackable: bool, amount: i32) -> Item {
+        Item {
+            tag,
+            stackable,
+            amount,
+        }
     }
 }
 #[derive(Getters)]
-#[getset(get = "pub",get_mut="pub")]
+#[getset(get = "pub", get_mut = "pub")]
 #[derive(Debug)]
 pub struct Items {
-    items:HashMap<Item,i32>,
+    items: HashMap<String, Item>,
 }
 impl Items {
-    fn new_item(&mut self,name:String,tag:ItemTag,stackable:bool,amount:i32){
-       let item = Item::new(name,tag,stackable);
-        self.insert(item,amount);
+    fn new_item(&mut self, name: String, tag: ItemTag, stackable: bool, amount: i32) {
+        let item = Item::new(tag, stackable, amount);
+        self.insert(name, item);
     }
-    pub fn items_mut(&mut self)->&mut HashMap<Item,i32>{
+    pub fn items_mut(&mut self) -> &mut HashMap<String, Item> {
         &mut self.items
     }
-    pub fn contains(&self,item:&String)->bool{
-        self.items().iter().any(|i|i.0.name()==item)
+    pub fn contains(&self, item: &String) -> bool {
+        self.items().contains_key(item)
     }
-    pub fn dups(&self)->bool{
-        self.items().iter().any(|i|*i.1>1&& !i.0.stackable())
+    pub fn dups(&self) -> bool {
+        self.items()
+            .iter()
+            .any(|i| i.1.amount > 1 && !i.1.stackable())
     }
-    pub fn split_list(&self)->impl Iterator<Item = Vec<&String>>{
+    pub fn split_list(&self) -> impl Iterator<Item = Vec<&String>> {
         let mut da_iter = Vec::new();
         let mut dc_iter = Vec::new();
         let mut nda_iter = Vec::new();
         let mut artifact_iter = Vec::new();
-        self.items().iter().for_each(|i| match i.0.tag{
-            ItemTag::NDA => nda_iter.push(&i.0.name),
-            ItemTag::DA => da_iter.push(&i.0.name),
-            ItemTag::DC => dc_iter.push(&i.0.name),
-            ItemTag::ARTIFACT => artifact_iter.push(&i.0.name)
+        self.items().iter().for_each(|(name,item)| match item.tag {
+            ItemTag::NDA => {nda_iter.push(name);},
+            ItemTag::DA => {da_iter.push(name);},
+            ItemTag::DC => {dc_iter.push(name);},
+            ItemTag::ARTIFACT => {artifact_iter.push(name);},
         });
-        vec![nda_iter,da_iter,dc_iter,artifact_iter].into_iter()
-
-
-
+        vec![nda_iter, da_iter, dc_iter, artifact_iter].into_iter()
     }
-    fn insert(&mut self,item:Item,amount:i32 ){
-        match self.items.get_mut(&item){
-            Some(item)=> {*item+=1;},
-            None => {self.items.insert(item, amount);}
+    fn insert(&mut self, name: String, item: Item) {
+        match self.items.get_mut(&name) {
+            Some(item) => {
+                item.amount += 1;
+            }
+            None => {
+                self.items.insert(name, item);
+            }
         };
     }
     pub fn text(num: usize) -> String {
@@ -248,11 +255,11 @@ impl Items {
     }
     pub fn new() -> Items {
         Items {
-            items:HashMap::new(),
+            items: HashMap::new(),
         }
     }
     pub fn count(&self) -> u16 {
-       self.items.len() as u16
+        self.items.len() as u16
     }
 }
 #[derive(Getters)]
@@ -945,14 +952,14 @@ pub fn parse_df_character_with_items(document: &Html, category: ParsingCategory)
     let mut warbuilder = WarBuilder::default();
     for span in document.select(&item_selector).into_iter() {
         let item_name = span.text().next().unwrap();
-        let (item_name, amount,stackable) = match item_name.split_once(" (x") {
-            None => (item_name.to_string(), 1,false),
+        let (item_name, amount, stackable) = match item_name.split_once(" (x") {
+            None => (item_name.to_string(), 1, false),
             Some(item) => {
                 let x_str = item.1;
                 let amount = x_str[..x_str.len() - 1]
                     .parse::<i32>()
                     .expect("failed to parse stack amount");
-                (item.0.to_string(), amount,true)
+                (item.0.to_string(), amount, true)
             }
         };
         let mut classes = span.value().classes();
@@ -960,19 +967,19 @@ pub fn parse_df_character_with_items(document: &Html, category: ParsingCategory)
             match class {
                 "gold" => {
                     character.nda_count += 1;
-                    items.new_item(item_name,ItemTag::NDA,stackable,amount);
+                    items.new_item(item_name, ItemTag::NDA, stackable, amount);
                 }
                 "coins" => {
                     character.dc_count += 1;
-                    items.new_item(item_name,ItemTag::DC,stackable,amount);
+                    items.new_item(item_name, ItemTag::DC, stackable, amount);
                 }
                 "amulet" => {
                     character.da_count += 1;
-                    items.new_item(item_name,ItemTag::DA,stackable,amount);
+                    items.new_item(item_name, ItemTag::DA, stackable, amount);
                 }
                 "artifact" => {
                     character.artifact_count += 1;
-                    items.new_item(item_name,ItemTag::ARTIFACT,stackable,amount);
+                    items.new_item(item_name, ItemTag::ARTIFACT, stackable, amount);
                 }
                 "warlabel" => {
                     warbuilder.warlabel = Some(item_name);

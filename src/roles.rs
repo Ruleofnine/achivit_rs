@@ -1,4 +1,5 @@
 use crate::parsing::{DFCharacterData, Items, WarList};
+use std::collections::HashMap;
 use color_eyre::Result;
 use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -85,8 +86,36 @@ pub enum ReqType {
     ItemDC,
     #[serde(rename = "Item/Stackable")]
     ItemStackable,
+    Inn
+}
+#[derive(Debug, Deserialize, Serialize)]
+pub struct InnList{
+    #[serde(flatten)]
+    list:HashMap<String,InnReq>
+}
+impl InnList{
+    pub fn reqs(&self)->&HashMap<String,InnReq>{
+        &self.list
+    }
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct InnReq{
+    required:Vec<String>
+}
+impl InnReq{
+    pub fn reqs(&self)->&Vec<String>{
+        &self.required
+    }
+}
+
+
+pub fn get_InnList() -> Result<InnList> {
+    let file = File::open("JSONS/InnList.json")?;
+    let reader = BufReader::new(file);
+    let innlist: InnList = serde_json::from_reader(reader)?;
+    Ok(innlist)
+}
 pub fn get_roles(path: &str) -> Result<RoleList> {
     let file = File::open(format!("JSONS/{path}"))?;
     let reader = BufReader::new(file);
@@ -94,6 +123,7 @@ pub fn get_roles(path: &str) -> Result<RoleList> {
     roles.sort();
     Ok(roles)
 }
+
 pub fn get_roles_bytes(bytes: &Vec<u8>) -> Result<RoleList> {
     let mut roles: RoleList = serde_json::from_slice(bytes)?;
     roles.sort();
@@ -166,12 +196,11 @@ fn check_item_stackable(role: &Role, items: &Items) -> bool {
             (name, amount)
         })
         .collect();
-    dbg!(&required);
-    required.iter().all(|(item, amount)| {
+    required.iter().all(|(req_item, req_amount)| {
         items
             .items()
             .iter()
-            .any(|i| i.0.name() == item && dbg!(*i.1 >= *amount))
+            .any(|(name,item)| name == req_item && item.amount() >= req_amount)
     })
 }
 fn aquired_roles_indexes<'a>(roles: &mut RoleList, mut char: DFCharacterData) -> Vec<usize> {
@@ -191,6 +220,7 @@ fn aquired_roles_indexes<'a>(roles: &mut RoleList, mut char: DFCharacterData) ->
             ReqType::ItemLean => role.amount() as u16 <= *char.unique_item_count() && !dups,
             ReqType::ItemDC => role.amount() as u16 <= *char.dc_count(),
             ReqType::ItemStackable => check_item_stackable(role, &char_items),
+            ReqType::Inn => check_max_role(roles_list,role, &roles_indexes_to_remove),
         };
         if aquired {
             roles_indexes_to_remove.push(i);

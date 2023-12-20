@@ -14,9 +14,14 @@ mod tests {
             .await?
             .to_lookupstate()?;
         let data = LookupState::extract_data(char)?;
-        let roles = check_roles(data,"ascendancies.json")?;       // let char1 = extract_data(char1)?;
-        dbg!(roles.roles());
-        dbg!(roles.roles().len());
+        let inn_reqs = get_InnList()?;
+        let reqs = inn_reqs.reqs();
+        // reqs.iter().all(|req|req.1.reqs().iter().all(|i|data.item_list());
+
+        dbg!(data.item_list().as_ref().unwrap());
+        // let roles = check_roles(data,"ascendancies.json")?;       // let char1 = extract_data(char1)?;
+        // dbg!(roles.roles());
+        // dbg!(roles.roles().len());
         // let char2 = extract_data(char2)?;
         // let list1 = char1.item_list.unwrap();
         // let list2 = char2.item_list.unwrap();

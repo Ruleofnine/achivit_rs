@@ -7,13 +7,14 @@ mod tests {
     use color_eyre::Result;
     #[tokio::test]
     async fn test() -> Result<()> {
-
         let char = FileFetcher::new("htmls/ruleofnine.html")
             .category(ParsingCategory::Items)
             .fetch_data()
             .await?
             .to_lookupstate()?;
-        // let data = LookupState::extract_data(char)?;
+        let data = LookupState::extract_data(char)?;
+        assert_eq!(&data.name , "Ruleofnine");
+        assert_eq!(*data.level() , 90);
         // let inn_reqs = get_InnList()?;
         // let reqs = inn_reqs.reqs();
         // for (_,i) in reqs{

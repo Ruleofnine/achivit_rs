@@ -1,6 +1,13 @@
 name: Tests
 env:
-   DATABASE_URL
+   DATABASE_URL = postgres://USERNAME:PASS@localhost:5432/DB_NAME"
+   BOT_TOKEN="TOKEN" 
+   DEBUG_GUILD=1234
+   PG_USER="USERNAME"
+   PG_PASS="PASS"
+   PG_IP="localhost"
+   PG_PORT=5432
+   PG_DB_NAME="DB_NAME"
 on:
   push:
     branches: [ main ]
@@ -13,6 +20,17 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
     strategy:
       matrix:
         toolchain:

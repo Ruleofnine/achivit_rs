@@ -1,5 +1,5 @@
 use crate::serenity::GuildId;
-use achivit_rs::db::{db_needs_to_be_created, initialize_db};
+use achivit_rs::db::establish_connection;
 use achivit_rs::error_handler::on_error;
 use achivit_rs::event_handler::event_handler;
 use achivit_rs::{print_banner, Data};
@@ -18,11 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init_from_env(
         env_logger::Env::default().default_filter_or("info,serenity=error,tracing=error"),
     );
-    if db_needs_to_be_created().await? {
-        initialize_db().await.expect("failed to create db");
-    }
-
-    let db_connection = achivit_rs::db::establish_connection().await?;
+    let db_connection = establish_connection().await?;
     info!("Logining into Discord...");
     let _guild_id = GuildId(
         env::var("DEBUG_GUILD")

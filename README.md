@@ -8,6 +8,8 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 ## Features
 
 - [Lookup DF IDS]
+- [Custom Roles Lookup]
+- [Custom Ascendancies System]
 
 ## Getting Started
 

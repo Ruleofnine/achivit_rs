@@ -11,9 +11,12 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 
 ## Features
 
-- [Lookup DF IDS]
-- [Custom Roles Lookup]
-- [Custom Ascendancies System]
+* Lookup DF IDS
+* Custom Roles Lookup]
+* Custom Ascendancies System
+
+## Todos
+- Dfpedia
 
 ## Getting Started
 
@@ -48,12 +51,10 @@ Before you begin, make sure you have the following software installed on your sy
    Settings -> Advanced -> Developer Mode  
    (there currently isn't any point to having a debug guild but might as well)
 
-5. In the `DATABASE_URL` field, replace your PostgreSQL username and password, and specify your PostgreSQL server's IP address and port in their respective spots.  
-   for example `DATABASE_URL="postgres://ruleofnine:p4ssw0rd@localhost:5432/archivitdb"`
+5. Populate the rest of the fields in the `.env` with their proper values
+   **NOTE:** populate the `PG_DB_NAME` with the name you would like the database to be called, the build script will create the database and initialize it.  
 
-6. After the `/` in the `DATABASE_URL field`, enter your desired database name. **NOTE:** that this database doesn't exist yet; it will be created during setup.
-
-### Database Initialization 
+### Building
 
 Make sure you are in the project directory and have finshed all steps in [Installation](#installation).
 
@@ -67,6 +68,6 @@ to build a binary:
 ```
 The generated binary file will be located at the `achivit_rs/target/release/archivit_rs`. 
 
-The provided `build.rs` file runs <ins>automatically</ins> whenver you edit the `.env` file then build/run/check etc with cargo.
-The build file executes before compilation of the main code, and it checks to see if a postgres database with the name provied in the `.env` `DATABASE_URL` path section exists, if not it creates one and creates the needed tables.
+The provided `build.rs` file runs <ins>automatically</ins> whenever you build/run/check etc with cargo and the `.env` file has been edited since last build.
+The build file executes before compilation of the main code, and it checks to see if a postgres database with the name provied in the `.env` `PG_DB_NAME` section exists, if not it creates one and creates the needed tables.
 **NOTE:** [Sqlx](https://docs.rs/sqlx/latest/sqlx/) [query](https://docs.rs/sqlx/latest/sqlx/macro.query.html) macros check your database at COMPILE TIME to ensure correctness. The program will **NOT RUN** unless you have a valid database. 

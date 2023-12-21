@@ -13,10 +13,6 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use tokio::fs;
-pub trait HashItem {
-    // fn name(&self)->&String;
-}
-
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum ParsingCategory {
     CharacterPage,

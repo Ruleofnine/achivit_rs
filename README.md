@@ -1,5 +1,7 @@
-[![build](https://github.com/Ruleofnine/achivit_rs/actions/workflows/ci.yml/badge.svg)](https://github.com/Ruleofnine/achivit_rs/actions/workflows/ci.yml)
-[![dg](https://img.shields.io/discord/416861825888681995?logo=discord&label=DG)](https://discord.gg/UrKUVDVCrv)
+
+[![ci](https://img.shields.io/github/actions/workflow/status/Ruleofnine/achivit_rs/ci.yml?logo=rust&label=build&labelColor=black)](https://github.com/Ruleofnine/achivit_rs/actions/workflows/ci.yml)
+[![dg](https://img.shields.io/discord/416861825888681995?logo=discord&label=DG&labelColor=black)](https://discord.gg/UrKUVDVCrv)
+
 
 # Archivist Discord Bot
 

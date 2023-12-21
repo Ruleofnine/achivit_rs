@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from df_characters where DF_ID = $1 and discord_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2590fe148100e81172c331ec66a8535201009710e51116f5a777b3dac5e7b992"
+}

@@ -1,4 +1,5 @@
 use crate::serenity::GuildId;
+use achivit_rs::db::{db_needs_to_be_created, initialize_db};
 use achivit_rs::error_handler::on_error;
 use achivit_rs::event_handler::event_handler;
 use achivit_rs::{print_banner, Data};
@@ -11,14 +12,18 @@ use std::time::Instant;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_banner();
     dotenv().ok();
-    let db_connection = achivit_rs::db::establish_connection().await?;
     let token = env::var("BOT_TOKEN").expect("Missing `BOT_TOKEN` env var,");
     let start_time = Instant::now();
     color_eyre::install().expect("Failed to install color_eyre");
     env_logger::init_from_env(
         env_logger::Env::default().default_filter_or("info,serenity=error,tracing=error"),
     );
+    if db_needs_to_be_created().await? {
+        initialize_db().await.expect("failed to create db");
+    }
 
+    let db_connection = achivit_rs::db::establish_connection().await?;
+    info!("Logining into Discord...");
     let _guild_id = GuildId(
         env::var("DEBUG_GUILD")
             .expect("Expected DEBUG_GUILD in environment")
@@ -66,16 +71,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     poise::Framework::builder()
         .token(&token)
         .setup(move |ctx, _ready, framework| {
+            info!("Setting up Poise Framework");
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 // poise::builtins::register_in_guild(ctx, &test_commands, _guild_id).await?;
-                let commands: Vec<String> = framework
-                    .options()
-                    .commands
-                    .iter()
-                    .map(|c| c.name.to_owned())
-                    .collect();
-                info!("Registered Commands: {:?}", commands);
                 Ok(Data {
                     start_time,
                     db_connection,

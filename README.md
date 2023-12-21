@@ -1,4 +1,4 @@
-[![ci](https://github.com/Ruleofnine/achivit_rs/actions/workflows/ci.yml/badge.svg)](https://github.com/Ruleofnine/achivit_rs/actions/workflows/ci.yml)
+[![Tests](https://github.com/Ruleofnine/achivit_rs/actions/workflows/tests.yml/badge.svg)](https://github.com/Ruleofnine/achivit_rs/actions/workflows/tests.yml)
 # Archivist Discord Bot
 
 This is  *WIP* Discord Bot that uses the libraries Serenity and Poise to interact with the Discord API.

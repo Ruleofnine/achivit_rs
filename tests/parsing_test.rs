@@ -1,10 +1,11 @@
 extern crate achivit_rs;
 #[cfg(test)]
 mod tests {
-    use achivit_rs::roles::*;
     use achivit_rs::lookup_df::LookupState;
     use achivit_rs::parsing::{ParsingCategory,FileFetcher};
+    use achivit_rs::db::{get_env_info,create_db,initialize_db};
     use color_eyre::Result;
+
     #[tokio::test]
     async fn test() -> Result<()> {
         let char = FileFetcher::new("htmls/ruleofnine.html")
@@ -55,4 +56,10 @@ mod tests {
         // parse_df_character_duplicates_from_file(&test_page)?;
         Ok(())
     }
+#[tokio::test]
+async fn generate_db_init()->Result<()>{
+    dotenv::dotenv().ok();
+    Ok(())
 }
+}
+

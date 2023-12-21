@@ -28,7 +28,6 @@ dependencies = [
  "struct_iterable",
  "thiserror",
  "tokio",
- "url",
 ]
 
 [[package]]

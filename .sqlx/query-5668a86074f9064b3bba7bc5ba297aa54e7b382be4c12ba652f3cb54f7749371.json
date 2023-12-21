@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO df_characters (discord_id,df_id,character_name,registered_by) VALUES ($1,$2,$3,$4) ON CONFLICT (df_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5668a86074f9064b3bba7bc5ba297aa54e7b382be4c12ba652f3cb54f7749371"
+}

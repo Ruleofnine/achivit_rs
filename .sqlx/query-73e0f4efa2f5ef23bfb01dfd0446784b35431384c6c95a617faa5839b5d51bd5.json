@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT df_id,character_name FROM df_characters WHERE discord_id = $1 order by created asc",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "df_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "character_name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "73e0f4efa2f5ef23bfb01dfd0446784b35431384c6c95a617faa5839b5d51bd5"
+}

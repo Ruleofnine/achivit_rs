@@ -502,6 +502,10 @@
       "The Fool's Opus"
     ]
   },
-  "A.A.R.G.H": {"required":["Timewarped Trophy",
-  "Timewarped Medal"]}
+  "A.A.R.G.H": {
+    "required": [
+      "Timewarped Trophy",
+      "Timewarped Medal"
+    ]
+  }
 }

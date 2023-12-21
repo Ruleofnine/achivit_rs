@@ -1,4 +1,6 @@
 name: Tests
+env:
+   DATABASE_URL
 on:
   push:
     branches: [ main ]
@@ -10,7 +12,6 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:

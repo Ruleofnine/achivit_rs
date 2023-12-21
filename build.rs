@@ -92,7 +92,7 @@ pub async fn initialize_db() -> Result<()> {
 async fn main() -> Result<()> {
     dotenv().ok();
     if db_needs_to_be_created().await? {
-        initialize_db().await.expect("failed to create db");
+        initialize_db().await.expect("failed Initializing db");
     }
     // This print staementment is what tells cargo to only rerun the build script when the .env fil is altered.
     // if commented out the build script will always run when built.

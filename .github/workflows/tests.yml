@@ -8,7 +8,6 @@ env:
     PG_IP: "localhost"
     PG_PORT: 5432
     PG_DB_NAME: test
-    DATABASE_URL: "postgres://root:postgres@localhost:5432/test"
 on:
   push:
     branches: [ main ]

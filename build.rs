@@ -32,6 +32,7 @@ pub async fn create_db() -> Result<()> {
     let (username, pg_pass, pg_ip, pg_port, db_name) = get_env_info()?;
     let url = format!("postgres://{username}:{pg_pass}@{pg_ip}:{pg_port}/postgres");
     let pool = PgPoolOptions::new().connect(&url).await?;
+    println!("Connecting to {}",url);
     println!("Database: {} Does not exist.", db_name);
     sqlx::query(&format!("CREATE DATABASE {}", db_name))
         .execute(&pool)
@@ -42,6 +43,7 @@ pub async fn create_db() -> Result<()> {
 pub async fn initialize_db() -> Result<()> {
     create_db().await?;
     let db_url = get_db_url()?;
+    println!("Connecting to {}", db_url);
     let pool = PgPool::connect(&db_url).await?;
     let username = env::var("PG_USER")?;
     println!("Connected to {}", db_url);

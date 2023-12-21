@@ -3,8 +3,8 @@ env:
     CARGO_TERM_COLOR: always
     BOT_TOKEN: "TOKEN" 
     DEBUG_GUILD: 1234
-    PG_USER: "USERNAME"
-    PG_PASS: "PASS"
+    PG_USER: "root"
+    PG_PASS: "postgres"
     PG_IP: "postgres"
     PG_PORT: 5432
     PG_DB_NAME: "DB_NAME"
@@ -23,12 +23,14 @@ jobs:
         env:
           POSTGRES_USER: root
           POSTGRES_DATABASE: postgres
-          POSTGRES_PASSWORD: PASS
+          POSTGRES_PASSWORD: postgres
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 5432:5432
           
     strategy:
       matrix:

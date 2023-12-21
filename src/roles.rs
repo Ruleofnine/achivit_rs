@@ -38,9 +38,9 @@ impl Role {
             .as_ref()
             .expect(format!("Role: {} Expected 'required'", self.name()).as_str())
     }
-    pub fn amount(&self) -> u16 {
+    pub fn amount(&self) -> i32 {
         self.amount
-            .expect(format!("Role: {} Expected 'required'", self.name()).as_str()) as u16
+            .expect(format!("Role: {} Expected 'required'", self.name()).as_str()) 
     }
 }
 fn max_last(a: &Role, b: &Role) -> Ordering {
@@ -109,7 +109,7 @@ impl InnReq {
     }
 }
 
-pub fn get_InnList() -> Result<InnList> {
+pub fn get_inn_list() -> Result<InnList> {
     let file = File::open("JSONS/InnList.json")?;
     let reader = BufReader::new(file);
     let innlist: InnList = serde_json::from_reader(reader)?;
@@ -142,19 +142,19 @@ fn check_war(role: &Role, char: &DFCharacterData) -> bool {
 fn check_item_amount(role: &Role, char_items: &Items) -> bool {
     let amount = role.amount();
     let items = role.required();
-    let count = items.iter().filter(|&i| char_items.contains(i)).count();
-    count as u16 >= amount
+    let count = items.iter().filter(|&i| char_items.contains(i)).count() as i32;
+    count  >= amount
 }
 
 fn check_waves(role: &Role, wars: &WarList) -> bool {
     let amount = role.amount();
     wars.war_list()
         .iter()
-        .any(|w| w.waves_int() as u16 >= amount)
+        .any(|w| w.waves_int() >= amount)
 }
 fn check_gold(role: &Role, gold: &i32) -> bool {
     let amount = role.amount();
-    *gold as u16 >= amount
+    *gold  >= amount
 }
 fn check_max_role(roles: &Vec<Role>, role: &Role, aquired_roles: &Vec<usize>) -> bool {
     let prereqs = role.prereqs();
@@ -200,13 +200,13 @@ fn check_item_stackable(role: &Role, items: &Items) -> bool {
     })
 }
 fn check_all_inn_reqs(items: &Items) -> bool {
-    let list = get_InnList().expect("failed to get inn list");
+    let list = get_inn_list().expect("failed to get inn list");
     list.reqs()
         .iter()
-        .all(|(_, innreq)| innreq.reqs().iter().all(|i| {dbg!(i);items.contains(i)}))
+        .all(|(_, innreq)| innreq.reqs().iter().all(|i| items.contains(i)))
 }
-fn aquired_roles_indexes<'a>(roles: &mut RoleList, mut char: DFCharacterData) -> Vec<usize> {
-    let char_items = char.item_list.take().expect("expected char items");
+fn aquired_roles_indexes<'a>(roles: &mut RoleList, char: &DFCharacterData) -> Vec<usize> {
+    let char_items = char.item_list.as_ref().take().expect("expected char items");
     let dups = char_items.dups();
     let roles_list = roles.roles();
     let mut roles_indexes_to_remove: Vec<usize> = vec![];
@@ -248,7 +248,7 @@ fn prereq_roles_to_remove(roles: &Vec<Role>) -> Vec<usize> {
     }
     prereq_roles
 }
-pub fn check_roles(char: DFCharacterData, path: &str) -> Result<RoleList> {
+pub fn check_roles(char: &DFCharacterData, path: &str) -> Result<RoleList> {
     let mut roles = get_roles(path)?;
     let mut aquired_roles = aquired_roles_indexes(&mut roles, char);
     aquired_roles.sort_by(|a, b| b.cmp(a));

@@ -1,6 +1,6 @@
 
 [![ci](https://img.shields.io/github/actions/workflow/status/Ruleofnine/achivit_rs/ci.yml?logo=rust&label=build&labelColor=black)](https://github.com/Ruleofnine/achivit_rs/actions/workflows/ci.yml)
-[![dg](https://img.shields.io/discord/416861825888681995?logo=discord&label=DG&labelColor=black)](https://discord.gg/UrKUVDVCrv)
+[![dg](https://img.shields.io/discord/416861825888681995?label=&color=7389d8&labelColor=6a7ec2&logoColor=ffffff&logo=discord)](https://discord.gg/UrKUVDVCrv)
 
 
 # Archivist Discord Bot
@@ -12,11 +12,13 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 ## Features
 
 * Lookup DF IDS
-* Custom Roles Lookup]
+* Custom Roles Lookup
 * Custom Ascendancies System
 
 ## Todos
 - Dfpedia
+- Ascendancies Missing Items
+- Update checker
 
 ## Getting Started
 

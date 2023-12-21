@@ -51,7 +51,7 @@ pub async fn send_roles_embed(
         }
         RolesListType::Ascend => (ASCEND_DA_IMGUR,Color::from_rgb(0,214,11),"ascendancies.json".to_owned(),format!("{}'s Acendancies",name)),
     };
-    let roles = check_roles(char, &path)?;
+    let roles = check_roles(&char, &path)?;
     let mut description = String::new();
     for role in roles.roles() {
         description += format!("__**{}**__\n{}\n", role.name(), role.description).as_str()

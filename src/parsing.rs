@@ -78,6 +78,7 @@ impl<'a> FileFetcher<'a> {
         let str = fs::read_to_string(self.file_path.to_string()).await?;
         Ok(CharacterData {
             str,
+            df_id: 0,
             category: self.category,
         })
     }
@@ -113,7 +114,12 @@ impl CharacterFetcher {
         Box::pin(async move {
             let str = fetch_page_with_user_agent(&self.user_agent(), &self.url()).await?;
             let category = self.category;
-            Ok(CharacterData { str, category })
+            let df_id = self.df_id;
+            Ok(CharacterData {
+                str,
+                df_id,
+                category,
+            })
         })
     }
 }
@@ -121,22 +127,33 @@ impl CharacterFetcher {
 #[getset(get = "pub")]
 pub struct CharacterData {
     str: String,
+    df_id: i32,
     category: ParsingCategory,
 }
 impl CharacterData {
     pub fn to_lookupstate(&self) -> Result<LookupState> {
         let document = Html::parse_document(&self.str);
         Ok(match self.category {
-            ParsingCategory::CharacterPage => parse_df_character(&document),
-            ParsingCategory::FlashCharacterPage => parse_df_character_flash(&document),
-            ParsingCategory::Wars => parse_df_character_wars_only(&document),
-            ParsingCategory::Duplicates => parse_df_character_duplicates(&document),
-            ParsingCategory::Inventory => parse_df_character_inventory_only(&document),
-            ParsingCategory::Items => parse_df_character_with_items(&document, self.category),
-            ParsingCategory::Compare => parse_df_character_with_items(&document, self.category),
-            ParsingCategory::Roles => parse_df_character_with_items(&document, self.category),
+            ParsingCategory::CharacterPage => parse_df_character(&document, *self.df_id()),
+            ParsingCategory::FlashCharacterPage => {
+                parse_df_character_flash(&document, *self.df_id())
+            }
+            ParsingCategory::Wars => parse_df_character_wars_only(&document, *self.df_id()),
+            ParsingCategory::Duplicates => parse_df_character_duplicates(&document, *self.df_id()),
+            ParsingCategory::Inventory => {
+                parse_df_character_inventory_only(&document, *self.df_id())
+            }
+            ParsingCategory::Items => {
+                parse_df_character_with_items(&document, self.category, *self.df_id())
+            }
+            ParsingCategory::Compare => {
+                parse_df_character_with_items(&document, self.category, *self.df_id())
+            }
+            ParsingCategory::Roles => {
+                parse_df_character_with_items(&document, self.category, *self.df_id())
+            }
             ParsingCategory::Ascendancies => {
-                parse_df_character_with_items(&document, self.category)
+                parse_df_character_with_items(&document, self.category, *self.df_id())
             }
         })
     }
@@ -222,11 +239,19 @@ impl Items {
         let mut dc_iter = Vec::new();
         let mut nda_iter = Vec::new();
         let mut artifact_iter = Vec::new();
-        self.items().iter().for_each(|(name,item)| match item.tag {
-            ItemTag::NDA => {nda_iter.push(name);},
-            ItemTag::DA => {da_iter.push(name);},
-            ItemTag::DC => {dc_iter.push(name);},
-            ItemTag::ARTIFACT => {artifact_iter.push(name);},
+        self.items().iter().for_each(|(name, item)| match item.tag {
+            ItemTag::NDA => {
+                nda_iter.push(name);
+            }
+            ItemTag::DA => {
+                da_iter.push(name);
+            }
+            ItemTag::DC => {
+                dc_iter.push(name);
+            }
+            ItemTag::ARTIFACT => {
+                artifact_iter.push(name);
+            }
         });
         vec![nda_iter, da_iter, dc_iter, artifact_iter].into_iter()
     }
@@ -280,9 +305,9 @@ pub struct DFCharacterData {
     pub item_list: Option<Items>,
 }
 impl DFCharacterData {
-    fn default() -> DFCharacterData {
+    fn default(df_id: i32) -> DFCharacterData {
         DFCharacterData {
-            id: 0,
+            id: df_id,
             name: "Default".to_string(),
             dragon: None,
             dragon_amulet: false,
@@ -488,8 +513,8 @@ impl WarList {
         &self.war_list
     }
 }
-pub fn parse_df_character(document: &Html) -> LookupState {
-    let mut character = DFCharacterData::default();
+pub fn parse_df_character(document: &Html, df_id: i32) -> LookupState {
+    let mut character = DFCharacterData::default(df_id);
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let h1_selector = Selector::parse("h1").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
@@ -497,7 +522,7 @@ pub fn parse_df_character(document: &Html) -> LookupState {
         None => return LookupState::NotFound,
     };
     character.name = match charpagedetails.select(&h1_selector).next() {
-        None => return parse_df_character_flash(document),
+        None => return parse_df_character_flash(document,df_id),
         Some(name) => name.text().collect::<Vec<_>>().join(" ").trim().to_string(),
     };
 
@@ -610,7 +635,7 @@ pub fn parse_df_character(document: &Html) -> LookupState {
     character.calc_item_count();
     LookupState::CharacterPage(character)
 }
-pub fn parse_df_character_wars_only(document: &Html) -> LookupState {
+pub fn parse_df_character_wars_only(document: &Html, _df_id: i32) -> LookupState {
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
         Some(charpagedetails) => charpagedetails,
@@ -654,7 +679,7 @@ pub fn parse_df_character_wars_only(document: &Html) -> LookupState {
     });
     LookupState::Wars(character_name, wars)
 }
-pub fn parse_df_character_inventory_only(document: &Html) -> LookupState {
+pub fn parse_df_character_inventory_only(document: &Html, _df_id: i32) -> LookupState {
     let mut items = Vec::new();
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
@@ -710,7 +735,7 @@ pub fn parse_df_character_inventory_only(document: &Html) -> LookupState {
     }
     LookupState::Inventory(character_name, items)
 }
-pub fn parse_df_character_duplicates(document: &Html) -> LookupState {
+pub fn parse_df_character_duplicates(document: &Html, _df_id: i32) -> LookupState {
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
         Some(charpagedetails) => charpagedetails,
@@ -765,11 +790,11 @@ pub fn parse_df_character_duplicates(document: &Html) -> LookupState {
     LookupState::Duplicates(character_name, items)
 }
 
-pub fn parse_df_character_flash(document: &Html) -> LookupState {
+pub fn parse_df_character_flash(document: &Html, df_id: i32) -> LookupState {
     let flashvars_selector = Selector::parse(r#"param[name="FlashVars"]"#).unwrap();
     let flashvars = match document.select(&flashvars_selector).next() {
         Some(vars) => vars.value().attr("value").unwrap(),
-        None => return parse_df_character(document),
+        None => return parse_df_character(document, df_id),
     };
     let key_value_pairs: Vec<&str> = flashvars.split('&').collect();
     let mut flashvars_map = std::collections::HashMap::new();
@@ -854,8 +879,12 @@ pub fn get_discord_embed_description_flash(
         up
     )
 }
-pub fn parse_df_character_with_items(document: &Html, category: ParsingCategory) -> LookupState {
-    let mut character = DFCharacterData::default();
+pub fn parse_df_character_with_items(
+    document: &Html,
+    category: ParsingCategory,
+    df_id: i32,
+) -> LookupState {
+    let mut character = DFCharacterData::default(df_id);
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let h1_selector = Selector::parse("h1").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
@@ -865,16 +894,18 @@ pub fn parse_df_character_with_items(document: &Html, category: ParsingCategory)
 
     match charpagedetails.select(&h1_selector).next() {
         None => {
-            if let LookupState::FlashCharatcerPage(chardata) = parse_df_character_flash(document) {
-                character.name = chardata.get("Name").unwrap().to_string();
-                character.gold = chardata.get("Gold").unwrap().parse::<i32>().unwrap();
-                character.level = chardata.get("Level").unwrap().parse::<u8>().unwrap();
-                character.last_played =
-                    NaiveDate::parse_from_str(chardata.get("LastPlayed").unwrap(), "%Y/%m/%d")
-                        .unwrap();
-            } else {
+            // if let LookupState::FlashCharatcerPage(chardata) =
+                // parse_df_character_flash(document, df_id)
+            // {
+                // character.name = chardata.get("Name").unwrap().to_string();
+                // character.gold = chardata.get("Gold").unwrap().parse::<i32>().unwrap();
+                // character.level = chardata.get("Level").unwrap().parse::<u8>().unwrap();
+                // dbg!(chardata.get("LastPlayed"));
+                // character.last_played =
+                //     NaiveDate::parse_from_str(chardata.get("LastPlayed").unwrap(), "%m/%d/%Y").expect("failed to parse date");
+            // } else {
                 return LookupState::NotFound;
-            }
+            // }
         }
         Some(name) => {
             let cb_label_selector =

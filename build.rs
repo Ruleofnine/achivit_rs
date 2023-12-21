@@ -1,6 +1,6 @@
 use anyhow::Result;
 use dotenv::dotenv;
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::PgPool;
 use std::env;
 pub fn get_db_url() -> Result<String> {
     let (pg_user, pg_pass, pg_ip, pg_port, db_name) = get_env_info()?;
@@ -19,7 +19,7 @@ pub fn get_env_info() -> Result<(String, String, String, String, String)> {
 pub async fn db_needs_to_be_created() -> Result<bool> {
     let (username, pg_pass, pg_ip, pg_port, db_name) = get_env_info()?;
     let url = format!("postgres://{username}:{pg_pass}@{pg_ip}:{pg_port}/postgres");
-    let pool = PgPoolOptions::new().connect(&url).await?;
+    let pool = PgPool::connect(&url).await?;
     let database_exists: bool = sqlx::query_scalar(&format!(
         "SELECT EXISTS (SELECT FROM pg_database WHERE datname = '{}')",
         db_name
@@ -31,7 +31,7 @@ pub async fn db_needs_to_be_created() -> Result<bool> {
 pub async fn create_db() -> Result<()> {
     let (username, pg_pass, pg_ip, pg_port, db_name) = get_env_info()?;
     let url = format!("postgres://{username}:{pg_pass}@{pg_ip}:{pg_port}/postgres");
-    let pool = PgPoolOptions::new().connect(&url).await?;
+    let pool = PgPool::connect(&url).await?;
     println!("Connecting to {}",url);
     println!("Database: {} Does not exist.", db_name);
     sqlx::query(&format!("CREATE DATABASE {}", db_name))

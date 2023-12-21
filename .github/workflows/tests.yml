@@ -5,9 +5,10 @@ env:
     DEBUG_GUILD: 1234
     PG_USER: "USERNAME"
     PG_PASS: "PASS"
-    PG_IP: "localhost"
+    PG_IP: "postgres"
     PG_PORT: 5432
     PG_DB_NAME: "DB_NAME"
+    DATABASE_URL: "postgres://root:PASS@postgres:5432/postgres"
 on:
   push:
     branches: [ main ]
@@ -23,8 +24,6 @@ jobs:
           POSTGRES_USER: root
           POSTGRES_DATABASE: postgres
           POSTGRES_PASSWORD: PASS
-          POSTGRES_HOST: localhost
-          POSTGRES_IP: localhost
         options: >-
           --health-cmd pg_isready
           --health-interval 10s

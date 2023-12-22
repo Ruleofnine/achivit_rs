@@ -2,29 +2,34 @@ use crate::parsing::{DFCharacterData, Items, WarList};
 use color_eyre::Result;
 use serde_derive::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
-pub enum RolesListType {
+pub enum RequirementListType {
     Roles,
     Ascend,
 }
+fn req_type_item() -> ReqType {
+    ReqType::Item
+}
 #[derive(Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct Role {
+pub struct Requirement {
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
     pub prereqs: Option<Vec<String>>,
     pub required: Option<Vec<String>>,
     #[serde(rename = "type")]
+    #[serde(default = "req_type_item")]
     pub req_type: ReqType,
     pub amount: Option<i32>,
 }
-impl Role {
+impl Requirement {
     pub fn name(&self) -> &String {
         &self.name
     }
     pub fn description(&self) -> &String {
-        &self.description
+        self.description
+            .as_ref()
+            .unwrap_or_else(|| panic!("Role: {} Expected 'description'", self.name()))
     }
     pub fn prereqs(&self) -> &[String] {
         self.prereqs
@@ -41,7 +46,7 @@ impl Role {
             .unwrap_or_else(|| panic!("Role: {} Expected 'amount'", self.name()))
     }
 }
-fn max_last(a: &Role, b: &Role) -> Ordering {
+fn max_last(a: &Requirement, b: &Requirement) -> Ordering {
     match (&a.req_type, &b.req_type) {
         (ReqType::Max, ReqType::Max) => Ordering::Equal,
         (ReqType::Max, _) => Ordering::Greater,
@@ -51,10 +56,9 @@ fn max_last(a: &Role, b: &Role) -> Ordering {
 }
 
 #[derive(Deserialize, Debug, Serialize)]
-pub struct RoleList(Vec<Role>);
-
-impl RoleList {
-    pub fn roles(&self) -> &[Role] {
+pub struct RequirementList(Vec<Requirement>);
+impl RequirementList {
+    pub fn requirements(&self) -> &[Requirement] {
         &self.0
     }
     fn sort(&mut self) {
@@ -86,73 +90,47 @@ pub enum ReqType {
     ItemStackable,
     Inn,
 }
-#[derive(Debug, Deserialize, Serialize)]
-pub struct InnList {
-    #[serde(flatten)]
-    list: HashMap<String, InnReq>,
-}
-impl InnList {
-    pub fn reqs(&self) -> &HashMap<String, InnReq> {
-        &self.list
-    }
-}
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct InnReq {
-    required: Vec<String>,
-}
-impl InnReq {
-    pub fn reqs(&self) -> &[String] {
-        &self.required
-    }
-}
-
-pub fn get_inn_list() -> Result<InnList> {
-    let file = File::open("JSONS/InnList.json")?;
-    let reader = BufReader::new(file);
-    let innlist: InnList = serde_json::from_reader(reader)?;
-    Ok(innlist)
-}
-pub fn get_roles(path: &str) -> Result<RoleList> {
+pub fn get_requirements(path: &str) -> Result<RequirementList> {
     let file = File::open(format!("JSONS/{path}"))?;
     let reader = BufReader::new(file);
-    let mut roles: RoleList = serde_json::from_reader(reader)?;
+    let mut roles: RequirementList = serde_json::from_reader(reader)?;
     roles.sort();
     Ok(roles)
 }
 
-pub fn get_roles_bytes(bytes: &[u8]) -> Result<RoleList> {
-    let mut roles: RoleList = serde_json::from_slice(bytes)?;
+pub fn get_requirements_bytes(bytes: &[u8]) -> Result<RequirementList> {
+    let mut roles: RequirementList = serde_json::from_slice(bytes)?;
     roles.sort();
     Ok(roles)
 }
-fn check_item(role: &Role, char_items: &Items) -> bool {
+fn check_item(role: &Requirement, char_items: &Items) -> bool {
     let items = role
         .required
         .as_ref()
         .expect("Item Role requires item list");
     items.iter().all(|i| char_items.contains(i))
 }
-fn check_war(role: &Role, char: &DFCharacterData) -> bool {
+fn check_war(role: &Requirement, char: &DFCharacterData) -> bool {
     let amount = role.amount.expect("War needs amount") as usize;
     char.wars.wars().len() >= amount
 }
-fn check_item_amount(role: &Role, char_items: &Items) -> bool {
+fn check_item_amount(role: &Requirement, char_items: &Items) -> bool {
     let amount = role.amount();
     let items = role.required();
     let count = items.iter().filter(|&i| char_items.contains(i)).count() as i32;
     count >= amount
 }
 
-fn check_waves(role: &Role, wars: &WarList) -> bool {
+fn check_waves(role: &Requirement, wars: &WarList) -> bool {
     let amount = role.amount();
     wars.war_list().iter().any(|w| w.waves_int() >= amount)
 }
-fn check_gold(role: &Role, gold: &i32) -> bool {
+fn check_gold(role: &Requirement, gold: &i32) -> bool {
     let amount = role.amount();
     *gold >= amount
 }
-fn check_max_role(roles: &[Role], role: &Role, aquired_roles: &[usize]) -> bool {
+fn check_max_role(roles: &[Requirement], role: &Requirement, aquired_roles: &[usize]) -> bool {
     let prereqs = role.prereqs();
     let amount = prereqs.len();
     let mut has = 0;
@@ -167,7 +145,7 @@ fn check_max_role(roles: &[Role], role: &Role, aquired_roles: &[usize]) -> bool 
     }
     false
 }
-fn check_item_stackable(role: &Role, items: &Items) -> bool {
+fn check_item_stackable(role: &Requirement, items: &Items) -> bool {
     let required: Vec<(String, i32)> = role
         .required()
         .iter()
@@ -196,15 +174,15 @@ fn check_item_stackable(role: &Role, items: &Items) -> bool {
     })
 }
 fn check_all_inn_reqs(items: &Items) -> bool {
-    let list = get_inn_list().expect("failed to get inn list");
-    list.reqs()
+    let list = get_requirements("InnList.json").expect("failed to get in list");
+    list.requirements()
         .iter()
-        .all(|(_, innreq)| innreq.reqs().iter().all(|i| items.contains(i)))
+        .all(|innreq| innreq.required().iter().all(|i| {dbg!(i);dbg!(items.contains(i))}))
 }
-fn aquired_roles_indexes(roles: &mut RoleList, char: &DFCharacterData) -> Vec<usize> {
+fn aquired_roles_indexes(roles: &mut RequirementList, char: &DFCharacterData) -> Vec<usize> {
     let char_items = char.item_list.as_ref().expect("expected char items");
     let dups = char_items.dups();
-    let roles_list = roles.roles();
+    let roles_list = roles.requirements();
     let mut roles_indexes_to_remove: Vec<usize> = vec![];
     for (i, role) in roles_list.iter().enumerate() {
         let aquired = match role.req_type {
@@ -229,7 +207,7 @@ fn aquired_roles_indexes(roles: &mut RoleList, char: &DFCharacterData) -> Vec<us
     }
     roles_indexes_to_remove
 }
-fn prereq_roles_to_remove(roles: &[Role]) -> Vec<usize> {
+fn prereq_roles_to_remove(roles: &[Requirement]) -> Vec<usize> {
     let mut prereq_roles = Vec::new();
     for role in roles {
         if let Some(prereqs) = &role.prereqs {
@@ -244,11 +222,11 @@ fn prereq_roles_to_remove(roles: &[Role]) -> Vec<usize> {
     }
     prereq_roles
 }
-pub fn check_roles(char: &DFCharacterData, path: &str) -> Result<RoleList> {
-    let mut roles = get_roles(path)?;
+pub fn check_requirements(char: &DFCharacterData, path: &str) -> Result<RequirementList> {
+    let mut roles = get_requirements(path)?;
     let mut aquired_roles = aquired_roles_indexes(&mut roles, char);
     aquired_roles.sort_by(|a, b| b.cmp(a));
-    let mut roles: Vec<Role> = aquired_roles
+    let mut roles: Vec<Requirement> = aquired_roles
         .iter()
         .map(|i| roles.0.swap_remove(*i))
         .collect();
@@ -258,7 +236,7 @@ pub fn check_roles(char: &DFCharacterData, path: &str) -> Result<RoleList> {
     prereq_roles.iter().rev().for_each(|i| {
         roles.swap_remove(*i);
     });
-    let mut role_list = RoleList(roles);
+    let mut role_list = RequirementList(roles);
     role_list.sort_alphabetical();
     Ok(role_list)
 }

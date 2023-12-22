@@ -3,7 +3,7 @@ use crate::embeds::*;
 use crate::guild_settings::GuildSettings;
 use crate::manage_users::autocomplete_character;
 use crate::parsing::{CharacterFetcher, DFCharacterData, ParsingCategory, WarList};
-use crate::roles::{get_roles, RolesListType};
+use crate::requirements::{get_requirements, RequirementListType};
 use crate::serenity::Color;
 use crate::sheets::compare_sheet;
 use crate::{Context, Error};
@@ -25,8 +25,8 @@ async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<
         LookupState::Duplicates(name, dups) => {
             send_duplicates_embed(dups, df_id, name, ctx).await?
         }
-        LookupState::Roles(char) => send_roles_embed(df_id,char,ctx,RolesListType::Roles).await?,
-        LookupState::Ascendancies(char) => send_roles_embed(df_id,char,ctx,RolesListType::Ascend).await?
+        LookupState::Roles(char) => send_roles_embed(df_id,char,ctx,RequirementListType::Roles).await?,
+        LookupState::Ascendancies(char) => send_roles_embed(df_id,char,ctx,RequirementListType::Ascend).await?
     };
     Ok(())
 }
@@ -152,7 +152,7 @@ pub async fn roles_list(ctx: Context<'_>) -> Result<(), Error> {
         None => return Ok(no_settings_embed(ctx).await?),
         Some(settings) => settings,
     };
-    let mut roles = get_roles(guild_settings.roles_path())?;
+    let mut roles = get_requirements(guild_settings.roles_path())?;
     Ok(roles_embed(ctx, &mut roles).await?)
 }
 

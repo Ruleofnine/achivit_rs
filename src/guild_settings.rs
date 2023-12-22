@@ -3,7 +3,7 @@ use std::fs;
 use poise::serenity_prelude::Attachment;
 use color_eyre::Result;
 use sqlx::query;
-use crate::{Context,Error, embeds, roles::get_roles_bytes};
+use crate::{Context,Error, embeds, requirements::get_requirements_bytes};
 use serde::{Serialize, Deserialize};
 use getset::Getters;
 #[derive(sqlx::FromRow,Serialize, Deserialize,Getters)]
@@ -21,7 +21,7 @@ pub async fn set_roles(ctx: Context<'_>,file:Attachment) -> Result<(), Error> {
         }
     }
     let file = file.download().await?;
-    let mut roles = match get_roles_bytes(&file){
+    let mut roles = match get_requirements_bytes(&file){
         Ok(data) => data,
         Err(e) => return Ok(embeds::role_init_error(ctx,e).await?)
     };
@@ -33,7 +33,7 @@ pub async fn set_roles(ctx: Context<'_>,file:Attachment) -> Result<(), Error> {
         guild_id:guild.id.0 as i64,
         roles_path:json_path.to_owned()
     };
-    let roles_json = serde_json::to_string(roles.roles())?;
+    let roles_json = serde_json::to_string(roles.requirements())?;
     fs::write(format!("JSONS/{json_path}"),roles_json.as_bytes())?;
     let pool = &ctx.data().db_connection;
     query!("

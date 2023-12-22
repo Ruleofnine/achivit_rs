@@ -1,6 +1,7 @@
 pub mod db;
-pub mod roles;
+pub mod requirements;
 pub mod dev_tools;
+pub mod roles_extended;
 pub mod embeds;
 pub mod error_handler;
 pub mod event_handler;
@@ -18,6 +19,7 @@ pub use dotenv::dotenv;
 pub use log::info;
 pub use lookup_df::lookup_df_character;
 pub use poise::serenity_prelude as serenity;
+pub mod paginate;
 use sqlx::PgPool;
 use std::time::Instant;
 use std::env;
@@ -28,6 +30,23 @@ pub type Context<'a> = poise::Context<'a, Data, Error>;
 pub struct Data {
     pub start_time: Instant,
     pub db_connection: PgPool,
+}
+pub fn get_command_list()-> Vec<poise::Command<Data, Box<(dyn std::error::Error + std::marker::Send + Sync + 'static)>>>{
+   vec![
+        crate::wiki::wiki(),
+        crate::time::ping(),
+        crate::time::uptime(),
+        crate::time::server_time(),
+        crate::time::random_event(),
+        crate::dev_tools::list_slash_commands(),
+        crate::manage_users::register_character(),
+        crate::manage_users::delete_character(),
+        crate::lookup_df::lookup_df_character(),
+        crate::lookup_df::compare_df_characters(),
+        crate::lookup_df::roles_list(),
+        crate::guild_settings::set_roles(),
+        crate::roles_extended::inn_items(),
+    ]
 }
 pub fn print_banner(){
     let achivit_style = Style::new().bright_purple();

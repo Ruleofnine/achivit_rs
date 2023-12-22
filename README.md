@@ -19,6 +19,7 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 - Dfpedia
 - Ascendancies Missing Items
 - Update checker
+- populate dfwiki command on typing?
 
 ## Getting Started
 

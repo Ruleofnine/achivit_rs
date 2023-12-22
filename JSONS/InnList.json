@@ -1,5 +1,6 @@
-{
-  "Dragon Challenges!": {
+[
+  {
+    "name": "Dragon Challenges!",
     "required": [
       "Ultimate Blade Pieces",
       "Elemental Flux",
@@ -49,7 +50,8 @@
       "Dragonoid Dagger V"
     ]
   },
-  "Nefarious Challenges!": {
+  {
+    "name": "Nefarious Challenges!",
     "required": [
       "Blood Moon Token",
       "Necro Paragon Helm I",
@@ -72,7 +74,8 @@
       "Legion Bracer"
     ]
   },
-  "Otherworldly Creatures Challenges!": {
+  {
+    "name": "Otherworldly Creatures Challenges!",
     "required": [
       "Sir Bearginion's Fur",
       "Leorilla Mane Belt I",
@@ -102,7 +105,8 @@
       "Baby Chimera"
     ]
   },
-  "Dreamspace Challenges": {
+  {
+    "name": "Dreamspace Challenges",
     "required": [
       "Sporcaling",
       "Dream Dust",
@@ -120,7 +124,8 @@
       "Tentacle of the Dominion III"
     ]
   },
-  "Dreamspace\u00b2": {
+  {
+    "name": "Dreamspace\u00b2",
     "required": [
       "Curious Togwool",
       "Sphere of Consuming Nightmares",
@@ -140,7 +145,8 @@
       "Tog-Sized Ribbon"
     ]
   },
-  "Unfortunate Souls Challenges": {
+  {
+    "name": "Unfortunate Souls Challenges",
     "required": [
       "Vaal's Ego",
       "Molten Sourcemetal",
@@ -156,7 +162,8 @@
       "Caitiff's Notes"
     ]
   },
-  "Azaveyran Challenges": {
+  {
+    "name": "Azaveyran Challenges",
     "required": [
       "Sea Chicken's Conquest I",
       "Sea Chicken's Conquest II",
@@ -178,7 +185,8 @@
       "Hacked Magi Drone"
     ]
   },
-  "Forgotten Beasts Challenges": {
+  {
+    "name": "Forgotten Beasts Challenges",
     "required": [
       "Frallmar's Heartscale",
       "Hyperhydra's Hyperfang",
@@ -197,7 +205,8 @@
       "Ring of Otherworld III"
     ]
   },
-  "The Exaltia Tower": {
+  {
+    "name": "The Exaltia Tower",
     "required": [
       "Exalted Forgemetal",
       "Exalted Cloth",
@@ -228,7 +237,8 @@
       "Wings of Yaphael III"
     ]
   },
-  "The Corrupted Seven": {
+  {
+    "name": "The Corrupted Seven",
     "required": [
       "Chibi Envy",
       "Chibi Greed",
@@ -254,7 +264,8 @@
       "Pandora's Scythe III"
     ]
   },
-  "Displaced Fates": {
+  {
+    "name": "Displaced Fates",
     "required": [
       "Challenger Belt",
       "Strange Broken Tool",
@@ -289,7 +300,8 @@
       "Warrior's Challenger Belt I"
     ]
   },
-  "The Conduit": {
+  {
+    "name": "The Conduit",
     "required": [
       "Inert Summon Gem - Reaver EX",
       "Summon Gem Setting - Reaver",
@@ -311,7 +323,8 @@
       "Summon Gem - Ayauhnqui EX"
     ]
   },
-  "Inevitable Equilibrium": {
+  {
+    "name": "Inevitable Equilibrium",
     "required": [
       "Horn of Hatir",
       "Horn of Dolaas",
@@ -324,7 +337,8 @@
       "Replica DragonLord Helm III"
     ]
   },
-  "Lords of Chaos": {
+  {
+    "name": "Lords of Chaos",
     "required": [
       "Staff of Inversion I",
       "Staff of Inversion II",
@@ -366,7 +380,8 @@
       "Chaotic Blade of Swordhaven III"
     ]
   },
-  "Lost Fables": {
+  {
+    "name": "Lost Fables",
     "required": [
       "Dormant Jade Cleaver",
       "Book of the Sun",
@@ -402,7 +417,8 @@
       "Zeclem's Relic Belt"
     ]
   },
-  "Change of Heart": {
+  {
+    "name": "Change of Heart",
     "required": [
       "Creatioux Claw I",
       "Creatioux Claw II",
@@ -420,7 +436,8 @@
       "Dragonscale Necklace"
     ]
   },
-  "Doomed Reality": {
+  {
+    "name": "Doomed Reality",
     "required": [
       "Doom Core Residue",
       "Corrupted Heartscale",
@@ -432,7 +449,8 @@
       "Distilled Doom Essence"
     ]
   },
-  "Tenets of the Devoted": {
+  {
+    "name": "Tenets of the Devoted",
     "required": [
       "Maker-Touched Zweihander I",
       "Maker-Touched Zweihander II",
@@ -452,7 +470,8 @@
       "Shattered Flamehelm"
     ]
   },
-  "Ties that Bind": {
+  {
+    "name": "Ties that Bind",
     "required": [
       "Charnel Doom Helmet I",
       "Charnel Doom Helmet II",
@@ -468,7 +487,8 @@
       "The Blood Mantle III"
     ]
   },
-  "The Eggsalted Meateor": {
+  {
+    "name": "The Eggsalted Meateor",
     "required": [
       "Cute Chickencow Hat",
       "Chickencow's Penance",
@@ -476,7 +496,8 @@
       "Eggsalted Remnant"
     ]
   },
-  "Beginnings": {
+  {
+    "name": "Beginnings",
     "required": [
       "Shard of Destiny",
       "ArchKnight's Tale",
@@ -491,7 +512,8 @@
       "Rolith's Backup Hammer III"
     ]
   },
-  "Crossroads": {
+  {
+    "name": "Crossroads",
     "required": [
       "Shattered Debris",
       "Suki's Hope",
@@ -502,10 +524,11 @@
       "The Fool's Opus"
     ]
   },
-  "A.A.R.G.H": {
+  {
+    "name": "A.A.R.G.H",
     "required": [
       "Timewarped Trophy",
       "Timewarped Medal"
     ]
   }
-}
+]

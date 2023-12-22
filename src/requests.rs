@@ -1,6 +1,6 @@
 use color_eyre::eyre::eyre;
 use color_eyre::Result;
-use log::error;
+use log::{error,info};
 use reqwest::{Client, StatusCode};
 use serde_json::Value;
 pub const FLASH_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ArtixGameLauncher/2.0.7 Chrome/80.0.3987.137 Electron/8.1.0 Safari/537.36";
@@ -16,6 +16,7 @@ pub async fn fetch_page_with_user_agent(user_agent: &str, url: &str) -> Result<S
         .user_agent(user_agent)
         .build()?;
     let response = client.get(url).send().await?;
+    info!("GET Request -> {url} STATUS : {}",response.status());
     let status_code = response.status();
     match status_code {
         StatusCode::OK => Ok(response.text().await?),
@@ -33,6 +34,7 @@ pub async fn fetch_json(url: &str) -> Result<Value> {
     let client = Client::new();
     let response = client.get(url).send().await?;
     let status_code = response.status();
+    info!("GET Request -> {url} STATUS : {}",response.status());
     match status_code {
         StatusCode::OK => {
             let json: Value = response.json().await?;

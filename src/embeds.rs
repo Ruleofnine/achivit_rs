@@ -2,21 +2,21 @@ use crate::guild_settings::GuildSettings;
 use crate::parsing::{get_discord_embed_description_flash, DFCharacterData, WarList};
 use crate::requests::{ASCEND_DA_IMGUR, CHARPAGE, DA_IMGUR, NDA_IMGUR, ROLE_DA_IMGUR};
 use crate::rng::random_rgb;
-use crate::roles::{check_roles, RoleList, RolesListType};
+use crate::requirements::{check_requirements, RequirementList, RequirementListType};
 use crate::sheets::SheetData;
 use crate::{serenity::Color, Context};
 use color_eyre::{Report, Result};
 use poise::serenity_prelude;
 use std::collections::HashMap;
 use std::fmt::Write;
-pub async fn roles_embed(ctx: Context<'_>, roles: &mut RoleList) -> Result<()> {
-    let mut description = String::new();
+pub async fn roles_embed(ctx: Context<'_>, roles: &mut RequirementList) -> Result<()> {
     let guild = ctx.guild().expect("expected guild");
     let guild_name = &guild.name;
     roles.sort_alphabetical();
-    for role in roles.roles() {
-        description += format!("**{}**\n*{}*\n", role.name(), role.description).as_str()
-    }
+    let description = roles.requirements().iter().fold(String::new(), |mut acc, r| {
+        writeln!(acc, "**{}**\n{}", r.name(), r.description()).expect("failed parsing roles");
+        acc
+    });
     ctx.send(|f| {
         f.embed(|f| {
             f.title(format!("{guild_name} Roles"))
@@ -32,7 +32,7 @@ pub async fn send_roles_embed(
     df_id: i32,
     char: DFCharacterData,
     ctx: Context<'_>,
-    role_list_type: RolesListType,
+    role_list_type: RequirementListType,
 ) -> Result<()> {
     let guild_id = ctx.guild_id().expect("expected guild").0 as i64;
     let pool = &ctx.data().db_connection;
@@ -43,7 +43,7 @@ pub async fn send_roles_embed(
             .await?;
     let name = char.name().to_owned();
     let (thumbnail, color, path, title) = match role_list_type {
-        RolesListType::Roles => {
+        RequirementListType::Roles => {
             let guild_settings = match settings {
                 None => return no_settings_embed(ctx).await,
                 Some(settings) => settings,
@@ -55,17 +55,17 @@ pub async fn send_roles_embed(
                 format!("{}'s Eligible Roles", name),
             )
         }
-        RolesListType::Ascend => (
+        RequirementListType::Ascend => (
             ASCEND_DA_IMGUR,
             Color::from_rgb(0, 214, 11),
             "ascendancies.json".to_owned(),
             format!("{}'s Acendancies", name),
         ),
     };
-    let roles = check_roles(&char, &path)?;
+    let roles = check_requirements(&char, &path)?;
     let mut description = String::new();
-    for role in roles.roles() {
-        description += format!("__**{}**__\n{}\n", role.name(), role.description).as_str()
+    for role in roles.requirements() {
+        description += format!("__**{}**__\n{}\n", role.name(), role.description()).as_str()
     }
     ctx.send(|f| {
         f.embed(|f| {

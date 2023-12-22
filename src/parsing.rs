@@ -30,19 +30,13 @@ pub trait IsFlash {
 }
 impl IsFlash for ParsingCategory {
     fn is_flash(&self) -> bool {
-        match self {
-            ParsingCategory::FlashCharacterPage => true,
-            _ => false,
-        }
+        matches!(self,ParsingCategory::FlashCharacterPage)
     }
 }
 
 impl IsFlash for LookupCategory {
     fn is_flash(&self) -> bool {
-        match self {
-            LookupCategory::FlashCharacterPage => true,
-            _ => false,
-        }
+        matches!(self, LookupCategory::FlashCharacterPage)
     }
 }
 impl From<&LookupCategory> for ParsingCategory {
@@ -112,7 +106,7 @@ impl CharacterFetcher {
         self,
     ) -> Pin<Box<dyn Future<Output = Result<CharacterData>> + Send + 'static>> {
         Box::pin(async move {
-            let str = fetch_page_with_user_agent(&self.user_agent(), &self.url()).await?;
+            let str = fetch_page_with_user_agent(self.user_agent(), &self.url()).await?;
             let category = self.category;
             let df_id = self.df_id;
             Ok(CharacterData {
@@ -174,7 +168,7 @@ pub struct Dragon {
 impl Dragon {
     fn new(mut dragon_str: String) -> Dragon {
         dragon_str.truncate(dragon_str.len() - 7);
-        let mut split_name: Vec<_> = dragon_str.split_inclusive("(").collect();
+        let mut split_name: Vec<_> = dragon_str.split_inclusive('(').collect();
         let dragon_type = split_name
             .pop()
             .expect("no element in dragon")
@@ -214,11 +208,11 @@ impl Item {
 }
 #[derive(Getters)]
 #[getset(get = "pub", get_mut = "pub")]
-#[derive(Debug)]
+#[derive(Debug,Default)]
 pub struct Items {
     items: HashMap<String, Item>,
 }
-impl Items {
+impl Items  {
     fn new_item(&mut self, name: String, tag: ItemTag, stackable: bool, amount: i32) {
         let item = Item::new(tag, stackable, amount);
         self.insert(name, item);
@@ -342,7 +336,7 @@ impl DFCharacterData {
     }
     pub fn get_dmk_str(&self) -> String {
         match &self.dmk {
-            Some(dmk) => format!("**{}**\n", dmk.to_string()),
+            Some(dmk) => format!("**{dmk}**\n"),
             None => "".to_string(),
         }
     }
@@ -433,18 +427,13 @@ impl DFCharacterData {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Default)]
 pub struct WarBuilder {
     pub warlabel: Option<String>,
     pub war_text: Option<String>,
 }
+
 impl WarBuilder {
-    pub fn default() -> WarBuilder {
-        WarBuilder {
-            warlabel: None,
-            war_text: None,
-        }
-    }
     pub fn build(self) -> War {
         War::new(
             self.warlabel.expect("warlabel is None"),
@@ -509,7 +498,7 @@ impl WarList {
     pub fn total_waves_string(&self) -> String {
         self.calc_waves_cleared().to_formatted_string(&Locale::en)
     }
-    pub fn wars(&self) -> &Vec<War> {
+    pub fn wars(&self) -> &[War] {
         &self.war_list
     }
 }
@@ -522,7 +511,7 @@ pub fn parse_df_character(document: &Html, df_id: i32) -> LookupState {
         None => return LookupState::NotFound,
     };
     character.name = match charpagedetails.select(&h1_selector).next() {
-        None => return parse_df_character_flash(document,df_id),
+        None => return parse_df_character_flash(document, df_id),
         Some(name) => name.text().collect::<Vec<_>>().join(" ").trim().to_string(),
     };
 
@@ -590,7 +579,7 @@ pub fn parse_df_character(document: &Html, df_id: i32) -> LookupState {
     let mut unique: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     let item_selector = Selector::parse("div#charpagedetails.card-columns.mx-auto span").unwrap();
     let mut warbuilder = WarBuilder::default();
-    for span in document.select(&item_selector).into_iter() {
+    for span in document.select(&item_selector) {
         let mut item = true;
         let item_name = span.text().next().unwrap();
         let mut classes = span.value().classes();
@@ -647,7 +636,7 @@ pub fn parse_df_character_wars_only(document: &Html, _df_id: i32) -> LookupState
             .value()
             .attr("value")
             .unwrap()
-            .split_once(" ")
+            .split_once(' ')
             .unwrap()
             .0
             .trim()[5..]
@@ -692,7 +681,7 @@ pub fn parse_df_character_inventory_only(document: &Html, _df_id: i32) -> Lookup
             .value()
             .attr("value")
             .unwrap()
-            .split_once(" ")
+            .split_once(' ')
             .unwrap()
             .0
             .trim()[5..]
@@ -716,19 +705,16 @@ pub fn parse_df_character_inventory_only(document: &Html, _df_id: i32) -> Lookup
     for card in document.select(&div_card_selector) {
         if let Some(h4) = card.select(&h4_selector).next() {
             if h4.text().collect::<String>() == "Inventory" {
-                card.select(&span_selector)
-                    .into_iter()
-                    .enumerate()
-                    .for_each(|(i, x)| {
-                        let item_name = x.inner_html();
-                        match x.value().classes().next().expect("no classes") {
-                            "coins" => items.push(format!("{}: **__{}__**", i, item_name)),
-                            "amulet" => items.push(format!("{}: **{}**", i, item_name)),
-                            "artifact" => items.push(format!("{}: *{}*", i, item_name)),
-                            "gold" => items.push(format!("{}: {}", i, item_name)),
-                            _ => panic!("UnexpectedItemClass"),
-                        };
-                    });
+                card.select(&span_selector).enumerate().for_each(|(i, x)| {
+                    let item_name = x.inner_html();
+                    match x.value().classes().next().expect("no classes") {
+                        "coins" => items.push(format!("{}: **__{}__**", i, item_name)),
+                        "amulet" => items.push(format!("{}: **{}**", i, item_name)),
+                        "artifact" => items.push(format!("{}: *{}*", i, item_name)),
+                        "gold" => items.push(format!("{}: {}", i, item_name)),
+                        _ => panic!("UnexpectedItemClass"),
+                    };
+                });
             }
             break;
         }
@@ -748,7 +734,7 @@ pub fn parse_df_character_duplicates(document: &Html, _df_id: i32) -> LookupStat
             .value()
             .attr("value")
             .unwrap()
-            .split_once(" ")
+            .split_once(' ')
             .unwrap()
             .0
             .trim()[5..]
@@ -767,7 +753,7 @@ pub fn parse_df_character_duplicates(document: &Html, _df_id: i32) -> LookupStat
         }
     };
     let item_selector = Selector::parse("div#charpagedetails.card-columns.mx-auto span").unwrap();
-    for span in document.select(&item_selector).into_iter() {
+    for span in document.select(&item_selector) {
         let item_name = span.text().next().unwrap();
         let mut classes = span.value().classes();
         if let Some(class) = classes.next() {
@@ -808,7 +794,7 @@ pub fn parse_df_character_flash(document: &Html, df_id: i32) -> LookupState {
     }
     LookupState::FlashCharatcerPage(flashvars_map)
 }
-fn hex(color_name: &str, value: &String) -> String {
+fn hex(color_name: &str, value: &str) -> String {
     let hex = value.parse::<i32>().unwrap_or_default();
     format!(
         "**{}: ** [{:x}]({}{:x})\n",
@@ -895,16 +881,16 @@ pub fn parse_df_character_with_items(
     match charpagedetails.select(&h1_selector).next() {
         None => {
             // if let LookupState::FlashCharatcerPage(chardata) =
-                // parse_df_character_flash(document, df_id)
+            // parse_df_character_flash(document, df_id)
             // {
-                // character.name = chardata.get("Name").unwrap().to_string();
-                // character.gold = chardata.get("Gold").unwrap().parse::<i32>().unwrap();
-                // character.level = chardata.get("Level").unwrap().parse::<u8>().unwrap();
-                // dbg!(chardata.get("LastPlayed"));
-                // character.last_played =
-                //     NaiveDate::parse_from_str(chardata.get("LastPlayed").unwrap(), "%m/%d/%Y").expect("failed to parse date");
+            // character.name = chardata.get("Name").unwrap().to_string();
+            // character.gold = chardata.get("Gold").unwrap().parse::<i32>().unwrap();
+            // character.level = chardata.get("Level").unwrap().parse::<u8>().unwrap();
+            // dbg!(chardata.get("LastPlayed"));
+            // character.last_played =
+            //     NaiveDate::parse_from_str(chardata.get("LastPlayed").unwrap(), "%m/%d/%Y").expect("failed to parse date");
             // } else {
-                return LookupState::NotFound;
+            return LookupState::NotFound;
             // }
         }
         Some(name) => {
@@ -974,10 +960,10 @@ pub fn parse_df_character_with_items(
             character.name = name.text().collect::<Vec<_>>().join(" ").trim().to_string();
         }
     };
-    let mut items = Items::new();
+    let mut items = Items::default();
     let item_selector = Selector::parse("div#charpagedetails.card-columns.mx-auto span").unwrap();
     let mut warbuilder = WarBuilder::default();
-    for span in document.select(&item_selector).into_iter() {
+    for span in document.select(&item_selector) {
         let item_name = span.text().next().unwrap();
         let (item_name, amount, stackable) = match item_name.split_once(" (x") {
             None => (item_name.to_string(), 1, false),

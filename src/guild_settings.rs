@@ -17,7 +17,7 @@ roles_path:String
 pub async fn set_roles(ctx: Context<'_>,file:Attachment) -> Result<(), Error> {
     if let Some(file_type)=  &file.content_type{
         if file_type != "application/json; charset=utf-8"{
-            return Ok(embeds::wrong_file_type(ctx, &file_type).await?)
+            return Ok(embeds::wrong_file_type(ctx, file_type).await?)
         }
     }
     let file = file.download().await?;

@@ -28,10 +28,8 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
     };
     let res = query!("INSERT INTO df_characters (discord_id,df_id,character_name,registered_by) VALUES ($1,$2,$3,$4) ON CONFLICT (df_id) DO NOTHING",user_id,df_id,character,author).execute(pool).await?;
     let color: Color;
-    let title: String;
-    if res.rows_affected() == 0 {
+    let title = if res.rows_affected() == 0 {
         color = Color::DARK_RED;
-        title = format!("Already Registered: {}", character);
         user_id = query!(
             "SELECT discord_id FROM df_characters WHERE df_id = $1",
             df_id
@@ -40,9 +38,10 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
         .await?
         .discord_id;
         user = ctx.http().get_user(user_id as u64).await?;
+        format!("Already Registered: {}", character)
     } else {
         color = Color::DARK_GOLD;
-        title = format!("Successfully Registered: {}", character);
+        format!("Successfully Registered: {}", character)
     };
     let username = user.name.to_owned();
     let icon_url = user.face();
@@ -117,18 +116,14 @@ pub async fn delete_character(
     )
     .fetch_all(pool)
     .await?;
-    let color: Color;
-    let title: String;
     let username = user.name.to_owned();
     let icon_url = user.face();
-    if res.rows_affected() == 0 {
-        color = Color::DARK_RED;
-        title = format!("NOT REGISTERED: {}", db_character.character_name);
+    let (color, title) = if res.rows_affected() == 0 {
         ctx.send(|f| {
             f.embed(|f| {
-                f.title(title)
+                f.title(format!("NOT REGISTERED: {}", db_character.character_name))
                     .url(format!("{}{}", CHARPAGE, character))
-                    .color(color)
+                    .color(Color::DARK_RED)
                     .author(|a| a.name(&username).icon_url(icon_url))
                     .description(format!(
                         "**DF ID:** {} [{}]({}{})",
@@ -143,9 +138,11 @@ pub async fn delete_character(
         .await?;
         return Ok(());
     } else {
-        color = Color::DARK_GOLD;
-        title = format!("Successfully DELETED: {}", db_character.character_name)
-    }
+        (
+            Color::DARK_GOLD,
+            format!("Successfully DELETED: {}", db_character.character_name),
+        )
+    };
     let chars_string = chars
         .iter()
         .map(|c| {

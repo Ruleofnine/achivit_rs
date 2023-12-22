@@ -135,10 +135,7 @@ pub async fn compare_df_characters(
         _ => compare_not_found_embed(ctx, not_found).await?,
     };
     let sheet_data = compare_sheet(main_state, second_state).await?;
-    match sheet_data {
-        Some(sheet) => send_compare_embed(sheet, ctx).await?,
-        None => (),
-    };
+    if let Some(sheet) = sheet_data { send_compare_embed(sheet, ctx).await? }
     Ok(())
 }
 /// Get the DF role list for this server

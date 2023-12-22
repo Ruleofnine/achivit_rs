@@ -1,13 +1,14 @@
 use crate::guild_settings::GuildSettings;
 use crate::parsing::{get_discord_embed_description_flash, DFCharacterData, WarList};
-use crate::requests::{CHARPAGE, DA_IMGUR, NDA_IMGUR,ROLE_DA_IMGUR,ASCEND_DA_IMGUR};
+use crate::requests::{ASCEND_DA_IMGUR, CHARPAGE, DA_IMGUR, NDA_IMGUR, ROLE_DA_IMGUR};
 use crate::rng::random_rgb;
 use crate::roles::{check_roles, RoleList, RolesListType};
 use crate::sheets::SheetData;
-use crate::{Context,serenity::Color};
+use crate::{serenity::Color, Context};
 use color_eyre::{Report, Result};
 use poise::serenity_prelude;
 use std::collections::HashMap;
+use std::fmt::Write;
 pub async fn roles_embed(ctx: Context<'_>, roles: &mut RoleList) -> Result<()> {
     let mut description = String::new();
     let guild = ctx.guild().expect("expected guild");
@@ -20,7 +21,7 @@ pub async fn roles_embed(ctx: Context<'_>, roles: &mut RoleList) -> Result<()> {
         f.embed(|f| {
             f.title(format!("{guild_name} Roles"))
                 .color(Color::from_rgb(1, 214, 103))
-                .thumbnail(ROLE_DA_IMGUR,)
+                .thumbnail(ROLE_DA_IMGUR)
                 .description(description)
         })
     })
@@ -41,15 +42,25 @@ pub async fn send_roles_embed(
             .fetch_optional(pool)
             .await?;
     let name = char.name().to_owned();
-    let (thumbnail,color,path,title) = match role_list_type {
+    let (thumbnail, color, path, title) = match role_list_type {
         RolesListType::Roles => {
             let guild_settings = match settings {
-                None => return Ok(no_settings_embed(ctx).await?),
+                None => return no_settings_embed(ctx).await,
                 Some(settings) => settings,
             };
-            (ROLE_DA_IMGUR,Color::from_rgb(1, 162, 197),guild_settings.roles_path().clone(),format!("{}'s Eligible Roles",name))
+            (
+                ROLE_DA_IMGUR,
+                Color::from_rgb(1, 162, 197),
+                guild_settings.roles_path().clone(),
+                format!("{}'s Eligible Roles", name),
+            )
         }
-        RolesListType::Ascend => (ASCEND_DA_IMGUR,Color::from_rgb(0,214,11),"ascendancies.json".to_owned(),format!("{}'s Acendancies",name)),
+        RolesListType::Ascend => (
+            ASCEND_DA_IMGUR,
+            Color::from_rgb(0, 214, 11),
+            "ascendancies.json".to_owned(),
+            format!("{}'s Acendancies", name),
+        ),
     };
     let roles = check_roles(&char, &path)?;
     let mut description = String::new();
@@ -82,7 +93,7 @@ pub async fn wrong_file_type(ctx: Context<'_>, file_type: &str) -> Result<()> {
 pub async fn no_settings_embed(ctx: Context<'_>) -> Result<()> {
     ctx.send(|f| {
         f.embed(|f| {
-            f.title(format!("There are no Guild Settings for this guild!"))
+            f.title("There are no Guild Settings for this guild!")
                 .color(Color::DARK_RED)
                 .description("An administrator still needs to set up roles for this server!")
         })
@@ -139,10 +150,10 @@ pub async fn compare_not_found_embed(ctx: Context<'_>, notfound: Vec<i32>) -> Re
         2 => (("Both"), "These characters were"),
         _ => (("One"), "This character was"),
     };
-    let chars_description = notfound
-        .iter()
-        .map(|f| format!("[{f}]({CHARPAGE})\n"))
-        .collect::<String>();
+    let chars_description = notfound.iter().fold(String::new(), |mut acc, f| {
+        let _ = writeln!(acc, "[{f}]({CHARPAGE})");
+        acc
+    });
     ctx.send(|f| {
         f.embed(|f| {
             f.title(format!(
@@ -166,7 +177,7 @@ pub async fn send_character_embed(
     let description = character.get_discord_embed_description(df_id);
     ctx.send(|f| {
         f.embed(|f| {
-            f.title(format!("{}", character.name))
+            f.title(character.name)
                 .url(format!("{}{}", CHARPAGE, df_id))
                 .color(embed_color)
                 .description(description)
@@ -196,7 +207,7 @@ pub async fn send_flash_character_embed(
     let description = get_discord_embed_description_flash(character, df_id);
     ctx.send(|f| {
         f.embed(|f| {
-            f.title(format!("{}", name))
+            f.title(name)
                 .url(format!("{}{}", CHARPAGE, df_id))
                 .color(embed_color)
                 .description(description)

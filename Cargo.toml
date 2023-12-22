@@ -1,6 +1,6 @@
 [package]
 name = "achivit_rs"
-version = "0.7.0"
+version = "0.7.1"
 edition = "2021"
 authors = ["Ruleofnine"]
 repository = "https://github.com/Ruleofnine/achivit_rs"
@@ -16,7 +16,6 @@ name = "achivit_rs"
 path = "src/lib.rs"
 
 [features]
-# default = ["reqwest-tests"]
 reqwest-tests = []
 
 [dependencies]
@@ -40,7 +39,6 @@ rand = "0.8.5"
 serde_derive = "1.0.193"
 serde = "1.0.193"
 rust_xlsxwriter = "0.56.0"
-struct_iterable = "0.1.1"
 getset = "0.1.2"
 
 [build-dependencies]

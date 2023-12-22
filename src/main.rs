@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic)]
 use crate::serenity::GuildId;
 use achivit_rs::db::establish_connection;
 use achivit_rs::error_handler::on_error;
@@ -8,8 +9,9 @@ use log::info;
 use poise::serenity_prelude as serenity;
 use std::env;
 use std::time::Instant;
+use color_eyre::Result;
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     print_banner();
     dotenv().ok();
     let token = env::var("BOT_TOKEN").expect("Missing `BOT_TOKEN` env var,");

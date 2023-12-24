@@ -10,6 +10,7 @@ use crate::{Context, Error};
 use color_eyre::{eyre::eyre, Result};
 use poise::serenity_prelude::User;
 use std::collections::HashMap;
+use std::fmt::Display;
 
 async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<()> {
     match state {
@@ -52,11 +53,36 @@ pub enum LookupCategory {
     Roles,
     Ascendancies,
 }
+impl Display for LookupState{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let lookup_type = match self{
+            LookupState::Inventory(_,_)=>"Inventory",
+            LookupState::CharacterPage(_)=>"CharacterPage",
+            LookupState::Wars(_,_)=>"Wars",
+            LookupState::Roles(_)=>"Roles",
+            LookupState::Duplicates(_,_ )=>"Duplicates",
+            LookupState::Ascendancies(_)=>"Ascendancies",
+            LookupState::FlashCharatcerPage(_)=>"FlashCharacterPage",
+            LookupState::NotFound=>"NotFound"
+        };
+        write!(f, "{}",lookup_type)
+    }
+
+}
 impl LookupState {
-    pub fn extract_data(self) -> Result<DFCharacterData> {
+    
+    pub fn extract_character_data(self) -> Result<DFCharacterData> {
         match self {
             LookupState::CharacterPage(data) => Ok(data),
-            _ => Err(eyre!("No data for this LookupState")),
+            LookupState::Ascendancies(data) => Ok(data),
+            LookupState::Roles(data) => Ok(data),
+            _ => Err(eyre!("Incorrect LookupState: {}",self)),
+        }
+    }
+    pub fn extract_inventory_data(self) -> Result<(String,Vec<String>)> {
+        match self {
+            LookupState::Inventory(name,items) => Ok((name,items)),
+            _ => Err(eyre!("Incorrect LookupState :{}",self)),
         }
     }
 }

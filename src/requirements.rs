@@ -177,7 +177,7 @@ fn check_all_inn_reqs(items: &Items) -> bool {
     let list = get_requirements("InnList.json").expect("failed to get in list");
     list.requirements()
         .iter()
-        .all(|innreq| innreq.required().iter().all(|i| {dbg!(i);dbg!(items.contains(i))}))
+        .all(|innreq| innreq.required().iter().all(|i| items.contains(i)))
 }
 fn aquired_roles_indexes(roles: &mut RequirementList, char: &DFCharacterData) -> Vec<usize> {
     let char_items = char.item_list.as_ref().expect("expected char items");

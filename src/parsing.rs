@@ -13,6 +13,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use tokio::fs;
+use crate::paginate::paginate_item;
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum ParsingCategory {
     CharacterPage,
@@ -669,7 +670,9 @@ pub fn parse_df_character_wars_only(document: &Html, _df_id: i32) -> LookupState
     LookupState::Wars(character_name, wars)
 }
 pub fn parse_df_character_inventory_only(document: &Html, _df_id: i32) -> LookupState {
-    let mut items = Vec::new();
+    let mut pages = vec![String::with_capacity(4096)];
+    let mut current_page = 0;
+    let mut current_len = 0;
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();
     let charpagedetails = match document.select(&charpage_selector).next() {
         Some(charpagedetails) => charpagedetails,
@@ -707,11 +710,12 @@ pub fn parse_df_character_inventory_only(document: &Html, _df_id: i32) -> Lookup
             if h4.text().collect::<String>() == "Inventory" {
                 card.select(&span_selector).enumerate().for_each(|(i, x)| {
                     let item_name = x.inner_html();
+                    let index = i+1;
                     match x.value().classes().next().expect("no classes") {
-                        "coins" => items.push(format!("{}: **__{}__**", i, item_name)),
-                        "amulet" => items.push(format!("{}: **{}**", i, item_name)),
-                        "artifact" => items.push(format!("{}: *{}*", i, item_name)),
-                        "gold" => items.push(format!("{}: {}", i, item_name)),
+                        "coins" => paginate_item(&mut pages,format!("{}: **__{}__**\n", index, item_name),&mut current_len,&mut current_page),
+                        "amulet" => paginate_item(&mut pages,format!("{}: **{}**\n", index, item_name),&mut current_len,&mut current_page),
+                        "artifact" => paginate_item(&mut pages,format!("{}: *{}*\n", index, item_name),&mut current_len,&mut current_page),
+                        "gold" => paginate_item(&mut pages,format!("{}: {}\n", index, item_name),&mut current_len,&mut current_page),
                         _ => panic!("UnexpectedItemClass"),
                     };
                 });
@@ -719,7 +723,7 @@ pub fn parse_df_character_inventory_only(document: &Html, _df_id: i32) -> Lookup
             break;
         }
     }
-    LookupState::Inventory(character_name, items)
+    LookupState::Inventory(character_name, pages)
 }
 pub fn parse_df_character_duplicates(document: &Html, _df_id: i32) -> LookupState {
     let charpage_selector = Selector::parse("div#charpagedetails").unwrap();

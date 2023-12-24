@@ -5,6 +5,7 @@ use crate::rng::random_rgb;
 use crate::requirements::{check_requirements, RequirementList, RequirementListType};
 use crate::sheets::SheetData;
 use crate::{serenity::Color, Context};
+use crate::paginate::{paginate,PaginateEmbed};
 use color_eyre::{Report, Result};
 use poise::serenity_prelude;
 use std::collections::HashMap;
@@ -270,23 +271,9 @@ pub async fn send_inventory_embed(
 ) -> Result<()> {
     match inventory.is_empty() {
         false => {
-            let mut description = String::new();
-            for item in inventory {
-                if (item.len() + description.len()) > 4096 {
-                    break;
-                }
-                description += &format!("{}\n", &item);
-            }
-            ctx.send(|f| {
-                f.embed(|f| {
-                    f.title(format!("{}'s Inventory", name))
-                        .url(format!("{}{}", CHARPAGE, df_id))
-                        .color(Color::from_rgb(105, 68, 48))
-                        .description(description)
-                        .thumbnail("https://imgur.com/fUyFn0I.png")
-                })
-            })
-            .await?;
+            let title = format!("{}'s Inventory", name); 
+            let embed = PaginateEmbed::new(title.as_str(),Some("https://imgur.com/fUyFn0I.png"),Color::from_rgb(105, 68, 48),inventory);
+            paginate(ctx,embed).await?;
         }
         true => {
             ctx.send(|f| {

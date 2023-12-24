@@ -1,6 +1,7 @@
 use crate::requests::{fetch_page_with_user_agent, USER_AGENT};
 use poise::AutocompleteChoice;
 use serde_derive::{Serialize,Deserialize};
+use serde_json::Value;
 use std::collections::HashMap;
 use crate::serenity::Color;
 use crate::{Context, Error};
@@ -58,6 +59,7 @@ pub async fn wiki(
 pub struct SeedPage {
     search_phrases: Vec<SearchPhrase>,
     featured: Featured,
+    sponsored: Option<String>,
 }
 
 #[derive(Serialize, Deserialize,Debug)]
@@ -74,7 +76,7 @@ struct Featured {
     #[derive(Serialize, Deserialize,Debug)]
 pub struct Page {
         query: String,
-        ids: HashMap<String, u32>,
+        ids:Value,
         suggestions: Vec<String>,
     }
     
@@ -82,7 +84,7 @@ pub struct Page {
 pub async fn autocomplete_wiki(
     _ctx: Context<'_>,
     partial: &str,
-) -> Vec<poise::AutocompleteChoice<String>> {
+) -> Vec<AutocompleteChoice<String>> {
     if partial.is_empty(){
     let page = fetch_page_with_user_agent(USER_AGENT, SEED_URL).await.expect("failed to seed wiki url");
     let page_data: SeedPage = serde_json::from_str(&page).unwrap();
@@ -92,13 +94,18 @@ pub async fn autocomplete_wiki(
     let url = format!("{}{}{}",SEARCH_URL_PART_1,partial,SEARCH_URL_PART_2);
     let page = fetch_page_with_user_agent(USER_AGENT, &url).await.expect("failed to seed wiki url");
     let page_data:Page = serde_json::from_str(&page).map_err(|e|dbg!((page,e))).unwrap();
-    page_data.ids
-        .iter()
+    if page_data.ids.is_array(){
+        return Vec::new() 
+    }
+    else{
+        let ids:HashMap<String,u32> = serde_json::from_value(page_data.ids).expect("failed to turn Value to HashMap of ids");
+        ids.iter()
         .map(|(name,_)| poise::AutocompleteChoice {
             name:name.to_string(),
             value: name.to_string(),
         })
         .collect()
+    }
 }
 
 

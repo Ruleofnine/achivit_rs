@@ -14,12 +14,11 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 * Lookup DF IDS
 * Custom Roles Lookup
 * Custom Ascendancies System
+* [DragonFable Endgame Wiki](https://dragonfable-endgame.fandom.com/wiki/) search with autocomplete 
 
 ## Todos
-- Dfpedia
-- Ascendancies Missing Items
+- <b>Dfpedia</b>
 - Update checker
-- populate dfwiki command on typing?
 - challenges
 
 ## Getting Started

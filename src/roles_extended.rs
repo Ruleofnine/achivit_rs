@@ -19,18 +19,23 @@ pub async fn inn_items(
     let path = "InnList.json";
     let inn_list = get_requirements(path)?;
     let items = if let Some(df_id) = character {
-       let items = CharacterFetcher::new(df_id, LookupCategory::Ascendancies)
+        let items = CharacterFetcher::new(df_id, LookupCategory::Ascendancies)
             .category(ParsingCategory::Items)
             .fetch_data()
             .await?
-            .to_lookupstate()?.extract_character_data()?.item_list.take().unwrap();
+            .to_lookupstate()?
+            .extract_character_data()?
+            .item_list
+            .take()
+            .unwrap();
         Some(items)
     } else {
         None
     };
-    let pages = get_requirement_pages(inn_list,items);
+    let pages = get_requirement_pages(inn_list, items);
     let (r, g, b) = random_rgb();
-    let embed = PaginateEmbed::new("Inn Items", None, Color::from_rgb(r, g, b), pages).set_empty_string("No Inn Items to display");
+    let embed = PaginateEmbed::new("Inn Items", None, Color::from_rgb(r, g, b), pages)
+        .set_empty_string("No Inn Items to display");
     paginate(ctx, embed).await?;
     Ok(())
 }

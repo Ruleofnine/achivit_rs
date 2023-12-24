@@ -2,7 +2,7 @@ use crate::lookup_df::LookupCategory;
 use crate::manage_users::autocomplete_character;
 use crate::paginate::{get_requirement_pages, paginate, PaginateEmbed};
 use crate::parsing::{CharacterFetcher, ParsingCategory};
-use crate::requirements::{check_requirements, get_requirements};
+use crate::requirements::get_requirements;
 use crate::rng::random_rgb;
 use crate::serenity::{Color, User};
 use crate::{Context, Error};

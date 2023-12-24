@@ -1,4 +1,4 @@
-use crate::{Context, Error, get_command_list};
+use crate::{Context, Error};
 use color_eyre::Result;
 use log::info;
 #[poise::command(slash_command, owners_only, guild_only)]

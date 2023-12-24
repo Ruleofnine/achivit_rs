@@ -1,8 +1,7 @@
+use crate::parsing::Items;
 use crate::requirements::RequirementList;
 use crate::serenity::{CollectComponentInteraction, InteractionResponseType};
 use crate::Context;
-use crate::parsing::{Item, Items};
-use std::collections::HashMap;
 use color_eyre::Result;
 use getset::Getters;
 use poise::serenity_prelude::CreateActionRow;
@@ -18,7 +17,7 @@ pub struct PaginateEmbed<'a> {
     color: Color,
     footer: String,
     current_page: usize,
-    empty_string: Option<&'a str>
+    empty_string: Option<&'a str>,
 }
 impl<'a> PaginateEmbed<'a> {
     fn get_current_page(&self) -> &str {
@@ -37,7 +36,7 @@ impl<'a> PaginateEmbed<'a> {
             footer: format!("Page {} of {}", 1, pages.len()),
             pages,
             current_page: 0,
-            empty_string: None
+            empty_string: None,
         }
     }
     fn next_clicked(&mut self) {
@@ -50,28 +49,28 @@ impl<'a> PaginateEmbed<'a> {
     fn next_page(&mut self) {
         self.current_page += 1
     }
-    fn previous_clicked(&mut self){
-            self.current_page = self.current_page
-                .checked_sub(1)
-                .unwrap_or(self.pages().len() - 1);
+    fn previous_clicked(&mut self) {
+        self.current_page = self
+            .current_page
+            .checked_sub(1)
+            .unwrap_or(self.pages().len() - 1);
         self.update_footer()
     }
     fn update_footer(&mut self) {
-        self.footer = format!("Page {} of {}", self.current_page()+1, self.pages().len())
+        self.footer = format!("Page {} of {}", self.current_page() + 1, self.pages().len())
     }
     fn reset_page(&mut self) {
         self.current_page = 0;
     }
-    pub fn set_empty_string(mut self,string:&'a str)->PaginateEmbed{
+    pub fn set_empty_string(mut self, string: &'a str) -> PaginateEmbed {
         self.empty_string = Some(string);
         self
-
     }
-    fn check_empty(&mut self){
-        if self.pages().is_empty(){
-            let string =match self.empty_string(){
+    fn check_empty(&mut self) {
+        if self.pages().is_empty() {
+            let string = match self.empty_string() {
                 Some(str) => str,
-                None => "No Data to paginate"
+                None => "No Data to paginate",
             };
             self.pages = vec![String::from(string)]
         };
@@ -102,7 +101,7 @@ pub fn paginate_item(
     pages[*current_page].push_str(&item);
 }
 
-pub fn get_requirement_pages(req_list: RequirementList,items:Option<Items>) -> Vec<String> {
+pub fn get_requirement_pages(req_list: RequirementList, items: Option<Items>) -> Vec<String> {
     let mut pages: Vec<String> = vec![String::new()];
     let mut current_page = 0;
     let mut current_len = 0;
@@ -118,18 +117,22 @@ pub fn get_requirement_pages(req_list: RequirementList,items:Option<Items>) -> V
         pages[current_page].push_str(&challenge_text);
         current_len += challenge_text.len();
         for item in challenge.required() {
-            if items_present && dbg!(items.as_ref().map_or(false, |items|!items.items().contains_key(item))) || items.is_none(){
-            let item_text = format!("{}\n", item);
-            check_new_page(
-                &mut pages,
-                &mut current_page,
-                &mut current_len,
-                item_text.len(),
-            );
-            pages[current_page].push_str(&item_text);
-            current_len += item_text.len();
+            if items_present
+                && dbg!(items
+                    .as_ref()
+                    .map_or(false, |items| !items.items().contains_key(item)))
+                || items.is_none()
+            {
+                let item_text = format!("{}\n", item);
+                check_new_page(
+                    &mut pages,
+                    &mut current_page,
+                    &mut current_len,
+                    item_text.len(),
+                );
+                pages[current_page].push_str(&item_text);
+                current_len += item_text.len();
             };
-
         }
     }
     // Remove the last page if it is empty
@@ -200,10 +203,11 @@ pub async fn paginate<'a>(
                 b.kind(InteractionResponseType::UpdateMessage)
                     .interaction_response_data(|b| {
                         b.embed(|b| {
-                            if paginate_struct.thumbnail().is_some(){
+                            if paginate_struct.thumbnail().is_some() {
                                 b.thumbnail(paginate_struct.thumbnail().unwrap());
                             }
-                            b.title(paginate_struct.title()).description(paginate_struct.get_current_page())
+                            b.title(paginate_struct.title())
+                                .description(paginate_struct.get_current_page())
                                 .color(*paginate_struct.color())
                                 .footer(|f| f.text(paginate_struct.footer()))
                         })
@@ -213,4 +217,22 @@ pub async fn paginate<'a>(
     }
     Ok(())
 }
+#[cfg(test)]
+mod tests{
+    use crate::parsing::{FileFetcher, ParsingCategory};
+    use super::*;
+    #[tokio::test]
+    async fn paginate_inventory_test() -> Result<()> {
+        let (_, pages) = FileFetcher::new("htmls/3ach.html")
+            .category(ParsingCategory::Inventory)
+            .fetch_data()
+            .await?
+            .to_lookupstate()?
+            .extract_inventory_data()?;
+        pages
+            .iter()
+            .for_each(|page| assert!(page.len() < MAX_PAGE_LENGTH));
+        Ok(())
+    }
 
+}

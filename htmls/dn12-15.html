@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<!--[if IE 8 ]> <html class="no-js ie8"> <![endif]-->
+<!--[if IE 9 ]> <html class="ie9"> <![endif]-->
+
+<head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-43443388-3"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'UA-43443388-3');
+    </script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="keywords" content="DragonFable, RPG, Dragon, Quest, Game, Artix Entertainment" />
+    <meta name="description" content="Play DragonFable to explore an online RPG and other games for free. New adventures every week." />
+
+
+
+    <link rel="shortcut icon" href="/images/DF/fave.ico" />
+    <title>DragonFable - Design Notes</title>
+    <link rel="stylesheet" href="/css/DF-style.min.css?ver=23" />
+
+    
+</head>
+<body>
+    <nav class="navbar nav-offcanvas d-none" role="navigation"></nav>
+
+    <div class="pusher">
+        <div class="content">
+            <div class="content-inner bg-black">
+<!-- Artix Bar -->
+<nav id="artixNav" class="navbar navbar-expand-md fixed-top" role="navigation">
+    <button class="navbar-toggler p-0" type="button" data-toggle="offcanvas" aria-controls="nav-offcanvas" aria-expanded="false" data-effect="slide"
+            aria-label="Toggle navigation">
+        <i class="icon-artix dragonhead"></i>
+    </button>
+
+    <button class="navbar-toggler hamburger hamburger--3dx" type="button" data-toggle="offcanvas" aria-controls="nav-offcanvas" aria-expanded="false" data-effect="slide2"
+            aria-label="Toggle navigation">
+        <div class="hamburger-box">
+            <div class="hamburger-inner"></div>
+        </div>
+    </button>
+    <div class="collapse navbar-collapse">
+        <a class="navbar-brand d-none d-md-block px-2 mr-2" href="https://www.artix.com" target="_blank"><i class="icon-artix dragon" style="margin-left:2px;"></i></a>
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.artix.com" target="_blank">ARTIX</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="Games" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">Games</a>
+                <div class="dropdown-menu" aria-labelledby="AEGamesDropDown">
+                    <a class="dropdown-item" href="//www.aq3d.com" target="_blank"><i class="icon-artix aq3d"></i>AQ3D</a>
+                    <a class="dropdown-item" href="//biobeasts.artix.com" target="_blank"><i class="icon-artix bb"></i>BioBeasts</a>
+                    <a class="dropdown-item" href="//battlegems.artix.com" target="_blank"><i class="icon-artix bg"></i>BattleGems</a>
+                    <a class="dropdown-item" href="//www.undeadassault.com" target="_blank"><i class="icon-artix ud"></i>Undead Assault</a>
+                    <a class="dropdown-item" href="//www.aqdragons.com" target="_blank"><i class="icon-artix aqd"></i>Dragons</a>
+                    <a class="dropdown-item" href="//www.aq.com" target="_blank"><i class="icon-artix aqw"></i>AQWorlds</a>
+                    <a class="dropdown-item" href="//epicduel.artix.com" target="_blank"><i class="icon-artix ed"></i>EpicDuel</a>
+                    <a class="dropdown-item" href="//www.dragonfable.com" target="_blank"><i class="icon-artix df"></i>DragonFable</a>
+                    <a class="dropdown-item" href="//www.mechquest.com" target="_blank"><i class="icon-artix mq"></i>Mechquest</a>
+                    <a class="dropdown-item" href="//www.battleon.com" target="_blank"><i class="icon-artix aq"></i>AdventureQuest</a>
+                    <a class="dropdown-item" href="//oversoul.artix.com" target="_blank"><i class="icon-artix os"></i>OverSoul</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.artix.com/news/allnews" target="_blank">News</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="Shop" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Shop
+                </a>
+                <div class="dropdown-menu" aria-labelledby="ShopDropDown">
+                    <a class="dropdown-item" href="https://portal.battleon.com/store/points" target="_blank"><i class="icon-artix ap"></i>Artix Points</a>
+                    <a class="dropdown-item" href="https://www.heromart.com" target="_blank"><i class="icon-artix hm"></i>HeroMart</a>
+                    <a class="dropdown-item" href="https://www.artix.com/shop/redeem" target="_blank"><i class="icon-artix redeem"></i>Redeem Code</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://support.artix.com/hc/en-us/categories/115001213588-DragonFable" target="_blank">Support</a>
+            </li>
+        </ul>
+        <a class="btn btn-red" href="https://www.artix.com/downloads/artixlauncher/?utm_source=DFtopnav&utm_medium=btn&utm_campaign=gamelauncher" target="_blank">Get Launcher</a>
+    </div>
+</nav>
+
+<!-- DragonFable -->
+<nav id="gameNav" class="navbar navbar-expand-md sticky-top df d-none d-sm-none d-md-block" role="navigation">
+    <div class="collapse navbar-collapse df">
+        <a class="navbar-brand btn-gray p-2" href="/">
+            <img class="img-fluid" srcset="/images/DF/logo-icon-df.png 1x, /images/df/logo-icon-df@2x.png 2x" alt="DragonAmulet">
+        </a>
+        <a class="mr-2" href="/">
+            <img class="img-fluid" srcset="/images/DF/logo-sm-df.png 1x, /images/df/logo-sm-df@2x.png 2x" alt="Dragonfable">
+        </a>
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="Game" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Game
+                </a>
+                <div class="dropdown-menu" aria-labelledby="gameDropDown">
+                    <a class="dropdown-item" href="/About">About</a>
+                    <a class="dropdown-item" href="/TrainDragon">Train your Dragon</a>
+                    <a class="dropdown-item" href="/Mapping">Map the Dungeons</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="News" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    News
+                </a>
+                <div class="dropdown-menu" aria-labelledby="newsDropDown">
+                    <a class="dropdown-item" target="_blank" href="https://www.artix.com/news/df">Game News</a>
+                    <a class="dropdown-item" href="/gamedesignnotes">Design Notes</a>
+                </div>
+            </li>
+
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="Media" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Media
+                </a>
+                <div class="dropdown-menu" aria-labelledby="mediaDropDown">
+                    <a class="dropdown-item" href="/Screenshots">Screenshots</a>
+                    <a class="dropdown-item" href="/Special/FrostvalGallery">Frostval Art Gallery</a>
+                    <a class="dropdown-item" href="/Special/ScreenEdits">Screen Edits Gallery</a>
+                    <a class="dropdown-item" href="/Special/FanArt">Fan Art Gallery</a>
+                    <a class="dropdown-item" href="/Special/PiratesVsNinjaGallery">Pirates Vs. Ninja</a>
+                    <a class="dropdown-item" href="/Special/MotivationalPosters">Motivational Posters</a>
+                    <a class="dropdown-item" href="/Special/MoviePosters">Movie Posters</a>
+                </div>
+            </li>
+
+
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="Shop" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Shop
+                </a>
+                <div class="dropdown-menu" aria-labelledby="accountDropDown">
+                    <a class="dropdown-item" href="/Upgrade">Dragon Amulet</a>
+                    <a class="dropdown-item" href="/Coins">Dragon Coins</a>
+                    <a class="dropdown-item" href="/Doomknight">Doom Knight</a>
+                </div>
+            </li>
+        </ul>
+        <a class="btn-gray text-uppercase p-3 px-4 mr-2" href="https://account.dragonfable.com" target="_blank"><span class="d-md-none d-lg-inline-block">Manage</span> Account</a>
+        <a class="btn-play-sm p-3" href="https://play.dragonfable.com/game/" target="_blank" title="Play DragonFable"></a>
+    </div>
+</nav>
+
+                <!-- Page Content -->
+                <div class="container-fluid intro py-3">
+                    
+
+
+
+
+<div class="container-lg">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 pt-md-0 designNotes">
+                <div class="row mb-4">
+                    <div class='d-none d-md-block dnAvatar col-auto text-center pt-2'>
+                            <a class="d-block" href='/gamedesignnotes/tag/Verlyrus'><img src="/images/DF/author/Verlyrus.png" alt="Verlyrus" /></a>
+
+                        <p>Squashed Cat</p>
+                    </div>
+
+                    <div class='col pt-2 dn-article'>
+                        <p class="mb-0">Friday, December 15, 2023</p>
+                        <h2 class="postTitle pt-0"><a href="/gamedesignnotes/bk3-flame-within-9403">Book 3: Convergence - The Flame Within</a></h2>
+
+                        <div class="">
+                            <p>Hey there, heroes!</p>
+<p>This week, it's time to begin the assault on the Rose encampment! Book 3: Convergence continues with The Flame Within!</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="https://cms.battleon.com/DF/images/FLAMEWITHINdn.png" alt="" width="400" height="225" /></p><h3 class='readMore text-center'><a href='/gamedesignnotes/bk3-flame-within-9403'>Read More</a></h3>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row mb-4">
+
+                    <div class='d-none d-md-block dnAvatar col-auto text-center pt-2'>
+                            <a class="d-block" href='/gamedesignnotes/tag/Verlyrus'><img src="/images/DF/author/Verlyrus.png" alt="Verlyrus" /></a>
+
+                        <p>Dizzy Cat</p>
+                    </div>
+
+                    <div class='col pt-2 dn-article'>
+                        <p class="mb-0">Friday, December 8, 2023</p>
+                        <h2 class="postTitle pt-0"><a href="/gamedesignnotes/bk3-arrival-and-tree-9399">Book 3: Convergence - The Arrival of the Magi &amp; The Mana Tree</a></h2>
+
+                        <div class="">
+                            <p>Hey there, heroes!</p>
+<p>This week, Book 3's main story continues with a new cutscene quest: The Arrival of the Magi!</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="https://cms.battleon.com/DF/images/ARRIVALOFTHEMAGIdn.png" alt="" width="400" height="225" /></p><h3 class='readMore text-center'><a href='/gamedesignnotes/bk3-arrival-and-tree-9399'>Read More</a></h3>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row mb-4">
+
+                    <div class='d-none d-md-block dnAvatar col-auto text-center pt-2'>
+                            <a class="d-block" href='/gamedesignnotes/tag/Verlyrus'><img src="/images/DF/author/Verlyrus.png" alt="Verlyrus" /></a>
+
+                        <p>Cursed Cat</p>
+                    </div>
+
+                    <div class='col pt-2 dn-article'>
+                        <p class="mb-0">Saturday, December 2, 2023</p>
+                        <h2 class="postTitle pt-0"><a href="/gamedesignnotes/arena-accursed-hunt-9389">Arena at the Edge of Time: Accursed Hunt</a></h2>
+
+                        <div class="">
+                            <p>Hey there, heroes!</p>
+<p>This month's Arena challenge has arrived! Delve into the history of the ice elves in this new addition to the Lost Fables 2 board!</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="https://cms.battleon.com/DF/images/LOSTFABLES2-2dn.png" alt="" width="400" height="225" /></p><h3 class='readMore text-center'><a href='/gamedesignnotes/arena-accursed-hunt-9389'>Read More</a></h3>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row mb-4">
+
+                    <div class='d-none d-md-block dnAvatar col-auto text-center pt-2'>
+                            <a class="d-block" href='/gamedesignnotes/tag/Verlyrus'><img src="/images/DF/author/Verlyrus.png" alt="Verlyrus" /></a>
+
+                        <p>Cyber Cat</p>
+                    </div>
+
+                    <div class='col pt-2 dn-article'>
+                        <p class="mb-0">Monday, November 27, 2023</p>
+                        <h2 class="postTitle pt-0"><a href="/gamedesignnotes/monday-mini-update-cbr-9383">Monday Mini-Update: Retroclear Gear!</a></h2>
+
+                        <div class="">
+                            <p>Hey there, heroes!</p>
+<p>It's Cyber Monday! This year, we have a selection of mysterious Retroclear gear available for purchase!</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="https://cms.battleon.com/DF/images/promo-retroclear.png" alt="" width="400" height="550" />Available this week from the Book of Lore, Retroclear gear comes in both normal and Color Custom (Dragon Eye) options!</p>
+<p>Check them out before they leave!</p>
+<hr />
+<p>Also today, there's been a few updates and adjustments!</p>
+<ul>
+<li>Items in the Bank interface now show their level.</li>
+<li>The candle in the Bank building has been moved down a bit to prevent a flickering flame.</li>
+<li>Item descriptions now show stackable item quantities.</li>
+<li>Moved the filigree in the Inventory UI so that it no longer covers up text.</li>
+<li>Fixed an issue where DoT damage pop ups could overlap healing pop ups.</li>
+<li>Fixed an issue where attacks could sometimes overlap healing pop ups.</li>
+<li>Fixed an issue where Bonus wasn't calculated properly in some instances.</li>
+</ul>
+<hr />
+<p>And that's all for today! A chilly new challenge is coming later this week to the Arena at the Edge of Time!</p>
+                        </div>
+                    </div>
+
+                </div>
+
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-12 col-md-4 bg-black text-center side pt-2 pt-md-0">
+
+
+<h4 class="mt-3">Design Note Archive</h4>
+<div id="articleArchiveMenu" class="m-3">
+
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2023">2023</a>
+            </div>
+
+            <div id="collapse2023" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2023/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2023/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2023/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2023/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2023/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2023/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2023/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2023/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2023/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2023/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2023/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2023/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2022">2022</a>
+            </div>
+
+            <div id="collapse2022" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2022/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2022/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2022/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2022/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2022/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2022/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2022/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2022/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2022/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2022/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2022/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2022/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2021">2021</a>
+            </div>
+
+            <div id="collapse2021" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2021/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2021/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2021/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2021/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2021/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2021/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2021/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2021/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2021/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2021/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2021/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2021/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2020">2020</a>
+            </div>
+
+            <div id="collapse2020" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2020/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2020/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2020/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2020/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2020/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2020/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2020/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2020/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2020/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2020/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2020/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2020/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2019">2019</a>
+            </div>
+
+            <div id="collapse2019" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2019/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2019/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2019/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2019/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2019/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2019/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2019/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2019/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2019/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2019/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2019/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2019/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2018">2018</a>
+            </div>
+
+            <div id="collapse2018" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2018/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2018/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2018/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2018/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2018/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2018/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2018/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2018/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2018/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2018/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2018/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2018/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2017">2017</a>
+            </div>
+
+            <div id="collapse2017" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2017/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2017/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2017/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2017/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2017/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2017/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2017/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2017/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2017/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2017/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2017/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2017/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2016">2016</a>
+            </div>
+
+            <div id="collapse2016" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2016/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2016/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2016/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2016/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2016/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2016/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2016/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2016/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2016/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2016/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2016/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2016/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2015">2015</a>
+            </div>
+
+            <div id="collapse2015" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2015/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2015/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2015/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2015/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2015/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2015/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2015/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2015/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2015/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2015/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2015/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2015/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2014">2014</a>
+            </div>
+
+            <div id="collapse2014" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2014/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2014/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2014/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2014/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2014/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2014/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2014/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2014/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2014/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2014/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2014/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2014/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2013">2013</a>
+            </div>
+
+            <div id="collapse2013" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2013/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2013/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2013/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2013/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2013/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2013/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2013/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2013/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2013/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2013/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2013/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2013/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2012">2012</a>
+            </div>
+
+            <div id="collapse2012" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2012/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2012/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2012/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2012/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2012/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2012/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2012/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2012/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2012/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2012/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2012/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2012/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2011">2011</a>
+            </div>
+
+            <div id="collapse2011" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2011/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2011/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2011/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2011/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2011/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2011/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2011/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2011/5">May</a></p>
+                        <p><a href="/gamedesignnotes/date/2011/4">April</a></p>
+                        <p><a href="/gamedesignnotes/date/2011/3">March</a></p>
+                        <p><a href="/gamedesignnotes/date/2011/2">February</a></p>
+                        <p><a href="/gamedesignnotes/date/2011/1">January</a></p>
+                </div>
+            </div>
+        </div>
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapse2010">2010</a>
+            </div>
+
+            <div id="collapse2010" class="collapse" data-parent="#articleArchiveMenu">
+                <div class="card-body">
+                        <p><a href="/gamedesignnotes/date/2010/12">December</a></p>
+                        <p><a href="/gamedesignnotes/date/2010/11">November</a></p>
+                        <p><a href="/gamedesignnotes/date/2010/10">October</a></p>
+                        <p><a href="/gamedesignnotes/date/2010/9">September</a></p>
+                        <p><a href="/gamedesignnotes/date/2010/8">August</a></p>
+                        <p><a href="/gamedesignnotes/date/2010/7">July</a></p>
+                        <p><a href="/gamedesignnotes/date/2010/6">June</a></p>
+                        <p><a href="/gamedesignnotes/date/2010/5">May</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card m-2">
+            <div class="card-header">
+                <a class="card-link" href="/Archive/DesignNotes">Older</a>
+            </div>
+        </div>
+
+
+</div>
+
+
+ 
+            <br />
+            <br />
+
+
+<a href="https://www.artix.com/community/connect/" target="_blank" class="network fan mx-auto"></a>
+<a href="https://aq3d.com" target="_blank" class="network aq3d mx-auto"></a>
+<a href="https://www.aq.com" target="_blank" class="network aqw mx-auto"></a>
+<a href="https://epicduel.artix.com" target="_blank" class="legacy ed mx-auto"></a>
+<a href="https://oversoul.artix.com" target="_blank" class="legacy os mx-auto"></a>
+<a href="https://www.battleon.com" target="_blank" class="legacy aq mx-auto"></a>
+<a href="https://www.undeadassault.com" target="_blank" class="network ud mx-auto"></a>
+
+        </div>
+    </div>
+</div>
+
+                </div>
+            </div>
+        </div>
+
+<div id="footer">
+    <div id="sociallinks" class="community">
+        <div class="container py-3">
+            <div class="text-center mt-3 pb-4">
+                <p class="h4 mb-md-4 mb-2 ">Connect with our online game community!</p>
+                <div class="row justify-content-center">
+                    <div class="col-6 col-md-2 align-self-center">
+                        <a class="d-inline-block insta px-2 py-1 mb-2" href="https://instagram.com/artixkrieger" target="_blank"><i class="fab fa-instagram fa-3x"></i></a>
+                    </div>
+                    <div class="col-6 col-md-2 align-self-center">
+                        <a class="d-inline-block btn-drkblue rounded mb-2 pt-2" href="https://www.facebook.com/dragonfablegame" target="_blank"><i class="text-white fab fa-facebook-f fa-3x pl-4 pr-2"></i></a>
+                    </div>
+                    <div class="col-6 col-md-2 align-self-center">
+                        <a class="d-inline-block btn-ltblue rounded-circle py-2" href="https://twitter.com/ArtixKrieger" target="_blank"><i class="text-white fab fa-twitter px-2"></i></a>
+                    </div>
+                    <div class="col-6 col-md-2 align-self-center">
+                        <a class="d-inline-block btn-yred btn-icon-yred rounded mt-1" href="https://www.youtube.com/channel/UCq64kvLolZAU5j3qO3xHYsw" target="_blank"><i class="text-white fas fa-play fa-2x mx-1 px-4 py-2"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="footer py-3">
+        <div class="container">
+            <div class="text-center mt-3">
+                <a class="d-inline-block" href="https://www.artix.com/" target="_blank">
+                    <img class="img-fluid" srcset="/images/artix/logo-artixdragon-red.png 1x, /images/artix/logo-artixdragon-red@2x.png 2x" alt="Artix Entertainment">
+                </a>
+                <p class="text-muted small">
+                    Copyright &copy; 2023
+                    <br>
+                    All games and characters are trademarks of <a href="//www.artix.com/" target="_blank">Artix Entertainment</a>, LLC.
+                </p>
+                <a class="btn btn-link" href="https://www.artix.com/policy-terms" target="_blank">Terms of Service</a>
+                <a class="btn btn-link" href="https://www.artix.com/policy-privacy" target="_blank">Privacy Policy</a>
+                <a class="btn btn-link" href="https://www.artix.com/policy-privacy-ca" target="_blank">California Privacy Rights</a>
+                <a class="btn btn-link" href="https://www.artix.com/policy-cookies" target="_blank">Cookies Policy</a>
+                <a class="btn btn-link" href="https://www.artix.com/about/contact/" target="_blank">Contact</a>
+            </div>
+        </div>
+    </footer>
+</div>
+
+    </div>
+
+    
+
+    <!--[if !IE]><!-->
+    <script src="/scripts/jquery.min.js"></script>
+    <script src="/scripts/moment.min.js"></script>
+    <script src="/scripts/bootstrap.bundle.min.js"></script>
+    <script src="/scripts/app.js"></script>
+    
+    <!--<![endif]-->
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            if (window.interop) {
+                $('#footer').hide();
+                $('#artixNav').hide();
+            }
+        });
+    </script>
+</body>
+</html>

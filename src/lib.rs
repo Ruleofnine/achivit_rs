@@ -20,6 +20,7 @@ pub use log::info;
 pub use lookup_df::lookup_df_character;
 pub use poise::serenity_prelude as serenity;
 pub mod paginate;
+pub mod update_checker;
 use sqlx::PgPool;
 use std::time::Instant;
 use std::env;

@@ -9,6 +9,7 @@ env:
     PG_PORT: 5432
     PG_DB_NAME: test
     SUPERUSERS: 0,1
+    DATABASE_URL: postgres://root:postgres@localhost:5432/test
 on:
   push:
     branches: [ main ]

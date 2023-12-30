@@ -76,8 +76,7 @@ pub async fn initialize_db() -> Result<()> {
         guild_id bigint NOT NULL UNIQUE,
         guild_name character varying(100) NOT NULL,
         roles_path character varying(111),
-        announcement_channel_id bigint,
-
+        announcement_channel_id bigint
         );
         ALTER TABLE public.guild_settings OWNER TO {0};
 
@@ -102,7 +101,6 @@ pub async fn initialize_db() -> Result<()> {
 
       ALTER TABLE public.RequiredItems OWNER TO {0};
 
-
      CREATE TABLE prerequisites (
      PrerequisiteID SERIAL PRIMARY KEY,
      RequirementID INT,  
@@ -118,6 +116,7 @@ pub async fn initialize_db() -> Result<()> {
     let sql_statements: Vec<&str> = sql_commands.split(';').map(|s| s.trim()).collect();
     for sql_statement in sql_statements {
         if !sql_statement.is_empty() {
+            dbg!(&sql_statement);
             sqlx::query(sql_statement).execute(&pool).await?;
         }
     }

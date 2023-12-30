@@ -1,6 +1,7 @@
 use crate::{Context, Error};
 use color_eyre::Result;
 use log::info;
+/// super_users have access to certain features across the bot. This concpet 
 pub async fn is_superuser_check(ctx: Context<'_>)->Result<bool,Error>{
     Ok(ctx.data().super_users.contains(&ctx.author().id.0))
 

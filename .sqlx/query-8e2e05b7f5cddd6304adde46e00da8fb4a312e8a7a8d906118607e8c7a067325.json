@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nINSERT INTO public.guild_settings (guild_id, guild_name)\nVALUES ($1, $2)\nON CONFLICT (guild_id) \nDO UPDATE SET\n    guild_name = EXCLUDED.guild_name",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8e2e05b7f5cddd6304adde46e00da8fb4a312e8a7a8d906118607e8c7a067325"
+}

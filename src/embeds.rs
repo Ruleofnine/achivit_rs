@@ -1,26 +1,57 @@
+use crate::db::ASCEND_GUILD_ID;
 use crate::guild_settings::GuildSettings;
+use crate::paginate::{paginate, PaginateEmbed};
 use crate::parsing::{get_discord_embed_description_flash, DFCharacterData, WarList};
 use crate::requests::{ASCEND_DA_IMGUR, CHARPAGE, DA_IMGUR, NDA_IMGUR, ROLE_DA_IMGUR};
-use crate::rng::random_rgb;
 use crate::requirements::{check_requirements, RequirementList, RequirementListType};
+use crate::rng::random_rgb;
 use crate::sheets::SheetData;
-use crate::{serenity::Color, Context};
-use crate::paginate::{paginate,PaginateEmbed};
+use crate::update_checker::DesignNote;
+use crate::{serenity::Color, Context, Error};
 use color_eyre::{Report, Result};
 use poise::serenity_prelude;
 use std::collections::HashMap;
 use std::fmt::Write;
-pub async fn roles_embed(ctx: Context<'_>, roles: &mut RequirementList) -> Result<()> {
-    let guild = ctx.guild().expect("expected guild");
-    let guild_name = &guild.name;
+pub async fn guild_only(ctx: Context<'_>) -> Result<bool> {
+    if ctx.guild().is_none() {
+        guild_only_embed(ctx).await?;
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+pub async fn no_character_embed(ctx: Context<'_>) -> Result<()> {
+    ctx.send( |f| {
+                    f.embed(|f| {
+                        f.title("No Characters Registered")
+                            .color(Color::DARK_RED)
+                            .description("You have no DF Characters registered, ask an administrator to regsiter your df id(s)")
+                    })
+                })
+                .await?;
+    return Ok(());
+}
+pub async fn guild_only_with_id(ctx: Context<'_>) -> Result<Option<i64>> {
+    if let Some(guild) = ctx.guild() {
+        Ok(Some(guild.id.0 as i64))
+    } else {
+        guild_only_embed(ctx).await?;
+        Ok(None)
+    }
+}
+pub async fn send_update_embed(dn: DesignNote) {}
+pub async fn roles_embed(ctx: Context<'_>, roles: &mut RequirementList,title:String) -> Result<()> {
     roles.sort_alphabetical();
-    let description = roles.requirements().iter().fold(String::new(), |mut acc, r| {
-        writeln!(acc, "**{}**\n{}", r.name(), r.description()).expect("failed parsing roles");
-        acc
-    });
+    let description = roles
+        .requirements()
+        .iter()
+        .fold(String::new(), |mut acc, r| {
+            writeln!(acc, "**{}**\n{}", r.name(), r.description.as_ref().unwrap_or(&"".to_string())).expect("failed to parse");
+            acc
+        });
     ctx.send(|f| {
         f.embed(|f| {
-            f.title(format!("{guild_name} Roles"))
+            f.title(title)
                 .color(Color::from_rgb(1, 214, 103))
                 .thumbnail(ROLE_DA_IMGUR)
                 .description(description)
@@ -35,35 +66,27 @@ pub async fn send_roles_embed(
     ctx: Context<'_>,
     role_list_type: RequirementListType,
 ) -> Result<()> {
-    let guild_id = ctx.guild_id().expect("expected guild").0 as i64;
+    let guild_id = match role_list_type{
+        RequirementListType::Ascend => ASCEND_GUILD_ID,
+        RequirementListType::Roles => ctx.guild_id().unwrap().0 as i64
+    };
     let pool = &ctx.data().db_connection;
-    let settings =
-        sqlx::query_as::<_, GuildSettings>("select * from guild_settings where guild_id = $1")
-            .bind(guild_id)
-            .fetch_optional(pool)
-            .await?;
     let name = char.name().to_owned();
-    let (thumbnail, color, path, title) = match role_list_type {
+    let (thumbnail, color, title) = match role_list_type {
         RequirementListType::Roles => {
-            let guild_settings = match settings {
-                None => return no_settings_embed(ctx).await,
-                Some(settings) => settings,
-            };
             (
                 ROLE_DA_IMGUR,
                 Color::from_rgb(1, 162, 197),
-                guild_settings.roles_path().clone(),
                 format!("{}'s Eligible Roles", name),
             )
         }
         RequirementListType::Ascend => (
             ASCEND_DA_IMGUR,
             Color::from_rgb(0, 214, 11),
-            "ascendancies.json".to_owned(),
             format!("{}'s Acendancies", name),
         ),
     };
-    let roles = check_requirements(&char, &path)?;
+    let roles = check_requirements(&char,guild_id,pool).await?;
     let mut description = String::new();
     for role in roles.requirements() {
         description += format!("__**{}**__\n{}\n", role.name(), role.description()).as_str()
@@ -91,12 +114,34 @@ pub async fn wrong_file_type(ctx: Context<'_>, file_type: &str) -> Result<()> {
     .await?;
     Ok(())
 }
+pub async fn guild_only_embed(ctx: Context<'_>) -> Result<()> {
+    ctx.send(|f| {
+        f.embed(|f| {
+            f.title("Guild only feature!")
+                .color(Color::DARK_RED)
+                .description("The feature you are trying to use is only usable in a guild!")
+        })
+    })
+    .await?;
+    Ok(())
+}
 pub async fn no_settings_embed(ctx: Context<'_>) -> Result<()> {
     ctx.send(|f| {
         f.embed(|f| {
             f.title("There are no Guild Settings for this guild!")
                 .color(Color::DARK_RED)
-                .description("An administrator still needs to set up roles for this server!")
+                .description("Guild settings still need to be created for this guild!")
+        })
+    })
+    .await?;
+    Ok(())
+}
+pub async fn no_roles_embed(ctx: Context<'_>) -> Result<()> {
+    ctx.send(|f| {
+        f.embed(|f| {
+            f.title("There are no roles for this guild!")
+                .color(Color::DARK_RED)
+                .description("Roles still need to be created for this guild!")
         })
     })
     .await?;
@@ -271,9 +316,14 @@ pub async fn send_inventory_embed(
 ) -> Result<()> {
     match inventory.is_empty() {
         false => {
-            let title = format!("{}'s Inventory", name); 
-            let embed = PaginateEmbed::new(title.as_str(),Some("https://imgur.com/fUyFn0I.png"),Color::from_rgb(105, 68, 48),inventory);
-            paginate(ctx,embed).await?;
+            let title = format!("{}'s Inventory", name);
+            let embed = PaginateEmbed::new(
+                title.as_str(),
+                Some("https://imgur.com/fUyFn0I.png"),
+                Color::from_rgb(105, 68, 48),
+                inventory,
+            );
+            paginate(ctx, embed).await?;
         }
         true => {
             ctx.send(|f| {

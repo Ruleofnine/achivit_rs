@@ -3,7 +3,7 @@ use crate::serenity::GuildId;
 use achivit_rs::db::establish_connection;
 use achivit_rs::error_handler::on_error;
 use achivit_rs::event_handler::event_handler;
-use achivit_rs::{print_banner, Data, get_command_list};
+use achivit_rs::{print_banner, Data, get_command_list,Tasks};
 use dotenv::dotenv;
 use log::info;
 use poise::serenity_prelude as serenity;
@@ -14,7 +14,7 @@ use color_eyre::Result;
 async fn main() -> Result<()> {
     print_banner();
     dotenv().ok();
-    let token = env::var("BOT_TOKEN").expect("Missing `BOT_TOKEN` env var,");
+    let token = env::var("BOT_TOKEN").expect("`BOT_TOKEN` not in .env file");
     let start_time = Instant::now();
     color_eyre::install().expect("Failed to install color_eyre");
     env_logger::init_from_env(
@@ -24,10 +24,17 @@ async fn main() -> Result<()> {
     info!("Logining into Discord...");
     let _guild_id = GuildId(
         env::var("DEBUG_GUILD")
-            .expect("Expected DEBUG_GUILD in environment")
+            .expect("Expected `DEBUG_GUILD` in environment")
             .parse()
             .expect("DEBUG_GUILD must be an integer"),
     );
+    let super_user_str = env::var("SUPERUSERS")
+        .expect("`SUPERUSERS` not found in .env file");
+
+    let super_users: Vec<u64> = super_user_str
+        .split(',')
+        .map(|s| s.parse::<u64>().expect("Failed to parse number to discord id"))
+        .collect();
 
     let test_commands = vec![achivit_rs::roles_extended::inn_items()];
     let options = poise::FrameworkOptions {
@@ -55,10 +62,7 @@ async fn main() -> Result<()> {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 poise::builtins::register_in_guild(ctx, &test_commands, _guild_id).await?;
-                Ok(Data {
-                    start_time,
-                    db_connection,
-                })
+                Ok(Data::new(start_time,db_connection,super_users))
             })
         })
         .options(options)

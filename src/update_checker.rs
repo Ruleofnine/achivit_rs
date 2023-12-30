@@ -1,14 +1,19 @@
-use crate::requests::{fetch_json, fetch_page_with_user_agent, DESIGN_NOTES_LINK, USER_AGENT};
-use chrono::NaiveDate;
+use crate::{
+    requests::{fetch_page_with_user_agent, DESIGN_NOTES_LINK, USER_AGENT},
+    Context, Error, Task,
+    embeds::send_update_embed
+};
 use color_eyre::{eyre::eyre, Result};
-use scraper::{Html, Selector};
 use getset::Getters;
-#[derive(Debug,Getters)]
-#[get="pub"]
+use scraper::{Html, Selector};
+use tokio::time::{self, Duration};
+const UPDATE_CHECKER: &str = "update_checker";
+#[derive(Debug, Getters)]
+#[get = "pub"]
 pub struct DesignNote {
     update_name: String,
     link: String,
-    date: NaiveDate,
+    date: String,
     image: String,
     poster_name: String,
     poster_image: String,
@@ -16,7 +21,7 @@ pub struct DesignNote {
 impl DesignNote {
     fn new(
         update_name: String,
-        date: NaiveDate,
+        date: String,
         link: String,
         image: String,
         poster_name: String,
@@ -40,7 +45,7 @@ impl DesignNote {
             .next()
             .ok_or(eyre!("Unable to find article"))?;
         let date_selector = Selector::parse("p.mb-0").unwrap();
-        let date_str = article
+        let date = article
             .select(&date_selector)
             .next()
             .unwrap()
@@ -50,7 +55,6 @@ impl DesignNote {
             .trim()
             .to_string();
 
-        let date = NaiveDate::parse_from_str(&date_str, "%A, %B %d, %Y")?;
         let link_selector = Selector::parse("h2.postTitle.pt-0 a").unwrap();
         let link = article
             .select(&link_selector)
@@ -108,4 +112,41 @@ impl DesignNote {
             poster_image,
         ))
     }
+}
+async fn run_update_checker(ctx: Context<'_>) -> Result<()> {
+    let tasks = ctx.data().tasks().clone();
+    let dn_str = fetch_page_with_user_agent(USER_AGENT, DESIGN_NOTES_LINK).await?;
+    let dn = DesignNote::parse_from_str(&dn_str)?;
+    tokio::spawn(async move {
+        let mut interval = time::interval(Duration::from_secs(10));
+        while tasks.is_running(UPDATE_CHECKER).await {
+            interval.tick().await;
+            let dn_str = fetch_page_with_user_agent(USER_AGENT, DESIGN_NOTES_LINK)
+                .await
+                .unwrap();
+            let new_dn = DesignNote::parse_from_str(&dn_str).unwrap();
+            if new_dn.date() != dn.date() {
+                tasks.stop_task(UPDATE_CHECKER).await;
+                send_update_embed(new_dn).await;
+                // send message to channel with ctx.send()
+            }
+        }
+    });
+    Ok(())
+}
+/// Check Design Notes for update every 10 seconds
+#[poise::command(prefix_command,)]
+pub async fn update_checker(ctx: Context<'_>) -> Result<(), Error> {
+    let tasks = ctx.data().tasks();
+    let is_running = tasks.is_running(UPDATE_CHECKER).await;
+    match is_running {
+        true => {
+            ctx.reply("Update checker already running").await?;
+        }
+        false => {
+            tasks.start_task(UPDATE_CHECKER).await;
+            run_update_checker(ctx).await?
+        }
+    }
+    Ok(())
 }

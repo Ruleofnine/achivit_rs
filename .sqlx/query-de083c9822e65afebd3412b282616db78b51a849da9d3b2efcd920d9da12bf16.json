@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select itemname from requireditems where requirementid = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "itemname",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "de083c9822e65afebd3412b282616db78b51a849da9d3b2efcd920d9da12bf16"
+}

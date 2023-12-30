@@ -20,6 +20,7 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 - <b>Dfpedia</b>
 - Update checker
 - challenges
+- update README
 
 ## Getting Started
 

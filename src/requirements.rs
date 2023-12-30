@@ -1,7 +1,9 @@
 use crate::parsing::{DFCharacterData, Items, WarList};
 use color_eyre::Result;
 use serde_derive::{Deserialize, Serialize};
+use sqlx::{query, PgPool};
 use std::cmp::Ordering;
+use std::fmt;
 use std::fs::File;
 use std::io::BufReader;
 pub enum RequirementListType {
@@ -91,12 +93,106 @@ pub enum ReqType {
     Inn,
 }
 
-pub fn get_requirements(path: &str) -> Result<RequirementList> {
+impl fmt::Display for ReqType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ReqType::Wars => write!(f, "Wars"),
+            ReqType::Waves => write!(f, "Waves"),
+            ReqType::Item => write!(f, "Item"),
+            ReqType::Gold => write!(f, "Gold"),
+            ReqType::ItemLean => write!(f, "Item/Lean"),
+            ReqType::ItemDC => write!(f, "Item/DC"),
+            ReqType::ItemAmount => write!(f, "Item/Amount"),
+            ReqType::Max => write!(f, "Max"),
+            ReqType::ItemStackable => write!(f, "Item/Stackable"),
+            ReqType::Inn => write!(f, "Inn"),
+            ReqType::ItemUnique => write!(f, "Item/Unique"),
+        }
+    }
+}
+
+impl ReqType {
+    fn from_str(s: &str) -> Option<ReqType> {
+        match s {
+            "Wars" => Some(ReqType::Wars),
+            "Item/Lean" => Some(ReqType::ItemLean),
+            "Item/DC" => Some(ReqType::ItemDC),
+            "Waves" => Some(ReqType::Waves),
+            "Item/Amount" => Some(ReqType::ItemAmount),
+            "Max" => Some(ReqType::Max),
+            "Item/Stackable" => Some(ReqType::ItemStackable),
+            "Item" => Some(ReqType::Item),
+            "Gold" => Some(ReqType::Gold),
+            "Inn" => Some(ReqType::Inn),
+            "Item/Unique" => Some(ReqType::ItemUnique),
+            _ => None, // Return None if the string does not match any variant
+        }
+    }
+}
+pub fn get_requirements_file(path: &str) -> Result<RequirementList> {
     let file = File::open(format!("JSONS/{path}"))?;
     let reader = BufReader::new(file);
     let mut roles: RequirementList = serde_json::from_reader(reader)?;
     roles.sort();
     Ok(roles)
+}
+
+pub async fn get_requirements<'a>(guild_id: i64, pool: &PgPool) -> Result<RequirementList> {
+    let reqs = query!(
+        "select * from requirements where guild_id = $1 order by name",
+        guild_id
+    )
+    .fetch_all(pool)
+    .await?;
+    let mut requirements: RequirementList = RequirementList(vec![]);
+    for req in reqs {
+        let name = req.name;
+        let description = req.description;
+        let req_id = req.requirementid;
+        let req_type = ReqType::from_str(&req.r#type.unwrap_or("Item".to_string())).unwrap();
+        let amount = req.amount;
+        let prereq_records = query!(
+            "select prerequisiterequirementid from prerequisites where RequirementId = $1",
+            req.requirementid
+        )
+        .fetch_all(pool)
+        .await?;
+        let items = query!(
+            "select itemname from requireditems where requirementid = $1",
+            req_id
+        )
+        .fetch_all(pool)
+        .await?
+        .iter()
+        .map(|r| r.itemname.clone())
+        .collect::<Vec<String>>();
+        let prereqs = if prereq_records.is_empty() {
+            None
+        } else {
+            let mut prereqs = vec![];
+            for prereq_id in prereq_records {
+                let name = query!(
+                    "select name from requirements where requirementid = $1",
+                    prereq_id.prerequisiterequirementid
+                )
+                .fetch_one(pool)
+                .await?;
+                prereqs.push(name.name);
+            }
+            Some(prereqs)
+        };
+        let required = if items.is_empty() { None } else { Some(items) };
+        requirements.0.push(Requirement {
+            name,
+            description,
+            required,
+            req_type,
+            prereqs,
+            amount,
+        })
+    }
+    requirements.sort();
+    Ok(requirements)
 }
 
 pub fn get_requirements_bytes(bytes: &[u8]) -> Result<RequirementList> {
@@ -174,7 +270,7 @@ fn check_item_stackable(role: &Requirement, items: &Items) -> bool {
     })
 }
 fn check_all_inn_reqs(items: &Items) -> bool {
-    let list = get_requirements("InnList.json").expect("failed to get in list");
+    let list = get_requirements_file("InnList.json").expect("failed to get in list");
     list.requirements()
         .iter()
         .all(|innreq| innreq.required().iter().all(|i| items.contains(i)))
@@ -222,8 +318,12 @@ fn prereq_roles_to_remove(roles: &[Requirement]) -> Vec<usize> {
     }
     prereq_roles
 }
-pub fn check_requirements(char: &DFCharacterData, path: &str) -> Result<RequirementList> {
-    let mut roles = get_requirements(path)?;
+pub async fn check_requirements<'a, 'b>(
+    char: &'b DFCharacterData,
+    guild_id: i64,
+    pool: &'a PgPool,
+) -> Result<RequirementList> {
+    let mut roles = get_requirements(guild_id, pool).await?;
     let mut aquired_roles = aquired_roles_indexes(&mut roles, char);
     aquired_roles.sort_by(|a, b| b.cmp(a));
     let mut roles: Vec<Requirement> = aquired_roles

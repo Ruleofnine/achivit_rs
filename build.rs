@@ -75,9 +75,43 @@ pub async fn initialize_db() -> Result<()> {
         CREATE TABLE public.guild_settings(
         guild_id bigint NOT NULL UNIQUE,
         guild_name character varying(100) NOT NULL,
-        roles_path character varying(111) NOT NULL
+        roles_path character varying(111),
+        announcement_channel_id bigint,
+
         );
         ALTER TABLE public.guild_settings OWNER TO {0};
+
+       CREATE TABLE Requirements (
+       guild_id bigint,
+       RequirementID SERIAL PRIMARY KEY,
+       Name VARCHAR(255) NOT NULL,
+       Description TEXT,
+       Type VARCHAR(50),
+       Amount INT DEFAULT NULL,
+       FOREIGN KEY (guild_id) REFERENCES guild_settings(guild_id) ON DELETE CASCADE
+       );
+
+      ALTER TABLE public.Requirements OWNER TO {0};
+
+      CREATE TABLE RequiredItems (
+      RequiredItemID SERIAL PRIMARY KEY,
+      RequirementID INT,
+      ItemName VARCHAR(255),
+      FOREIGN KEY (RequirementID) REFERENCES Requirements(RequirementID) ON DELETE CASCADE
+      );
+
+      ALTER TABLE public.RequiredItems OWNER TO {0};
+
+
+     CREATE TABLE prerequisites (
+     PrerequisiteID SERIAL PRIMARY KEY,
+     RequirementID INT,  
+     PrerequisiteRequirementID INT, 
+     FOREIGN KEY (RequirementID) REFERENCES requirements(RequirementID) ON DELETE CASCADE,
+     FOREIGN KEY (PrerequisiteRequirementID) REFERENCES requirements(RequirementID) ON DELETE CASCADE
+     );
+
+     ALTER TABLE public.prerequisites OWNER TO {0};
 "#,
         username
     );

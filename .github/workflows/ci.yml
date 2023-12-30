@@ -8,6 +8,7 @@ env:
     PG_IP: "localhost"
     PG_PORT: 5432
     PG_DB_NAME: test
+    SUPERUSERS: 0,1
 on:
   push:
     branches: [ main ]

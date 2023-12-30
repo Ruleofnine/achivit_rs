@@ -1,10 +1,8 @@
 use crate::db::query_with_id;
 use crate::embeds::*;
-use crate::guild_settings::GuildSettings;
 use crate::manage_users::autocomplete_character;
 use crate::parsing::{CharacterFetcher, DFCharacterData, ParsingCategory, WarList};
 use crate::requirements::{get_requirements, RequirementListType};
-use crate::serenity::Color;
 use crate::sheets::compare_sheet;
 use crate::{Context, Error};
 use color_eyre::{eyre::eyre, Result};
@@ -26,8 +24,12 @@ async fn send_embed(state: LookupState, ctx: Context<'_>, df_id: i32) -> Result<
         LookupState::Duplicates(name, dups) => {
             send_duplicates_embed(dups, df_id, name, ctx).await?
         }
-        LookupState::Roles(char) => send_roles_embed(df_id,char,ctx,RequirementListType::Roles).await?,
-        LookupState::Ascendancies(char) => send_roles_embed(df_id,char,ctx,RequirementListType::Ascend).await?
+        LookupState::Roles(char) => {
+            send_roles_embed(df_id, char, ctx, RequirementListType::Roles).await?
+        }
+        LookupState::Ascendancies(char) => {
+            send_roles_embed(df_id, char, ctx, RequirementListType::Ascend).await?
+        }
     };
     Ok(())
 }
@@ -43,7 +45,7 @@ pub enum LookupState {
     NotFound,
 }
 #[allow(non_camel_case_types)]
-#[derive(poise::ChoiceParameter, PartialEq,Debug)]
+#[derive(poise::ChoiceParameter, PartialEq, Debug)]
 pub enum LookupCategory {
     CharacterPage,
     FlashCharacterPage,
@@ -53,36 +55,34 @@ pub enum LookupCategory {
     Roles,
     Ascendancies,
 }
-impl Display for LookupState{
+impl Display for LookupState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let lookup_type = match self{
-            LookupState::Inventory(_,_)=>"Inventory",
-            LookupState::CharacterPage(_)=>"CharacterPage",
-            LookupState::Wars(_,_)=>"Wars",
-            LookupState::Roles(_)=>"Roles",
-            LookupState::Duplicates(_,_ )=>"Duplicates",
-            LookupState::Ascendancies(_)=>"Ascendancies",
-            LookupState::FlashCharatcerPage(_)=>"FlashCharacterPage",
-            LookupState::NotFound=>"NotFound"
+        let lookup_type = match self {
+            LookupState::Inventory(_, _) => "Inventory",
+            LookupState::CharacterPage(_) => "CharacterPage",
+            LookupState::Wars(_, _) => "Wars",
+            LookupState::Roles(_) => "Roles",
+            LookupState::Duplicates(_, _) => "Duplicates",
+            LookupState::Ascendancies(_) => "Ascendancies",
+            LookupState::FlashCharatcerPage(_) => "FlashCharacterPage",
+            LookupState::NotFound => "NotFound",
         };
-        write!(f, "{}",lookup_type)
+        write!(f, "{}", lookup_type)
     }
-
 }
 impl LookupState {
-    
     pub fn extract_character_data(self) -> Result<DFCharacterData> {
         match self {
             LookupState::CharacterPage(data) => Ok(data),
             LookupState::Ascendancies(data) => Ok(data),
             LookupState::Roles(data) => Ok(data),
-            _ => Err(eyre!("Incorrect LookupState: {}",self)),
+            _ => Err(eyre!("Incorrect LookupState: {}", self)),
         }
     }
-    pub fn extract_inventory_data(self) -> Result<(String,Vec<String>)> {
+    pub fn extract_inventory_data(self) -> Result<(String, Vec<String>)> {
         match self {
-            LookupState::Inventory(name,items) => Ok((name,items)),
-            _ => Err(eyre!("Incorrect LookupState :{}",self)),
+            LookupState::Inventory(name, items) => Ok((name, items)),
+            _ => Err(eyre!("Incorrect LookupState :{}", self)),
         }
     }
 }
@@ -99,6 +99,14 @@ pub async fn lookup_df_character(
 ) -> Result<(), Error> {
     let pool = &ctx.data().db_connection;
     let category = category.unwrap_or(LookupCategory::CharacterPage);
+    match category {
+        LookupCategory::Roles => {
+            if guild_only(ctx).await? {
+                return Ok(());
+            }
+        }
+        _ => (),
+    }
     let df_id = match (character, user) {
         (Some(character), _) => Some(character),
         (None, None) => query_with_id(pool, ctx.author().id.0).await?,
@@ -106,17 +114,7 @@ pub async fn lookup_df_character(
     };
     let df_id = match df_id {
         Some(df_id) => df_id,
-        None => {
-            ctx.send( |f| {
-                    f.embed(|f| {
-                        f.title("No Characters Registered")
-                            .color(Color::DARK_RED)
-                            .description("You have no DF Characters registered, ask an administrator to regsiter your df id(s)")
-                    })
-                })
-                .await?;
-            return Ok(());
-        }
+        None => return Ok(no_character_embed(ctx).await?),
     };
     let lookupstate = CharacterFetcher::new(df_id, category)
         .fetch_data()
@@ -161,24 +159,21 @@ pub async fn compare_df_characters(
         _ => compare_not_found_embed(ctx, not_found).await?,
     };
     let sheet_data = compare_sheet(main_state, second_state).await?;
-    if let Some(sheet) = sheet_data { send_compare_embed(sheet, ctx).await? }
+    if let Some(sheet) = sheet_data {
+        send_compare_embed(sheet, ctx).await?
+    }
     Ok(())
 }
 /// Get the DF role list for this server
-#[poise::command(slash_command)]
+#[poise::command(slash_command, guild_only)]
 pub async fn roles_list(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().expect("").0 as i64;
     let pool = &ctx.data().db_connection;
-    let settings =
-        sqlx::query_as::<_, GuildSettings>("select * from guild_settings where guild_id = $1")
-            .bind(guild_id)
-            .fetch_optional(pool)
-            .await?;
-    let guild_settings = match settings {
-        None => return Ok(no_settings_embed(ctx).await?),
-        Some(settings) => settings,
+    let guild_id = if let Some(id) = guild_only_with_id(ctx).await? {
+        id
+    } else {
+        return Ok(());
     };
-    let mut roles = get_requirements(guild_settings.roles_path())?;
-    Ok(roles_embed(ctx, &mut roles).await?)
+    let title = format!("{}'s Roles",ctx.guild().unwrap().id);
+    let mut roles = get_requirements(guild_id, pool).await?;
+    Ok(roles_embed(ctx, &mut roles,title).await?)
 }
-

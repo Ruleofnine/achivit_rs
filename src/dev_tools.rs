@@ -1,6 +1,10 @@
 use crate::{Context, Error};
 use color_eyre::Result;
 use log::info;
+pub async fn is_superuser_check(ctx: Context<'_>)->Result<bool,Error>{
+    Ok(ctx.data().super_users.contains(&ctx.author().id.0))
+
+}
 #[poise::command(slash_command, owners_only, guild_only)]
 pub async fn list_slash_commands(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("Command Executed").await?;

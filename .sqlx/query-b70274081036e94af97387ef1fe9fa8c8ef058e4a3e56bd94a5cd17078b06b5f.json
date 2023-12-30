@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO requireditems (requirementid, itemname) VALUES ($1, $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b70274081036e94af97387ef1fe9fa8c8ef058e4a3e56bd94a5cd17078b06b5f"
+}

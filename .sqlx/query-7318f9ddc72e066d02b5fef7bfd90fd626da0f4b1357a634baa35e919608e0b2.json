@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT into prerequisites (RequirementId, PrerequisiteRequirementID) VALUES ($1,$2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7318f9ddc72e066d02b5fef7bfd90fd626da0f4b1357a634baa35e919608e0b2"
+}

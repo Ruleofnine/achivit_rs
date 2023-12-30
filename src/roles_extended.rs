@@ -3,10 +3,13 @@ use crate::manage_users::autocomplete_character;
 use crate::paginate::{get_requirement_pages, paginate, PaginateEmbed};
 use crate::parsing::{CharacterFetcher, ParsingCategory};
 use crate::requirements::get_requirements;
+use crate::db::INN_GUILD_ID;
 use crate::rng::random_rgb;
 use crate::serenity::{Color, User};
 use crate::{Context, Error};
 use color_eyre::Result;
+//TODO
+// add in varibale lookup for differnt category roles/ascends
 /// Check requirements for roles/ascendancies
 #[poise::command(slash_command)]
 pub async fn inn_items(
@@ -16,8 +19,9 @@ pub async fn inn_items(
     #[description = "character of selected user"]
     character: Option<i32>,
 ) -> Result<(), Error> {
-    let path = "InnList.json";
-    let inn_list = get_requirements(path)?;
+    drop(user);
+    let pool = &ctx.data().db_connection;
+    let inn_list = get_requirements(INN_GUILD_ID,&pool).await?;
     let items = if let Some(df_id) = character {
         let items = CharacterFetcher::new(df_id, LookupCategory::Ascendancies)
             .category(ParsingCategory::Items)

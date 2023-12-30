@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select prerequisiterequirementid from prerequisites where RequirementId = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "prerequisiterequirementid",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "a396885c9638c5cc456aff1f5906dd4bc25acba71ff9cb448028ce5c9ed13cd8"
+}

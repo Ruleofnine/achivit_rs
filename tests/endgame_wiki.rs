@@ -1,5 +1,5 @@
 extern crate achivit_rs;
-// #[cfg(any(feature = "reqwest-tests",rust_analyzer))]
+#[cfg(any(feature = "reqwest-tests",rust_analyzer))]
 mod tests {
     use achivit_rs::requests::{fetch_page_with_user_agent, USER_AGENT};
     use color_eyre::Result;

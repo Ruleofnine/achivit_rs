@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select name from requirements where requirementid = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ded006324705586362fcf8d3fa3c9adfe31e73d7d89d143403f6dab46d029d16"
+}

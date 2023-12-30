@@ -149,7 +149,7 @@ pub async fn get_requirements<'a>(guild_id: i64, pool: &PgPool) -> Result<Requir
         let name = req.name;
         let description = req.description;
         let req_id = req.requirementid;
-        let req_type = ReqType::from_str(&req.r#type.unwrap_or("Item".to_string())).unwrap();
+        let req_type = ReqType::from_str(&req.r#type).unwrap();
         let amount = req.amount;
         let prereq_records = query!(
             "select prerequisiterequirementid from prerequisites where RequirementId = $1",

@@ -85,7 +85,7 @@ pub async fn initialize_db() -> Result<()> {
        RequirementID SERIAL PRIMARY KEY,
        Name VARCHAR(255) NOT NULL,
        Description TEXT,
-       Type VARCHAR(50),
+       Type VARCHAR(50) NOT NULL,
        Amount INT DEFAULT NULL,
        FOREIGN KEY (guild_id) REFERENCES guild_settings(guild_id) ON DELETE CASCADE
        );
@@ -94,8 +94,8 @@ pub async fn initialize_db() -> Result<()> {
 
       CREATE TABLE RequiredItems (
       RequiredItemID SERIAL PRIMARY KEY,
-      RequirementID INT,
-      ItemName VARCHAR(255),
+      RequirementID INT NOT NULL,
+      ItemName VARCHAR(255) NOT NULL,
       FOREIGN KEY (RequirementID) REFERENCES Requirements(RequirementID) ON DELETE CASCADE
       );
 
@@ -103,8 +103,8 @@ pub async fn initialize_db() -> Result<()> {
 
      CREATE TABLE prerequisites (
      PrerequisiteID SERIAL PRIMARY KEY,
-     RequirementID INT,  
-     PrerequisiteRequirementID INT, 
+     RequirementID INT NOT NULL,  
+     PrerequisiteRequirementID INT NOT NULL, 
      FOREIGN KEY (RequirementID) REFERENCES requirements(RequirementID) ON DELETE CASCADE,
      FOREIGN KEY (PrerequisiteRequirementID) REFERENCES requirements(RequirementID) ON DELETE CASCADE
      );

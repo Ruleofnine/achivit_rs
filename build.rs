@@ -45,6 +45,7 @@ pub async fn initialize_db() -> Result<()> {
     let db_url = get_db_url()?;
     println!("Connecting to {}", db_url);
     let pool = PgPool::connect(&db_url).await?;
+    let mut tx = pool.begin().await?;
     let username = env::var("PG_USER")?;
     println!("Connected to {}", db_url);
     println!("Initializing Database to User: {}", username);
@@ -75,8 +76,8 @@ pub async fn initialize_db() -> Result<()> {
         CREATE TABLE public.guild_settings(
         guild_id bigint NOT NULL UNIQUE,
         guild_name character varying(100) NOT NULL,
-        roles_path character varying(111),
-        announcement_channel_id bigint
+        announcement_channel_id bigint,
+        announcement_role_id bigint
         );
         ALTER TABLE public.guild_settings OWNER TO {0};
 
@@ -116,10 +117,11 @@ pub async fn initialize_db() -> Result<()> {
     let sql_statements: Vec<&str> = sql_commands.split(';').map(|s| s.trim()).collect();
     for sql_statement in sql_statements {
         if !sql_statement.is_empty() {
-            dbg!(&sql_statement);
-            sqlx::query(sql_statement).execute(&pool).await?;
+            println!("SQL STATEMENT: {}",&sql_statement.trim());
+            sqlx::query(sql_statement).execute(&mut *tx).await?;
         }
     }
+    tx.commit().await?;
     println!("All Tables Created Successfully");
     Ok(())
 }

@@ -15,10 +15,10 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 * Custom Roles Lookup
 * Custom Ascendancies System
 * [DragonFable Endgame Wiki](https://dragonfable-endgame.fandom.com/wiki/) search with autocomplete 
+* Update checker
 
 ## Todos
 - <b>Dfpedia</b>
-- Update checker
 - challenges
 - update README
 

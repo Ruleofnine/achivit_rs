@@ -98,7 +98,9 @@ impl Data {
     }
     pub fn new(start_time:Instant,db_connection:PgPool,super_users:Vec<u64>)->Data{
         Data { start_time, db_connection, tasks: Tasks::new(),super_users }
-
+    }
+    pub fn db(&self)->&PgPool{
+        &self.db_connection
     }
 }
 pub fn get_command_list(
@@ -117,6 +119,7 @@ pub fn get_command_list(
         crate::lookup_df::roles_list(),
         crate::guild_settings::set_roles(),
         crate::guild_settings::set_ascends(),
+        crate::guild_settings::init_announcements(),
         crate::guild_settings::set_inn_items(),
         crate::roles_extended::inn_items(),
         crate::update_checker::update_checker(),

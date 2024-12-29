@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select announcement_channel_id,announcement_role_id from guild_settings where guild_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "announcement_channel_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "announcement_role_id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "d5a54c01a62ce978dc0da0c429396d5a0011c1f73a44926cf7f9af72378019fb"
+}

@@ -7,6 +7,7 @@ use crate::{
 };
 use color_eyre::Result;
 use getset::Getters;
+use poise::serenity_prelude as serenity;
 use poise::serenity_prelude::Attachment;
 use serde::{Deserialize, Serialize};
 use serenity::model::{channel::Channel, guild::Role};
@@ -182,9 +183,7 @@ DO UPDATE SET
     Ok(())
 }
 #[poise::command(prefix_command, required_permissions = "ADMINISTRATOR", guild_only)]
-pub async fn init_guild(
-    ctx: Context<'_>,
-) -> Result<(), Error> {
+pub async fn init_guild(ctx: Context<'_>) -> Result<(), Error> {
     let pool = ctx.data().db();
     let guild_id = ctx.guild_id().unwrap().0 as i64;
     let guild_name = ctx.guild().unwrap().name;
@@ -204,5 +203,23 @@ DO UPDATE SET
     .fetch_one(pool)
     .await?;
     dbg!(settings);
+    Ok(())
+}
+#[poise::command(prefix_command, owners_only, dm_only)]
+pub async fn leave_guild(ctx: Context<'_>, guild_id: i64) -> Result<(), Error> {
+    let pool = ctx.data().db();
+    query!("DELETE FROM guild_settings where guild_id = $1;", guild_id,)
+        .execute(pool)
+        .await?;
+    if let Some(guild) =
+        serenity::GuildId(guild_id as u64).to_guild_cached(&ctx.serenity_context().cache)
+    {
+        guild.leave(ctx).await?;
+        ctx.say(format!("Successfully left the guild: {}", guild.name))
+            .await?;
+    } else {
+        ctx.say("Guild not found or bot is not a member of that guild.")
+            .await?;
+    }
     Ok(())
 }

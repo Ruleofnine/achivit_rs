@@ -21,6 +21,7 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 - <b>Dfpedia</b>
 - challenges
 - update README
+- fix update checker
 
 ## Getting Started
 

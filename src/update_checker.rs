@@ -129,17 +129,17 @@ async fn run_update_checker(
     all_guilds:Arc<Vec<GuildSettings>>
 ) -> Result<()> {
     let tasks = ctx.data().tasks().clone();
-    let dn_str = fetch_page_with_user_agent(USER_AGENT, DESIGN_NOTES_LINK).await?;
-    let dn = DesignNote::parse_from_str(&dn_str)?;
+    let last_dn_str = fetch_page_with_user_agent(USER_AGENT, DESIGN_NOTES_LINK).await?;
+    let last_dn = DesignNote::parse_from_str(&last_dn_str)?;
     tokio::spawn(async move {
         let mut interval = time::interval(Duration::from_secs(10));
         while tasks.is_running(UPDATE_CHECKER).await {
             interval.tick().await;
-            let dn_str = fetch_page_with_user_agent(USER_AGENT, DESIGN_NOTES_LINK)
+            let new_dn_str = fetch_page_with_user_agent(USER_AGENT, DESIGN_NOTES_LINK)
                 .await
                 .unwrap();
-            let new_dn = DesignNote::parse_from_str(&dn_str).unwrap();
-            if new_dn.date() != dn.date() || flag == UpdateCheckerFeatureFlag::Force {
+            let new_dn = DesignNote::parse_from_str(&new_dn_str).unwrap();
+            if new_dn.date() != last_dn.date() || flag == UpdateCheckerFeatureFlag::Force {
                 tasks.stop_task(UPDATE_CHECKER).await;
                 send_update_embed(Arc::clone(&all_guilds), new_dn)
                     .await

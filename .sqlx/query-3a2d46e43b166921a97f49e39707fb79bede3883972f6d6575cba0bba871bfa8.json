@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select * from guild_settings where announcement_channel_id IS NOT NULL and announcement_role_id IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "guild_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "guild_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "announcement_channel_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "announcement_role_id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "3a2d46e43b166921a97f49e39707fb79bede3883972f6d6575cba0bba871bfa8"
+}

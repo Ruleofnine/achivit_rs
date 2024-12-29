@@ -1,4 +1,3 @@
-extern crate achivit_rs;
 #[cfg(test)]
 mod tests {
     use achivit_rs::{requests::open_file, update_checker::DesignNote};

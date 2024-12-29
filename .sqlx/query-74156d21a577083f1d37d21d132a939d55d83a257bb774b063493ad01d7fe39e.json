@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO guild_settings (guild_id, guild_name)\nVALUES ($1, $2)\nON CONFLICT (guild_id)\nDO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "74156d21a577083f1d37d21d132a939d55d83a257bb774b063493ad01d7fe39e"
+}

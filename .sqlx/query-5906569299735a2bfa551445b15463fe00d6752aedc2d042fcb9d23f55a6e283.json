@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nINSERT INTO guild_settings (guild_id, guild_name, announcement_channel_id, announcement_role_id)\nVALUES ($1, $2, $3, $4)\nON CONFLICT (guild_id)\nDO UPDATE SET \n    guild_name = EXCLUDED.guild_name,\n    announcement_role_id = EXCLUDED.announcement_role_id,\n    announcement_channel_id = EXCLUDED.announcement_channel_id RETURNING *;\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "guild_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "guild_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "announcement_channel_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "announcement_role_id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "5906569299735a2bfa551445b15463fe00d6752aedc2d042fcb9d23f55a6e283"
+}

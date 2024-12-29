@@ -15,7 +15,7 @@ enum UpdateCheckerFeatureFlag {
     Start,
     Stop,
     Force,
-    Check,
+    IsRunning,
 }
 const UPDATE_CHECKER: &str = "update_checker";
 #[derive(Debug, Getters)]
@@ -204,7 +204,7 @@ pub async fn update_checker(ctx: Context<'_>, flag: UpdateCheckerFeatureFlag) ->
         (UpdateCheckerFeatureFlag::Stop, false) => {
             ctx.reply("Update Checker is **not** running!").await?;
         }
-        (UpdateCheckerFeatureFlag::Check, _) => {
+        (UpdateCheckerFeatureFlag::IsRunning, _) => {
             ctx.reply(format!("Update checker Status: {is_running}"))
                 .await?;
         }

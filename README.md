@@ -21,7 +21,8 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 - <b>Dfpedia</b>
 - challenges
 - update README
-- fix update checker
+- fix update checker? (it should work?)
+- add mechquest and AQ lookups
 
 ## Getting Started
 

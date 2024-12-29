@@ -38,17 +38,12 @@ pub fn str_to_i64(s: &str) -> i64 {
 pub struct Tasks {
     inner: Arc<Mutex<HashMap<String, bool>>>,
 }
+
 trait Task{
-    async fn start_task(&self,task_name:&str);
     async fn stop_task(&self,task_name:&str);
     async fn is_running(&self,task_name:&str)->bool;
 }
 impl Task for Arc<Mutex<HashMap<String, bool>>>{
-    async fn start_task(&self, task_name: &str) {
-        let mut tasks = self.lock().await;
-        tasks.insert(task_name.to_string(), true);
-    }
-
     async fn stop_task(&self, task_name: &str) {
         let mut tasks = self.lock().await;
         tasks.insert(task_name.to_string(), false);
@@ -61,7 +56,7 @@ impl Task for Arc<Mutex<HashMap<String, bool>>>{
 
 } 
 impl Tasks {
-    pub fn new() -> Self {
+    pub fn default() -> Self {
         Tasks {
             inner: Arc::new(Mutex::new(HashMap::new())),
         }
@@ -97,7 +92,7 @@ impl Data {
         &self.tasks
     }
     pub fn new(start_time:Instant,db_connection:PgPool,super_users:Vec<u64>)->Data{
-        Data { start_time, db_connection, tasks: Tasks::new(),super_users }
+        Data { start_time, db_connection, tasks: Tasks::default(),super_users }
     }
     pub fn db(&self)->&PgPool{
         &self.db_connection
@@ -112,6 +107,7 @@ pub fn get_command_list(
         crate::time::server_time(),
         crate::time::random_event(),
         crate::dev_tools::list_slash_commands(),
+        crate::dev_tools::clear_slash_commands(),
         crate::manage_users::register_character(),
         crate::manage_users::delete_character(),
         crate::lookup_df::lookup_df_character(),

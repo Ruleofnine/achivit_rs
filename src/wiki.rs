@@ -113,7 +113,7 @@ pub async fn autocomplete_wiki(
             .map_err(|e| dbg!((page, e)))
             .unwrap();
         if page_data.ids.is_array() {
-            return Vec::new();
+            Vec::new()
         } else {
             let ids: HashMap<String, u32> = serde_json::from_value(page_data.ids)
                 .expect("failed to turn Value to HashMap of ids");

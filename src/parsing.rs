@@ -1,3 +1,4 @@
+use std::iter::FromIterator;
 use crate::lookup_df::LookupCategory;
 use crate::lookup_df::LookupState;
 use crate::requests::{
@@ -183,7 +184,7 @@ impl Dragon {
         Dragon { name, dragon_type }
     }
 }
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, Eq, PartialEq, Hash,Clone,Copy)]
 pub enum ItemTag {
     NDA,
     DA,
@@ -192,11 +193,11 @@ pub enum ItemTag {
 }
 #[derive(Getters)]
 #[getset(get = "pub")]
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, Eq, PartialEq, Hash,Clone)]
 pub struct Item {
-    tag: ItemTag,
-    stackable: bool,
-    amount: i32,
+    pub tag: ItemTag,
+    pub stackable: bool,
+    pub amount: i32,
 }
 impl Item {
     fn new(tag: ItemTag, stackable: bool, amount: i32) -> Item {
@@ -213,8 +214,17 @@ impl Item {
 pub struct Items {
     items: HashMap<String, Item>,
 }
+
+impl<'a> FromIterator<(String,Item)> for Items {
+    fn from_iter<T: IntoIterator<Item = (String,Item)>>(iter: T) -> Self {
+        let mut new_items = Items::new();
+        iter.into_iter().for_each(|(k,v)|new_items.new_item(k, v.tag,v.stackable,v.amount));
+        new_items
+    }
+}
 impl Items  {
-    fn new_item(&mut self, name: String, tag: ItemTag, stackable: bool, amount: i32) {
+    
+    pub fn new_item(&mut self, name: String, tag: ItemTag, stackable: bool, amount: i32) {
         let item = Item::new(tag, stackable, amount);
         self.insert(name, item);
     }
@@ -250,7 +260,7 @@ impl Items  {
         });
         vec![nda_iter, da_iter, dc_iter, artifact_iter].into_iter()
     }
-    fn insert(&mut self, name: String, item: Item) {
+    pub fn insert(&mut self, name: String, item: Item) {
         match self.items.get_mut(&name) {
             Some(item) => {
                 item.amount += 1;

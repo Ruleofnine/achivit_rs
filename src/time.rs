@@ -77,7 +77,7 @@ pub async fn server_time(ctx: Context<'_>) -> Result<(), Error> {
     let now = Local::now();
     let avatar_url = ctx.serenity_context().cache.current_user().face();
     let description = format!(
-        "**{}, {}, {:02}{} {:04}** \n**{:02}:{:02}:{:02} {} EST**\n**Week:** {} **Day:** {:03}\n**Swatch Time:** @{:03.0}\n**Day Progress:** {:.2}%\n**Seconds Since Midnight:** {}\n**Seconds Until Midnight:** {}\n**Today in History:** {}",
+        "**{}, {}, {:02}{} {:04}** \n**{:02}:{:02}:{:02} {} EST**\n**Week:** {} **Day:** {:03}\n**Swatch Time:** @{:03.0}\n**Day Progress:** {:.2}%\n**Seconds Since Midnight:** {}\n**Seconds Until Midnight:** {}",
         now.format("%A"),
         now.format("%B"),
         now.day(),
@@ -93,7 +93,6 @@ pub async fn server_time(ctx: Context<'_>) -> Result<(), Error> {
         percentage_day_elapsed(),
         seconds_since_midnight(),
         seconds_until_midnight(),
-        crate::requests::get_random_event().await
     );
     ctx.send(|f| {
         f.embed(|f| {

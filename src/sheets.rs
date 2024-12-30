@@ -1,6 +1,6 @@
 use crate::parsing::DFCharacterData;
 use crate::{lookup_df::LookupState, parsing::Items};
-use color_eyre::{eyre::eyre, Result};
+use color_eyre::Result;
 use rust_xlsxwriter::*;
 fn write_items_to_sheet(
     worksheet: &mut Worksheet,

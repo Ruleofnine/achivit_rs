@@ -66,7 +66,7 @@ impl<'a> FileFetcher<'a> {
             category: ParsingCategory::CharacterPage,
         }
     }
-    pub fn category(&'a mut self, category: ParsingCategory) -> &mut FileFetcher {
+    pub fn category(&'a mut self, category: ParsingCategory) -> &'a mut FileFetcher<'a> {
         self.category = category;
         self
     }

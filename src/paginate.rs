@@ -62,7 +62,7 @@ impl<'a> PaginateEmbed<'a> {
     fn reset_page(&mut self) {
         self.current_page = 0;
     }
-    pub fn set_empty_string(mut self, string: &'a str) -> PaginateEmbed {
+    pub fn set_empty_string(mut self, string: &'a str) -> PaginateEmbed<'a> {
         self.empty_string = Some(string);
         self
     }

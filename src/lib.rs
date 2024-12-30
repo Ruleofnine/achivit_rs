@@ -116,6 +116,7 @@ pub fn get_command_list(
         crate::guild_settings::set_roles(),
         crate::guild_settings::leave_guild(),
         crate::guild_settings::set_ascends(),
+        crate::guild_settings::init_guild(),
         crate::guild_settings::init_announcements(),
         crate::guild_settings::set_inn_items(),
         crate::roles_extended::inn_items(),

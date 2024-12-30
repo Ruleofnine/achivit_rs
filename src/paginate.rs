@@ -118,9 +118,10 @@ pub fn get_requirement_pages(req_list: RequirementList, items: Option<Items>) ->
         current_len += challenge_text.len();
         for item in challenge.required() {
             if items_present
-                && dbg!(items
+        //something might be funky with this code here I had  debug statement on it
+                && items
                     .as_ref()
-                    .map_or(false, |items| !items.items().contains_key(item)))
+                    .map_or(false, |items| !items.items().contains_key(item))
                 || items.is_none()
             {
                 let item_text = format!("{}\n", item);
@@ -218,9 +219,9 @@ pub async fn paginate<'a>(
     Ok(())
 }
 #[cfg(test)]
-mod tests{
-    use crate::parsing::{FileFetcher, ParsingCategory};
+mod tests {
     use super::*;
+    use crate::parsing::{FileFetcher, ParsingCategory};
     #[tokio::test]
     async fn paginate_inventory_test() -> Result<()> {
         let (_, pages) = FileFetcher::new("htmls/3ach.html")
@@ -234,5 +235,4 @@ mod tests{
             .for_each(|page| assert!(page.len() < MAX_PAGE_LENGTH));
         Ok(())
     }
-
 }

@@ -179,7 +179,10 @@ DO UPDATE SET
     )
     .fetch_one(pool)
     .await?;
-    dbg!(settings);
+    ctx.reply(format!(
+        "announcement channel for {} set to {}",settings.guild_name,settings.announcement_channel_id.unwrap_or(-1)
+    ))
+    .await?;
     Ok(())
 }
 #[poise::command(prefix_command, required_permissions = "ADMINISTRATOR", guild_only)]
@@ -187,7 +190,7 @@ pub async fn init_guild(ctx: Context<'_>) -> Result<(), Error> {
     let pool = ctx.data().db();
     let guild_id = ctx.guild_id().unwrap().0 as i64;
     let guild_name = ctx.guild().unwrap().name;
-    let settings = query_as!(
+    let guild_settings = query_as!(
         GuildSettings,
         "
 INSERT INTO guild_settings (guild_id, guild_name)
@@ -202,7 +205,11 @@ DO UPDATE SET
     )
     .fetch_one(pool)
     .await?;
-    dbg!(settings);
+    ctx.reply(format!(
+        "Guild Init with Guild ID:{} and Guild Name:{}",
+        guild_settings.guild_id, guild_settings.guild_name
+    ))
+    .await?;
     Ok(())
 }
 #[poise::command(prefix_command, owners_only, dm_only)]

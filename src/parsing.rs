@@ -14,6 +14,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use tokio::fs;
+use log::error;
 use crate::paginate::paginate_item;
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum ParsingCategory {
@@ -894,18 +895,7 @@ pub fn parse_df_character_with_items(
 
     match charpagedetails.select(&h1_selector).next() {
         None => {
-            // if let LookupState::FlashCharatcerPage(chardata) =
-            // parse_df_character_flash(document, df_id)
-            // {
-            // character.name = chardata.get("Name").unwrap().to_string();
-            // character.gold = chardata.get("Gold").unwrap().parse::<i32>().unwrap();
-            // character.level = chardata.get("Level").unwrap().parse::<u8>().unwrap();
-            // dbg!(chardata.get("LastPlayed"));
-            // character.last_played =
-            //     NaiveDate::parse_from_str(chardata.get("LastPlayed").unwrap(), "%m/%d/%Y").expect("failed to parse date");
-            // } else {
             return LookupState::NotFound;
-            // }
         }
         Some(name) => {
             let cb_label_selector =
@@ -1017,9 +1007,9 @@ pub fn parse_df_character_with_items(
                     warbuilder = WarBuilder::default();
                 }
                 _ => {
-                    dbg!(span.value().classes().collect::<Vec<_>>());
-                    dbg!(item_name);
-                    dbg!(class);
+                    error!("Span: {:?}",span.value().classes().collect::<Vec<_>>());
+                    error!("Item Name: {}",item_name);
+                    error!("Class: {}",class);
                     panic!("UnexpectedItemType");
                 }
             }

@@ -110,7 +110,9 @@ pub async fn send_roles_embed(
         RequirementListType::Roles => ctx.guild_id().unwrap().0 as i64
     };
     let pool = &ctx.data().db_connection;
+    dbg!(&char);
     let name = char.name().to_owned();
+    dbg!(&name);
     let (thumbnail, color, title) = match role_list_type {
         RequirementListType::Roles => {
             (

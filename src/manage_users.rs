@@ -10,7 +10,7 @@ use serenity::utils::Color;
 use sqlx::query;
 
 /// Register Character by ID
-#[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
+#[poise::command(slash_command, required_permissions = "ADMINISTRATOR",default_member_permissions="ADMINISTRATOR")]
 pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) -> Result<(), Error> {
     let pool = &ctx.data().db_connection;
     let author = &ctx.author().name;

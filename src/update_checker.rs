@@ -161,7 +161,7 @@ impl AnnouncementSettings {
     }
 }
 /// Check Design Notes for update every 10 seconds
-#[poise::command(prefix_command, required_permissions = "ADMINISTRATOR", guild_only)]
+#[poise::command(prefix_command, required_permissions = "ADMINISTRATOR", default_member_permissions = "ADMINISTRATOR",guild_only)]
 pub async fn update_checker(ctx: Context<'_>, flag: UpdateCheckerFeatureFlag) -> Result<(), Error> {
     let tasks = ctx.data().tasks();
     let pool = ctx.data().db();

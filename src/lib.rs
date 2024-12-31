@@ -14,6 +14,7 @@ pub mod roles_extended;
 pub mod sheets;
 pub mod time;
 pub mod wiki;
+pub mod mech_aqw_lookup;
 pub use crate::event_handler::event_handler;
 pub use dotenv::dotenv;
 pub use log::info;
@@ -113,6 +114,8 @@ pub fn get_command_list(
         crate::lookup_df::lookup_df_character(),
         crate::lookup_df::compare_df_characters(),
         crate::lookup_df::roles_list(),
+        crate::mech_aqw_lookup::lookup_mechquest_id(),
+        crate::mech_aqw_lookup::lookup_aqc_id(),
         crate::guild_settings::set_roles(),
         crate::guild_settings::leave_guild(),
         crate::guild_settings::set_ascends(),

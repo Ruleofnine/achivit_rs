@@ -173,7 +173,7 @@ pub async fn roles_list(ctx: Context<'_>) -> Result<(), Error> {
     } else {
         return Ok(());
     };
-    let title = format!("{}'s Roles",ctx.guild().unwrap().name);
+    let title = format!("{}'s Roles", ctx.guild().unwrap().name);
     let mut roles = get_requirements(guild_id, pool).await?;
-    Ok(roles_embed(ctx, &mut roles,title).await?)
+    Ok(roles_embed(ctx, &mut roles, title).await?)
 }

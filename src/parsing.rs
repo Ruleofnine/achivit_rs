@@ -1,21 +1,21 @@
-use std::iter::FromIterator;
 use crate::lookup_df::LookupCategory;
 use crate::lookup_df::LookupState;
+use crate::paginate::paginate_item;
 use crate::requests::{
     fetch_page_with_user_agent, CHARPAGE, COLOR_SITE, FLASH_USER_AGENT, USER_AGENT,
 };
 use chrono::NaiveDate;
 use color_eyre::Result;
 use getset::Getters;
+use log::error;
 use num_format::{Locale, ToFormattedString};
 use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
 use std::collections::HashMap;
 use std::future::Future;
+use std::iter::FromIterator;
 use std::pin::Pin;
 use tokio::fs;
-use log::error;
-use crate::paginate::paginate_item;
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum ParsingCategory {
     CharacterPage,
@@ -33,7 +33,7 @@ pub trait IsFlash {
 }
 impl IsFlash for ParsingCategory {
     fn is_flash(&self) -> bool {
-        matches!(self,ParsingCategory::FlashCharacterPage)
+        matches!(self, ParsingCategory::FlashCharacterPage)
     }
 }
 
@@ -185,7 +185,7 @@ impl Dragon {
         Dragon { name, dragon_type }
     }
 }
-#[derive(Debug, Eq, PartialEq, Hash,Clone,Copy)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub enum ItemTag {
     NDA,
     DA,
@@ -194,7 +194,7 @@ pub enum ItemTag {
 }
 #[derive(Getters)]
 #[getset(get = "pub")]
-#[derive(Debug, Eq, PartialEq, Hash,Clone)]
+#[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Item {
     pub tag: ItemTag,
     pub stackable: bool,
@@ -211,20 +211,20 @@ impl Item {
 }
 #[derive(Getters)]
 #[getset(get = "pub", get_mut = "pub")]
-#[derive(Debug,Default)]
+#[derive(Debug, Default)]
 pub struct Items {
     items: HashMap<String, Item>,
 }
 
-impl<'a> FromIterator<(String,Item)> for Items {
-    fn from_iter<T: IntoIterator<Item = (String,Item)>>(iter: T) -> Self {
+impl<'a> FromIterator<(String, Item)> for Items {
+    fn from_iter<T: IntoIterator<Item = (String, Item)>>(iter: T) -> Self {
         let mut new_items = Items::new();
-        iter.into_iter().for_each(|(k,v)|new_items.new_item(k, v.tag,v.stackable,v.amount));
+        iter.into_iter()
+            .for_each(|(k, v)| new_items.new_item(k, v.tag, v.stackable, v.amount));
         new_items
     }
 }
-impl Items  {
-    
+impl Items {
     pub fn new_item(&mut self, name: String, tag: ItemTag, stackable: bool, amount: i32) {
         let item = Item::new(tag, stackable, amount);
         self.insert(name, item);
@@ -439,7 +439,7 @@ impl DFCharacterData {
     }
 }
 
-#[derive(Debug,Default)]
+#[derive(Debug, Default)]
 pub struct WarBuilder {
     pub warlabel: Option<String>,
     pub war_text: Option<String>,
@@ -721,12 +721,32 @@ pub fn parse_df_character_inventory_only(document: &Html, _df_id: i32) -> Lookup
             if h4.text().collect::<String>() == "Inventory" {
                 card.select(&span_selector).enumerate().for_each(|(i, x)| {
                     let item_name = x.inner_html();
-                    let index = i+1;
+                    let index = i + 1;
                     match x.value().classes().next().expect("no classes") {
-                        "coins" => paginate_item(&mut pages,format!("{}: **__{}__**\n", index, item_name),&mut current_len,&mut current_page),
-                        "amulet" => paginate_item(&mut pages,format!("{}: **{}**\n", index, item_name),&mut current_len,&mut current_page),
-                        "artifact" => paginate_item(&mut pages,format!("{}: *{}*\n", index, item_name),&mut current_len,&mut current_page),
-                        "gold" => paginate_item(&mut pages,format!("{}: {}\n", index, item_name),&mut current_len,&mut current_page),
+                        "coins" => paginate_item(
+                            &mut pages,
+                            format!("{}: **__{}__**\n", index, item_name),
+                            &mut current_len,
+                            &mut current_page,
+                        ),
+                        "amulet" => paginate_item(
+                            &mut pages,
+                            format!("{}: **{}**\n", index, item_name),
+                            &mut current_len,
+                            &mut current_page,
+                        ),
+                        "artifact" => paginate_item(
+                            &mut pages,
+                            format!("{}: *{}*\n", index, item_name),
+                            &mut current_len,
+                            &mut current_page,
+                        ),
+                        "gold" => paginate_item(
+                            &mut pages,
+                            format!("{}: {}\n", index, item_name),
+                            &mut current_len,
+                            &mut current_page,
+                        ),
                         _ => panic!("UnexpectedItemClass"),
                     };
                 });
@@ -782,7 +802,7 @@ pub fn parse_df_character_duplicates(document: &Html, _df_id: i32) -> LookupStat
                 }
                 "warlabel" | "d-inline-block" => (),
                 _ => {
-                    panic!("UnexpectedItemType");
+                    error!("Unexpected Item Type while parsing");
                 }
             }
         }
@@ -848,9 +868,12 @@ pub fn get_discord_embed_description_flash(
     let gender = format!(
         "**Gender:** {}\n",
         match flashdata.get("Gender").unwrap().as_str() {
-            "M" => "Male".to_owned(),
-            "F" => "Female".to_owned(),
-            _ => panic!("Unknown Gender"),
+            "M" => "Male".to_string(),
+            "F" => "Female".to_string(),
+            other => {
+                error!("Unknown Gender");
+                other.to_string()
+            }
         }
     );
     let founder = match flashdata.get("Founder").unwrap().as_str() {
@@ -1007,9 +1030,9 @@ pub fn parse_df_character_with_items(
                     warbuilder = WarBuilder::default();
                 }
                 _ => {
-                    error!("Span: {:?}",span.value().classes().collect::<Vec<_>>());
-                    error!("Item Name: {}",item_name);
-                    error!("Class: {}",class);
+                    error!("Span: {:?}", span.value().classes().collect::<Vec<_>>());
+                    error!("Item Name: {}", item_name);
+                    error!("Class: {}", class);
                     panic!("UnexpectedItemType");
                 }
             }
@@ -1023,4 +1046,150 @@ pub fn parse_df_character_with_items(
         ParsingCategory::Ascendancies => LookupState::Ascendancies(character),
         _ => LookupState::CharacterPage(character),
     }
+}
+#[derive(Debug, Getters)]
+#[getset(get = "pub")]
+pub struct MechquestData {
+    name: String,
+    last_played: String,
+    level: i64,
+    credits: i64,
+    account_type: String,
+    mech_models: i64,
+}
+impl MechquestData {
+    pub fn default() -> Self {
+        MechquestData {
+            name: "".to_string(),
+            last_played: "".to_string(),
+            level: 0,
+            credits: 0,
+            account_type: "".to_string(),
+            mech_models: 0,
+        }
+    }
+    pub fn credits_comma(&self) -> String {
+        self.credits.to_formatted_string(&Locale::en)
+    }
+}
+pub fn parse_mech_quest_charpage(document: Html) -> Result<Option<MechquestData>> {
+    let chardata_selector = Selector::parse("div#chardata").unwrap();
+    let label_selector = Selector::parse("div#chardata label").unwrap();
+    let chardiv = match document.select(&chardata_selector).next() {
+        Some(data) => data,
+        None => return Ok(None),
+    };
+    let mut mechdata = MechquestData::default();
+
+    let h1_selector = Selector::parse("h1").unwrap();
+    mechdata.name = match chardiv.select(&h1_selector).next() {
+        None => return Ok(None),
+        Some(name) => name.text().collect::<Vec<_>>().join(" ").trim().to_string(),
+    };
+    let labels = chardiv.select(&label_selector);
+
+    for label in labels {
+        if let Some(next_text) = label
+            .next_sibling()
+            .and_then(|sibling| sibling.value().as_text())
+        {
+            match dbg!(label.text().collect::<Vec<_>>().join(" ").trim()) {
+                "Level:" => mechdata.level = next_text.trim().parse::<i64>().unwrap_or_default(),
+                "Credits:" => {
+                    mechdata.credits = next_text.trim().parse::<i64>().unwrap_or_default()
+                }
+                "Last Played:" => mechdata.last_played = next_text.trim().to_string(),
+                "Account Type:" => mechdata.account_type = next_text.trim().to_string(),
+                _ => (),
+            }
+        }
+    }
+    let mecha_models_selector =
+        Selector::parse("div.col-12.col-md-6.p-3.border.border-dark.background-smudgy").unwrap();
+    let h3_selector = Selector::parse("h3").unwrap();
+
+    // Find the Mecha Models div
+    if let Some(mecha_div) = document.select(&mecha_models_selector).find(|div| {
+        div.select(&h3_selector).next().map_or(false, |header| {
+            header.text().any(|t| t.contains("Mecha Models"))
+        })
+    }) {
+        // Count the number of <br /> siblings
+        let mecha_count = mecha_div
+            .text() // Extract all text nodes
+            .filter(|text| !text.trim().is_empty() && text.trim() != "Mecha Models") // Filter out empty lines
+            .count();
+        mechdata.mech_models = mecha_count as i64;
+    }
+    Ok(Some(mechdata))
+}
+pub enum Bold{
+    All,
+    Prefix,
+    Suffix,
+    None
+}
+pub fn get_embed_str_partial_from_hashmap(hashmap:&HashMap<String,String>,key:&str,prefix:&str,bold:Bold,is_number:bool)->String{
+    if let Some(value) = hashmap.get(key){
+        if value == ""{
+            return "".to_string()
+        }
+        let new_value = if is_number{
+            value.parse::<i64>().unwrap_or_default().to_formatted_string(&Locale::en).to_string()
+        } else{
+                value.to_string()
+            };
+        match bold{
+            Bold::All => format!("**{}{}**\n",prefix,new_value),
+            Bold::Prefix => format!("**{}**{}\n",prefix,new_value),
+            Bold::Suffix=> format!("{}**{}**\n",prefix,new_value),
+            Bold::None => format!("{}{}\n",prefix,new_value),
+        }
+
+        
+    } else{
+        "".to_string()
+    }
+}
+
+pub fn parse_aqc_charpage(document: Html) -> Result<Option<HashMap<String,String>>> {
+    let flashvars_selector = Selector::parse(r#"param[name="FlashVars"]"#).unwrap();
+    let h3_selector = Selector::parse("h3").unwrap();
+    let flashvars = match document.select(&flashvars_selector).next() {
+        Some(vars) => vars.value().attr("value").unwrap(),
+        None => return Ok(None),
+    };
+    let key_value_pairs: Vec<&str> = flashvars.split('&').collect();
+    let mut flashvars_map = std::collections::HashMap::new();
+    for pair in key_value_pairs {
+        let parts: Vec<&str> = pair.split('=').collect();
+        if parts.len() == 2 {
+            let key = parts[0].trim();
+            let value = parts[1].trim();
+            flashvars_map.insert(key.to_string(), value.to_string());
+        }
+    }
+    if let Some(h3) = document.select(&h3_selector).next() {
+        for sib in h3.next_siblings().into_iter() {
+            if let Some(text) = sib.value().as_text() {
+                let text = text.trim().to_string();
+                if text.len() >= 2 {
+                    let first_two = &text[..2];
+                    match first_two {
+                        "Be" => {
+                            flashvars_map.insert("sBecame".to_string(), text.to_string());
+                        }
+                        "Bo" => {
+                            flashvars_map.insert("sBorn".to_string(), text.to_string());
+                        }
+                        "La" => {
+                            flashvars_map.insert("sLastPlayed".to_string(), text.to_string());
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+    };
+    Ok(Some(flashvars_map))
 }

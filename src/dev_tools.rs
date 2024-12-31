@@ -6,7 +6,7 @@ pub async fn is_superuser_check(ctx: Context<'_>)->Result<bool,Error>{
     Ok(ctx.data().super_users.contains(&ctx.author().id.0))
 
 }
-#[poise::command(slash_command, owners_only, guild_only)]
+#[poise::command(slash_command, owners_only, guild_only,default_member_permissions = "ADMINISTRATOR")]
 pub async fn list_slash_commands(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("Command Executed").await?;
     let commands = ctx.http().get_global_application_commands().await?;
@@ -25,7 +25,7 @@ pub async fn list_slash_commands(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-#[poise::command(slash_command, owners_only, guild_only)]
+#[poise::command(slash_command, owners_only, guild_only,default_member_permissions = "ADMINISTRATOR")]
 pub async fn clear_slash_commands(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("Command Executed").await?;
     let commands = ctx.http().get_global_application_commands().await?;

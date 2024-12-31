@@ -22,7 +22,8 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 - challenges
 - update README
 - fix update checker? (it should work?)
-- add mechquest and AQ lookups
+- add AQW lookup
+- log to file
 
 ## Getting Started
 

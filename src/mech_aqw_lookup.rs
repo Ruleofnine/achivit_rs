@@ -74,12 +74,11 @@ pub async fn lookup_aqc_id(
             get_embed_str_partial_from_hashmap(&data, "sLastPlayed", "",Bold::All,false),
 
         );
-        dbg!(&embed_str);
         ctx.send(|f| {
             f.embed(|f| {
                 f.title(data.get("sName").unwrap_or(&"No Name".to_string()))
                     .url(format!("{}", url))
-                    .thumbnail("https://aq.battleon.com/game/Content/images/AQ/logo-aq.png")
+                    .thumbnail("https://www.battleon.com/images/AQ/logo-lg-aq.png")
                     .color(Color::from_rgb(248, 191, 1))
                     .description(embed_str)
             })

@@ -15,7 +15,7 @@ enum UpdateCheckerFeatureFlag {
     Start,
     Stop,
     Force,
-    IsRunning,
+    CheckIsRunning,
 }
 const UPDATE_CHECKER: &str = "update_checker";
 #[derive(Debug, Getters)]
@@ -161,7 +161,7 @@ impl AnnouncementSettings {
     }
 }
 /// Check Design Notes for update every 10 seconds
-#[poise::command(prefix_command, required_permissions = "ADMINISTRATOR", default_member_permissions = "ADMINISTRATOR",guild_only)]
+#[poise::command(slash_command, required_permissions = "ADMINISTRATOR", default_member_permissions = "ADMINISTRATOR",guild_only)]
 pub async fn update_checker(ctx: Context<'_>, flag: UpdateCheckerFeatureFlag) -> Result<(), Error> {
     let tasks = ctx.data().tasks();
     let pool = ctx.data().db();
@@ -204,7 +204,7 @@ pub async fn update_checker(ctx: Context<'_>, flag: UpdateCheckerFeatureFlag) ->
         (UpdateCheckerFeatureFlag::Stop, false) => {
             ctx.reply("Update Checker is **not** running!").await?;
         }
-        (UpdateCheckerFeatureFlag::IsRunning, _) => {
+        (UpdateCheckerFeatureFlag::CheckIsRunning, _) => {
             ctx.reply(format!("Update checker Status: {is_running}"))
                 .await?;
         }

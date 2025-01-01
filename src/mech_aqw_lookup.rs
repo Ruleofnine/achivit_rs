@@ -1,7 +1,6 @@
 use crate::parsing::{
     get_embed_str_partial_from_hashmap, parse_aqc_charpage, parse_mech_quest_charpage, Bold,
 };
-use num_format::{Locale,ToFormattedString};
 use crate::requests::{FLASH_USER_AGENT, USER_AGENT};
 use crate::{requests::fetch_page_with_user_agent, Context, Error};
 use scraper::Html;
@@ -90,6 +89,42 @@ pub async fn lookup_aqc_id(
                 f.title("Character ID Not Found")
                     .url(format!("{}", url))
                     .image("https://aq.battleon.com/game/Content/images/headerbanner.gif")
+                    .color(Color::DARK_RED)
+                    .description("The game character you are searching for does not exist.")
+            })
+        })
+        .await?;
+    }
+    Ok(())
+}
+/// Lookup an AQW Character
+#[poise::command(slash_command)]
+pub async fn lookup_aqw_character(
+    ctx: Context<'_>,
+    #[description = "Character Name to lookup"] name: String,
+) -> Result<(), Error> {
+    let url = format!("https://account.aq.com/CharPage?id={}", name);
+    let json_string = fetch_page_with_user_agent(USER_AGENT, &url).await?;
+    let document = Html::parse_document(&json_string);
+    let data = parse_mech_quest_charpage(document)?;
+    if let Some(mechadata) = data {
+        let embed_str = format!("**Level:** {}\n**Credits:** {}\n**Last Played:** {}\n**Account Type:** {}\n**Mechs in Arsenal:** {}",mechadata.level(),mechadata.credits_comma(),mechadata.last_played(),mechadata.account_type(),mechadata.mech_models());
+        ctx.send(|f| {
+            f.embed(|f| {
+                f.title(mechadata.name())
+                    .url(format!("{}", url))
+                    .thumbnail("https://account.mechquest.com/images/logos/logo-lg-MQ.png?ver=2")
+                    .color(Color::from_rgb(48, 135, 188))
+                    .description(embed_str)
+            })
+        })
+        .await?;
+    } else {
+        ctx.send(|f| {
+            f.embed(|f| {
+                f.title("Character Not Found")
+                    .url(format!("{}", url))
+                    .thumbnail("https://account.mechquest.com/images/logos/logo-lg-MQ.png?ver=2")
                     .color(Color::DARK_RED)
                     .description("The game character you are searching for does not exist.")
             })

@@ -141,8 +141,9 @@ pub async fn set_ascends(ctx: Context<'_>, file: Attachment) -> Result<(), Error
 }
 
 #[poise::command(
-    prefix_command,
+    slash_command,
     required_permissions = "ADMINISTRATOR",
+    default_member_permissions = "ADMINISTRATOR",
     guild_only,
     check = "is_superuser_check"
 )]

@@ -36,7 +36,6 @@ async fn main() -> Result<()> {
         .map(|s| s.parse::<u64>().expect("Failed to parse number to discord id"))
         .collect();
 
-    let test_commands = vec![achivit_rs::roles_extended::inn_items()];
     let options = poise::FrameworkOptions {
         commands:get_command_list(),
         event_handler: |ctx, event, framework, data| {
@@ -45,7 +44,7 @@ async fn main() -> Result<()> {
         on_error: |error| Box::pin(on_error(error)),
         post_command: |ctx| {
             Box::pin(async move {
-                info!("Executed command: {}", ctx.command().qualified_name);
+                info!("{} Executed command: {}",ctx.author().name, ctx.command().qualified_name)
             })
         },
         prefix_options: poise::PrefixFrameworkOptions {
@@ -60,8 +59,8 @@ async fn main() -> Result<()> {
         .setup(move |ctx, _ready, framework| {
             info!("Setting up Poise Framework");
             Box::pin(async move {
+                let _ = &framework.options().commands.iter().for_each(|c|{dbg!(&c.qualified_name);});
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                poise::builtins::register_in_guild(ctx, &test_commands, _guild_id).await?;
                 Ok(Data::new(start_time,db_connection,super_users))
             })
         })

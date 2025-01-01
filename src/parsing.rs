@@ -216,7 +216,7 @@ pub struct Items {
     items: HashMap<String, Item>,
 }
 
-impl<'a> FromIterator<(String, Item)> for Items {
+impl FromIterator<(String, Item)> for Items {
     fn from_iter<T: IntoIterator<Item = (String, Item)>>(iter: T) -> Self {
         let mut new_items = Items::new();
         iter.into_iter()
@@ -1057,8 +1057,8 @@ pub struct MechquestData {
     account_type: String,
     mech_models: i64,
 }
-impl MechquestData {
-    pub fn default() -> Self {
+impl Default for MechquestData{
+    fn default() -> Self {
         MechquestData {
             name: "".to_string(),
             last_played: "".to_string(),
@@ -1068,6 +1068,8 @@ impl MechquestData {
             mech_models: 0,
         }
     }
+}
+impl MechquestData {
     pub fn credits_comma(&self) -> String {
         self.credits.to_formatted_string(&Locale::en)
     }
@@ -1110,7 +1112,7 @@ pub fn parse_mech_quest_charpage(document: Html) -> Result<Option<MechquestData>
 
     // Find the Mecha Models div
     if let Some(mecha_div) = document.select(&mecha_models_selector).find(|div| {
-        div.select(&h3_selector).next().map_or(false, |header| {
+        div.select(&h3_selector).next().is_some_and(|header| {
             header.text().any(|t| t.contains("Mecha Models"))
         })
     }) {
@@ -1131,7 +1133,7 @@ pub enum Bold{
 }
 pub fn get_embed_str_partial_from_hashmap(hashmap:&HashMap<String,String>,key:&str,prefix:&str,bold:Bold,is_number:bool)->String{
     if let Some(value) = hashmap.get(key){
-        if value == ""{
+        if value.is_empty(){
             return "".to_string()
         }
         let new_value = if is_number{
@@ -1170,7 +1172,7 @@ pub fn parse_aqc_charpage(document: Html) -> Result<Option<HashMap<String,String
         }
     }
     if let Some(h3) = document.select(&h3_selector).next() {
-        for sib in h3.next_siblings().into_iter() {
+        for sib in h3.next_siblings() {
             if let Some(text) = sib.value().as_text() {
                 let text = text.trim().to_string();
                 if text.len() >= 2 {

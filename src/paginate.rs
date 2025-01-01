@@ -121,7 +121,7 @@ pub fn get_requirement_pages(req_list: RequirementList, items: Option<Items>) ->
         //something might be funky with this code here I had  debug statement on it
                 && items
                     .as_ref()
-                    .map_or(false, |items| !items.items().contains_key(item))
+                    .is_some_and(|items| !items.items().contains_key(item))
                 || items.is_none()
             {
                 let item_text = format!("{}\n", item);
@@ -137,14 +137,14 @@ pub fn get_requirement_pages(req_list: RequirementList, items: Option<Items>) ->
         }
     }
     // Remove the last page if it is empty
-    if pages.last().map_or(false, |p| p.is_empty()) {
+    if pages.last().is_some_and(|p| p.is_empty()) {
         pages.pop();
     }
     pages
 }
-pub async fn paginate<'a>(
+pub async fn paginate(
     ctx: Context<'_>,
-    mut paginate_struct: PaginateEmbed<'a>,
+    mut paginate_struct: PaginateEmbed<'_>,
 ) -> Result<(), serenity::Error> {
     let ctx_id = ctx.id();
     paginate_struct.check_empty();
@@ -169,7 +169,7 @@ pub async fn paginate<'a>(
         })
         .embed(|f| {
             if paginate_struct.thumbnail().is_some() {
-                f.thumbnail(&paginate_struct.thumbnail().as_ref().unwrap());
+                f.thumbnail(paginate_struct.thumbnail().as_ref().unwrap());
             }
             f.title(paginate_struct.title())
                 .description(paginate_struct.get_current_page())

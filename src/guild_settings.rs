@@ -21,10 +21,10 @@ pub struct GuildSettings {
     pub announcement_role_id: Option<i64>,
 }
 //we need to return 'a reference of transaction/pool but we don't need the &requierments
-pub async fn insert_requirements<'a, 'b>(
+pub async fn insert_requirements(
     guild_id: i64,
-    pool: &'a PgPool,
-    requirements: &'b RequirementList,
+    pool: &PgPool,
+    requirements: &RequirementList,
 ) -> Result<()> {
     let mut transaction = pool.begin().await?;
     // delete any requirements already assigned to guild.
@@ -98,13 +98,13 @@ async fn set_requirements(
 ) -> Result<()> {
     if let Some(file_type) = &file.content_type {
         if file_type != "application/json; charset=utf-8" {
-            return Ok(embeds::wrong_file_type(ctx, file_type).await?);
+            embeds::wrong_file_type(ctx, file_type).await?
         }
     }
     let file = file.download().await?;
     let mut requirements = match get_requirements_bytes(&file) {
         Ok(data) => data,
-        Err(e) => return Ok(embeds::role_init_error(ctx, e).await?),
+        Err(e) => return embeds::role_init_error(ctx, e).await
     };
     let pool = &ctx.data().db_connection;
     insert_requirements(guild_id, pool, &requirements).await?;

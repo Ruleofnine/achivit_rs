@@ -20,7 +20,7 @@ pub async fn lookup_mechquest_id(
         ctx.send(|f| {
             f.embed(|f| {
                 f.title(mechadata.name())
-                    .url(format!("{}", url))
+                    .url(url)
                     .thumbnail("https://account.mechquest.com/images/logos/logo-lg-MQ.png?ver=2")
                     .color(Color::from_rgb(48, 135, 188))
                     .description(embed_str)
@@ -31,7 +31,7 @@ pub async fn lookup_mechquest_id(
         ctx.send(|f| {
             f.embed(|f| {
                 f.title("Character Not Found")
-                    .url(format!("{}", url))
+                    .url(url)
                     .thumbnail("https://account.mechquest.com/images/logos/logo-lg-MQ.png?ver=2")
                     .color(Color::DARK_RED)
                     .description("The game character you are searching for does not exist.")
@@ -76,7 +76,7 @@ pub async fn lookup_aqc_id(
         ctx.send(|f| {
             f.embed(|f| {
                 f.title(data.get("sName").unwrap_or(&"No Name".to_string()))
-                    .url(format!("{}", url))
+                    .url(url)
                     .thumbnail("https://www.battleon.com/images/AQ/logo-lg-aq.png")
                     .color(Color::from_rgb(248, 191, 1))
                     .description(embed_str)
@@ -87,7 +87,7 @@ pub async fn lookup_aqc_id(
         ctx.send(|f| {
             f.embed(|f| {
                 f.title("Character ID Not Found")
-                    .url(format!("{}", url))
+                    .url(url)
                     .image("https://aq.battleon.com/game/Content/images/headerbanner.gif")
                     .color(Color::DARK_RED)
                     .description("The game character you are searching for does not exist.")
@@ -112,7 +112,7 @@ pub async fn lookup_aqw_character(
         ctx.send(|f| {
             f.embed(|f| {
                 f.title(mechadata.name())
-                    .url(format!("{}", url))
+                    .url(url)
                     .thumbnail("https://account.mechquest.com/images/logos/logo-lg-MQ.png?ver=2")
                     .color(Color::from_rgb(48, 135, 188))
                     .description(embed_str)
@@ -123,7 +123,7 @@ pub async fn lookup_aqw_character(
         ctx.send(|f| {
             f.embed(|f| {
                 f.title("Character Not Found")
-                    .url(format!("{}", url))
+                    .url(url)
                     .thumbnail("https://account.mechquest.com/images/logos/logo-lg-MQ.png?ver=2")
                     .color(Color::DARK_RED)
                     .description("The game character you are searching for does not exist.")

@@ -2,17 +2,23 @@ use crate::db::ASCEND_GUILD_ID;
 use crate::guild_settings::GuildSettings;
 use crate::paginate::{paginate, PaginateEmbed};
 use crate::parsing::{get_discord_embed_description_flash, DFCharacterData, WarList};
-use crate::requests::{ASCEND_DA_IMGUR, CHARPAGE, DA_IMGUR, NDA_IMGUR, ROLE_DA_IMGUR,USER_AGENT,DF_LINK, fetch_page_with_user_agent};
+use crate::requests::{
+    fetch_page_with_user_agent, ASCEND_DA_IMGUR, CHARPAGE, DA_IMGUR, DF_LINK, NDA_IMGUR,
+    ROLE_DA_IMGUR, USER_AGENT,
+};
 use crate::requirements::{check_requirements, RequirementList, RequirementListType};
 use crate::rng::random_rgb;
 use crate::sheets::SheetData;
 use crate::update_checker::DesignNote;
-use crate::{serenity::{Color,Http,ChannelId}, Context};
+use crate::{
+    serenity::{ChannelId, Color, Http},
+    Context,
+};
 use color_eyre::{Report, Result};
 use poise::serenity_prelude::AttachmentType;
 use scraper::{Html, Selector};
 use std::sync::Arc;
-use std::{collections::HashMap,env,fmt::Write};
+use std::{collections::HashMap, env, fmt::Write};
 pub async fn guild_only(ctx: Context<'_>) -> Result<bool> {
     if ctx.guild().is_none() {
         guild_only_embed(ctx).await?;
@@ -30,7 +36,7 @@ pub async fn no_character_embed(ctx: Context<'_>) -> Result<()> {
                     })
                 })
                 .await?;
-    return Ok(());
+    Ok(())
 }
 pub async fn guild_only_with_id(ctx: Context<'_>) -> Result<Option<i64>> {
     if let Some(guild) = ctx.guild() {
@@ -40,17 +46,18 @@ pub async fn guild_only_with_id(ctx: Context<'_>) -> Result<Option<i64>> {
         Ok(None)
     }
 }
-pub async fn send_update_embed<'a>(guilds:Arc<Vec<GuildSettings>>,dn: DesignNote) -> Result<()>{
-    let url = format!("{DF_LINK}{}",dn.link());
+pub async fn send_update_embed(guilds: Arc<Vec<GuildSettings>>, dn: DesignNote) -> Result<()> {
+    let url = format!("{DF_LINK}{}", dn.link());
     let token = env::var("BOT_TOKEN").unwrap();
     let http = Http::new(&token);
     let document = fetch_page_with_user_agent(USER_AGENT, &url).await?;
     let html = Html::parse_document(&document);
     let text_selector = Selector::parse(r#"div[class=""]"#).unwrap();
-    let text = html.select(&text_selector)
+    let text = html
+        .select(&text_selector)
         .next()
         .map(|element| element.text().collect::<Vec<_>>().join(""))
-        .unwrap_or_else(|| String::new());
+        .unwrap_or_default();
 
     let description = if text.len() >= 4096 {
         let mut truncated_text = text.chars().take(4093).collect::<String>();
@@ -60,32 +67,50 @@ pub async fn send_update_embed<'a>(guilds:Arc<Vec<GuildSettings>>,dn: DesignNote
         text
     };
     tokio::spawn(async move {
-        for guild in guilds.iter(){
-        let channel = ChannelId(guild.announcement_channel_id().unwrap() as u64);
-        if let Err(why) = channel.send_message(&http, |f| {
-            f.content(format!("Release is  **LIVE!** <@&{}>",guild.announcement_role_id.unwrap())).embed(|e| {
-                e.title(dn.update_name())
-                 .url(url.clone())
-                 .color(Color::from_rgb(254, 216, 55))
-                 .thumbnail(DA_IMGUR)
-                 .image(dn.image())
-                 .description(description.clone())
-                 .author(|a| a.name(dn.poster_name()).icon_url(dn.poster_image()))
-            })
-        }).await {
-            println!("Error sending message: {:?}", why);
+        for guild in guilds.iter() {
+            let channel = ChannelId(guild.announcement_channel_id().unwrap() as u64);
+            if let Err(why) = channel
+                .send_message(&http, |f| {
+                    f.content(format!(
+                        "Release is  **LIVE!** <@&{}>",
+                        guild.announcement_role_id.unwrap()
+                    ))
+                    .embed(|e| {
+                        e.title(dn.update_name())
+                            .url(url.clone())
+                            .color(Color::from_rgb(254, 216, 55))
+                            .thumbnail(DA_IMGUR)
+                            .image(dn.image())
+                            .description(description.clone())
+                            .author(|a| a.name(dn.poster_name()).icon_url(dn.poster_image()))
+                    })
+                })
+                .await
+            {
+                println!("Error sending message: {:?}", why);
+            }
         }
-    }});
+    });
 
     Ok(())
 }
-pub async fn roles_embed(ctx: Context<'_>, roles: &mut RequirementList,title:String) -> Result<()> {
+pub async fn roles_embed(
+    ctx: Context<'_>,
+    roles: &mut RequirementList,
+    title: String,
+) -> Result<()> {
     roles.sort_alphabetical();
     let description = roles
         .requirements()
         .iter()
         .fold(String::new(), |mut acc, r| {
-            writeln!(acc, "**{}**\n{}", r.name(), r.description.as_ref().unwrap_or(&"".to_string())).expect("failed to parse");
+            writeln!(
+                acc,
+                "**{}**\n{}",
+                r.name(),
+                r.description.as_ref().unwrap_or(&"".to_string())
+            )
+            .expect("failed to parse");
             acc
         });
     ctx.send(|f| {
@@ -105,27 +130,25 @@ pub async fn send_roles_embed(
     ctx: Context<'_>,
     role_list_type: RequirementListType,
 ) -> Result<()> {
-    let guild_id = match role_list_type{
+    let guild_id = match role_list_type {
         RequirementListType::Ascend => ASCEND_GUILD_ID,
-        RequirementListType::Roles => ctx.guild_id().unwrap().0 as i64
+        RequirementListType::Roles => ctx.guild_id().unwrap().0 as i64,
     };
     let pool = &ctx.data().db_connection;
     let name = char.name().to_owned();
     let (thumbnail, color, title) = match role_list_type {
-        RequirementListType::Roles => {
-            (
-                ROLE_DA_IMGUR,
-                Color::from_rgb(1, 162, 197),
-                format!("{}'s Eligible Roles", name),
-            )
-        }
+        RequirementListType::Roles => (
+            ROLE_DA_IMGUR,
+            Color::from_rgb(1, 162, 197),
+            format!("{}'s Eligible Roles", name),
+        ),
         RequirementListType::Ascend => (
             ASCEND_DA_IMGUR,
             Color::from_rgb(0, 214, 11),
             format!("{}'s Acendancies", name),
         ),
     };
-    let roles = check_requirements(&char,guild_id,pool).await?;
+    let roles = check_requirements(&char, guild_id, pool).await?;
     let mut description = String::new();
     for role in roles.requirements() {
         description += format!("__**{}**__\n{}\n", role.name(), role.description()).as_str()

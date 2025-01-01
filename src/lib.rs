@@ -10,7 +10,6 @@ pub mod parsing;
 pub mod requests;
 pub mod requirements;
 pub mod rng;
-pub mod roles_extended;
 pub mod sheets;
 pub mod time;
 pub mod wiki;
@@ -56,13 +55,17 @@ impl Task for Arc<Mutex<HashMap<String, bool>>>{
     }
 
 } 
-impl Tasks {
-    pub fn default() -> Self {
+impl Default for Tasks{
+    fn default() -> Self {
         Tasks {
             inner: Arc::new(Mutex::new(HashMap::new())),
         }
     }
-    pub fn clone(&self)->Arc<Mutex<HashMap<String, bool>>>{
+
+
+}
+impl Tasks {
+    pub fn clone_inner(&self)->Arc<Mutex<HashMap<String, bool>>>{
         self.inner.clone()
 
     }
@@ -123,7 +126,7 @@ pub fn get_command_list(
         crate::guild_settings::init_guild(),
         crate::guild_settings::init_announcements(),
         crate::guild_settings::set_inn_items(),
-        crate::roles_extended::inn_items(),
+        crate::requirements::inn_items(),
         crate::update_checker::update_checker(),
     ]
 }

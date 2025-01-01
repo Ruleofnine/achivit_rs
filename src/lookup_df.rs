@@ -99,13 +99,8 @@ pub async fn lookup_df_character(
 ) -> Result<(), Error> {
     let pool = &ctx.data().db_connection;
     let category = category.unwrap_or(LookupCategory::CharacterPage);
-    match category {
-        LookupCategory::Roles => {
-            if guild_only(ctx).await? {
-                return Ok(());
-            }
-        }
-        _ => (),
+    if category == LookupCategory::Roles && guild_only(ctx).await? {
+        return Ok(());
     }
     let df_id = match (character, user) {
         (Some(character), _) => Some(character),

@@ -6,6 +6,15 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::fs::File;
 use std::io::BufReader;
+use crate::{Context, Error};
+use crate::lookup_df::LookupCategory;
+use crate::manage_users::autocomplete_character;
+use crate::paginate::{get_requirement_pages, paginate, PaginateEmbed};
+use crate::parsing::{CharacterFetcher, ParsingCategory};
+use crate::db::INN_GUILD_ID;
+use crate::rng::random_rgb;
+use crate::serenity::{Color, User};
+
 pub enum RequirementListType {
     Roles,
     Ascend,
@@ -137,7 +146,7 @@ pub fn get_requirements_file(path: &str) -> Result<RequirementList> {
     Ok(roles)
 }
 
-pub async fn get_requirements<'a>(guild_id: i64, pool: &PgPool) -> Result<RequirementList> {
+pub async fn get_requirements(guild_id: i64, pool: &PgPool) -> Result<RequirementList> {
     let reqs = query!(
         "select * from requirements where guild_id = $1 order by name",
         guild_id
@@ -318,10 +327,10 @@ fn prereq_roles_to_remove(roles: &[Requirement]) -> Vec<usize> {
     }
     prereq_roles
 }
-pub async fn check_requirements<'a, 'b>(
-    char: &'b DFCharacterData,
+pub async fn check_requirements(
+    char: &DFCharacterData,
     guild_id: i64,
-    pool: &'a PgPool,
+    pool: &PgPool,
 ) -> Result<RequirementList> {
     let mut roles = get_requirements(guild_id, pool).await?;
     let mut aquired_roles = aquired_roles_indexes(&mut roles, char);
@@ -339,4 +348,40 @@ pub async fn check_requirements<'a, 'b>(
     let mut role_list = RequirementList(roles);
     role_list.sort_alphabetical();
     Ok(role_list)
+}
+
+//TODO
+// add in varibale lookup for differnt category roles/ascends
+/// Check requirements for roles/ascendancies
+#[poise::command(slash_command)]
+pub async fn inn_items(
+    ctx: Context<'_>,
+    #[description = "User to lookup character of"] user: Option<User>,
+    #[autocomplete = "autocomplete_character"]
+    #[description = "character of selected user"]
+    character: Option<i32>,
+) -> Result<(), Error> {
+    drop(user);
+    let pool = &ctx.data().db_connection;
+    let inn_list = get_requirements(INN_GUILD_ID,pool).await?;
+    let items = if let Some(df_id) = character {
+        let items = CharacterFetcher::new(df_id, LookupCategory::Ascendancies)
+            .category(ParsingCategory::Items)
+            .fetch_data()
+            .await?
+            .to_lookupstate()?
+            .extract_character_data()?
+            .item_list
+            .take()
+            .unwrap();
+        Some(items)
+    } else {
+        None
+    };
+    let pages = get_requirement_pages(inn_list, items);
+    let (r, g, b) = random_rgb();
+    let embed = PaginateEmbed::new("Inn Items", None, Color::from_rgb(r, g, b), pages)
+        .set_empty_string("No Inn Items to display");
+    paginate(ctx, embed).await?;
+    Ok(())
 }

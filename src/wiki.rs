@@ -71,7 +71,7 @@ struct SearchPhrase {
 struct Sponsored {
     title: String,
     url: String,
-    pixel: Option<String>
+    pixel: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -96,14 +96,14 @@ pub async fn autocomplete_wiki(
             .await
             .expect("failed to seed wiki url");
         let page_data: SeedPage = serde_json::from_str(&page).unwrap();
-        return page_data
+        page_data
             .search_phrases
             .iter()
             .map(|f| AutocompleteChoice {
                 name: f.term.to_string(),
                 value: f.term.to_string(),
             })
-            .collect::<Vec<poise::AutocompleteChoice<String>>>();
+            .collect::<Vec<poise::AutocompleteChoice<String>>>()
     } else {
         let url = format!("{}{}{}", SEARCH_URL_PART_1, partial, SEARCH_URL_PART_2);
         let page = fetch_page_with_user_agent(USER_AGENT, &url)
@@ -117,8 +117,8 @@ pub async fn autocomplete_wiki(
         } else {
             let ids: HashMap<String, u32> = serde_json::from_value(page_data.ids)
                 .expect("failed to turn Value to HashMap of ids");
-            ids.iter()
-                .map(|(name, _)| poise::AutocompleteChoice {
+            ids.keys()
+                .map(|name| poise::AutocompleteChoice {
                     name: name.to_string(),
                     value: name.to_string(),
                 })

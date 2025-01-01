@@ -59,7 +59,7 @@ pub async fn compare_sheet(
 
     workbook.set_properties(&properties);
 
-    let mut worksheet = workbook.add_worksheet();
+    let worksheet = workbook.add_worksheet();
 
     if let (Some(mut list1), Some(mut list2)) = (char1.item_list.take(), char2.item_list.take()) {
         let list1_keys: Vec<_> = list1.items().keys().cloned().collect();
@@ -70,8 +70,8 @@ pub async fn compare_sheet(
 
         // Retain only unique items in list2
         list2.items_mut().retain(|k, _| !list1_keys.contains(k));
-        write_items_to_sheet(&mut worksheet, &list1, 0, &char1.name)?;
-        write_items_to_sheet(&mut worksheet, &list2, 5, &char2.name)?;
+        write_items_to_sheet(worksheet, &list1, 0, &char1.name)?;
+        write_items_to_sheet(worksheet, &list2, 5, &char2.name)?;
 
         let buf = workbook.save_to_buffer()?;
         let sheet_data = SheetData {

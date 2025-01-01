@@ -26,7 +26,7 @@ pub async fn register_character(ctx: Context<'_>, mut user: User, df_id: i32) ->
         .to_lookupstate()?;
     let character = match lookupstate {
         LookupState::CharacterPage(char) => char.name,
-        LookupState::FlashCharatcerPage(char) => char.get("Name").take().unwrap().to_owned(),
+        LookupState::FlashCharatcerPage(char) => char.get("Name").unwrap().to_owned(),
         LookupState::NotFound => return Ok(not_found_embed(ctx, df_id).await?),
         _ => panic!("Unexpected LookupState",),
     };

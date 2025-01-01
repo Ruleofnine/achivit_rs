@@ -128,7 +128,7 @@ async fn run_update_checker(
     flag: UpdateCheckerFeatureFlag,
     all_guilds:Arc<Vec<GuildSettings>>
 ) -> Result<()> {
-    let tasks = ctx.data().tasks().clone();
+    let tasks = ctx.data().tasks().clone_inner();
     let last_dn_str = fetch_page_with_user_agent(USER_AGENT, DESIGN_NOTES_LINK).await?;
     let last_dn = DesignNote::parse_from_str(&last_dn_str)?;
     tokio::spawn(async move {

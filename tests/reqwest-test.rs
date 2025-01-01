@@ -3,7 +3,7 @@ extern crate achivit_rs;
 mod tests {
     use achivit_rs::lookup_df::LookupCategory;
     use achivit_rs::parsing::{parse_mech_quest_charpage,parse_aqc_charpage, CharacterFetcher};
-    use achivit_rs::requests::{fetch_page_with_user_agent, USER_AGENT,FLASH_USER_AGENT};
+    use achivit_rs::requests::{fetch_json, fetch_page_with_user_agent, get_random_event, FLASH_USER_AGENT, USER_AGENT};
     use color_eyre::Result;
     use scraper::Html;
     #[tokio::test]
@@ -49,6 +49,12 @@ mod tests {
         let json_string = fetch_page_with_user_agent(FLASH_USER_AGENT, &url).await?;
         let document = Html::parse_document(&json_string);
         let data = parse_aqc_charpage(document)?;
+        dbg!(data);
+        Ok(())
+    } 
+    #[tokio::test]
+    async fn random_event_test() -> Result<()> {
+        let data = get_random_event().await;
         dbg!(data);
         Ok(())
     }

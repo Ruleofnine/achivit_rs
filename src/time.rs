@@ -114,7 +114,7 @@ pub async fn random_event(ctx: Context<'_>) -> Result<(), Error> {
         "**{} {}**\n**On This day in History: **{}",
         now.format("%B"),
         now.day(),
-        get_random_event().await
+        get_random_event().await?
     );
     ctx.send(|f| {
         f.embed(|f| {

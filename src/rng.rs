@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{Rng,seq::SliceRandom};
 
 use serde_derive::Deserialize;
 use serde_json::Value;
@@ -14,11 +14,10 @@ pub struct Data {
 pub struct EventData {
     Events: Vec<Event>,
 }
-
 #[derive(Debug, Deserialize)]
 pub struct Event {
     pub year: String,
-    pub text: String,
+    pub text: Option<String>,
     pub html: String,
     pub no_year_html: String,
     pub links: Vec<Link>,

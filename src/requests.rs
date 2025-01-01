@@ -49,10 +49,7 @@ pub async fn fetch_json(url: &str) -> Result<Value> {
         other => Err(eyre!(other)),
     }
 }
-pub async fn get_random_event() -> String {
-    let res = fetch_json("https://history.muffinlabs.com/date").await;
-    match res {
-        Ok(res) => crate::rng::event_parsing(crate::rng::random_event(res)),
-        Err(_) => "None".to_string(),
-    }
+pub async fn get_random_event() -> Result<String> {
+    let res = fetch_json("https://history.muffinlabs.com/date").await?;
+    Ok(crate::rng::event_parsing(crate::rng::random_event(res)))
 }

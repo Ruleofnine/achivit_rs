@@ -108,7 +108,7 @@ pub fn get_command_list(
         crate::time::server_time(),
         crate::time::random_event(),
         crate::dev_tools::list_slash_commands(),
-        crate::dev_tools::clear_slash_commands(),
+        crate::dev_tools::clear_guild_slash_commands(),
         crate::manage_users::register_character(),
         crate::manage_users::delete_character(),
         crate::lookup_df::lookup_df_character(),

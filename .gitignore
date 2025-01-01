@@ -1,3 +1,4 @@
 /target
+log
 .env
 JSONS/Mirror Server_roles.json

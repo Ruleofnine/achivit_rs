@@ -23,7 +23,6 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 - update README
 - fix update checker? (it should work?)
 - add AQW lookup
-- log to file
 
 ## Getting Started
 

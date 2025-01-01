@@ -1,0 +1,23 @@
+appenders:
+  stdout:
+    kind: console
+    encoder:
+      pattern: "[{d(%Y-%m-%d %I:%M:%S)} {h({l})}] {m}{n}"
+  filelogger:
+    kind: file
+    path: "log/log.log"
+    encoder:
+      pattern: "{d} - {m}{n}"
+
+root:
+  level: info
+  appenders:
+    - stdout
+    - filelogger
+
+loggers:
+  serenity:
+    level: error
+  tracing:
+    level: error
+

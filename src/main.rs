@@ -17,10 +17,7 @@ async fn main() -> Result<()> {
     let token = env::var("BOT_TOKEN").expect("`BOT_TOKEN` not in .env file");
     let start_time = Instant::now();
     color_eyre::install().expect("Failed to install color_eyre");
-    env_logger::Builder::from_env(
-        env_logger::Env::default().default_filter_or("info,serenity=error,tracing=error"),
-    )
-    .init();
+    log4rs::init_file("log4rs.yml", Default::default()).unwrap();
     let db_connection = establish_connection().await?;
     info!("Logining into Discord...");
     let _guild_id = GuildId(

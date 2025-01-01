@@ -59,7 +59,6 @@ async fn main() -> Result<()> {
         .setup(move |ctx, _ready, framework| {
             info!("Setting up Poise Framework");
             Box::pin(async move {
-                let _ = &framework.options().commands.iter().for_each(|c|{dbg!(&c.qualified_name);});
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data::new(start_time,db_connection,super_users))
             })

@@ -85,7 +85,7 @@ fn extract_name_from_invokation_data(input: &str) -> i64 {
     }
     0
 }
-#[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
+#[poise::command(slash_command, required_permissions = "ADMINISTRATOR",default_member_permissions="ADMINISTRATOR")]
 pub async fn delete_character(
     ctx: Context<'_>,
     #[description = "User to delete character of"] user: User,

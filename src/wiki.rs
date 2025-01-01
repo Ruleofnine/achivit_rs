@@ -59,8 +59,8 @@ pub async fn wiki(
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SeedPage {
     search_phrases: Vec<SearchPhrase>,
-    featured: Featured,
-    sponsored: Sponsored,
+    featured: Option<Featured>,
+    sponsored: Option<Sponsored>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

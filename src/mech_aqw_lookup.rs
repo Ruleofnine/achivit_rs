@@ -108,8 +108,7 @@ pub async fn lookup_aqw_character(
     let document = Html::parse_document(&json_string);
     let data = parse_aqw_charpage(document)?;
     if let Some(data) = data {
-        let embed_str = format!("{}{}{}{}{}{}{}{}{}{}{}",
-            get_embed_str_partial_from_hashmap(&data, "strName", "",Bold::Suffix,false),
+        let embed_str = format!("{}{}{}{}{}{}{}{}{}{}",
             get_embed_str_partial_from_hashmap(&data, "Level", "Level: ",Bold::Prefix,true),
             get_embed_str_partial_from_hashmap(&data, "strClass", "Class: ",Bold::Prefix,false),
             get_embed_str_partial_from_hashmap(&data, "strWeaponName", "Weapon: ",Bold::Prefix,false),

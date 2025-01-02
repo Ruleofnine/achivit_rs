@@ -118,7 +118,7 @@ pub fn get_command_list(
         crate::lookup_df::compare_df_characters(),
         crate::lookup_df::roles_list(),
         crate::mech_aqw_lookup::lookup_mechquest_id(),
-        crate::mech_aqw_lookup::lookup_aqw(),
+        crate::mech_aqw_lookup::lookup_aqw_character(),
         crate::mech_aqw_lookup::lookup_aqc_id(),
         crate::guild_settings::set_roles(),
         crate::guild_settings::leave_guild(),

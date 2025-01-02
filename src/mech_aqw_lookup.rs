@@ -99,7 +99,7 @@ pub async fn lookup_aqc_id(
 }
 /// Lookup an AQW Character
 #[poise::command(slash_command)]
-pub async fn lookup_aqw(
+pub async fn lookup_aqw_character(
     ctx: Context<'_>,
     #[description = "Character Name to lookup"] name: String,
 ) -> Result<(), Error> {

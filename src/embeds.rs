@@ -56,7 +56,7 @@ pub async fn send_update_embed(guilds: Arc<Vec<GuildSettings>>, dn: DesignNote) 
     let text = html
         .select(&text_selector)
         .next()
-        .map(|element| element.text().collect::<Vec<_>>().join(""))
+        .map(|element| element.text().collect::<String>())
         .unwrap_or_default();
 
     let description = if text.len() >= 4096 {

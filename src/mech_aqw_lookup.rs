@@ -1,5 +1,5 @@
 use crate::parsing::{
-    get_embed_str_partial_from_hashmap, parse_aqc_charpage, parse_mech_quest_charpage, Bold,
+    get_embed_str_partial_from_hashmap, parse_aqc_charpage, parse_aqw_charpage, parse_mech_quest_charpage, Bold
 };
 use crate::requests::{FLASH_USER_AGENT, USER_AGENT};
 use crate::{requests::fetch_page_with_user_agent, Context, Error};
@@ -99,22 +99,34 @@ pub async fn lookup_aqc_id(
 }
 /// Lookup an AQW Character
 #[poise::command(slash_command)]
-pub async fn lookup_aqw_character(
+pub async fn lookup_aqw(
     ctx: Context<'_>,
     #[description = "Character Name to lookup"] name: String,
 ) -> Result<(), Error> {
     let url = format!("https://account.aq.com/CharPage?id={}", name);
     let json_string = fetch_page_with_user_agent(USER_AGENT, &url).await?;
     let document = Html::parse_document(&json_string);
-    let data = parse_mech_quest_charpage(document)?;
-    if let Some(mechadata) = data {
-        let embed_str = format!("**Level:** {}\n**Credits:** {}\n**Last Played:** {}\n**Account Type:** {}\n**Mechs in Arsenal:** {}",mechadata.level(),mechadata.credits_comma(),mechadata.last_played(),mechadata.account_type(),mechadata.mech_models());
+    let data = parse_aqw_charpage(document)?;
+    if let Some(data) = data {
+        let embed_str = format!("{}{}{}{}{}{}{}{}{}{}{}",
+            get_embed_str_partial_from_hashmap(&data, "strName", "",Bold::Suffix,false),
+            get_embed_str_partial_from_hashmap(&data, "Level", "Level: ",Bold::Prefix,true),
+            get_embed_str_partial_from_hashmap(&data, "strClass", "Class: ",Bold::Prefix,false),
+            get_embed_str_partial_from_hashmap(&data, "strWeaponName", "Weapon: ",Bold::Prefix,false),
+            get_embed_str_partial_from_hashmap(&data, "strArmorName", "Armor: ",Bold::Prefix,false),
+            get_embed_str_partial_from_hashmap(&data, "strHelmName", "Helm: ",Bold::Prefix,false),
+            get_embed_str_partial_from_hashmap(&data, "strCapeName", "Cape: ",Bold::Prefix,false),
+            get_embed_str_partial_from_hashmap(&data, "strPetName", "Pet: ",Bold::Prefix,false),
+            get_embed_str_partial_from_hashmap(&data, "strMiscName", "Misc: ",Bold::Prefix,false),
+            get_embed_str_partial_from_hashmap(&data, "strFaction", "Faction: ",Bold::Prefix,false),
+            get_embed_str_partial_from_hashmap(&data, "guild", "Guild: ",Bold::Prefix,false),
+        );
         ctx.send(|f| {
             f.embed(|f| {
-                f.title(mechadata.name())
+                f.title(data.get("strName").unwrap())
                     .url(url)
-                    .thumbnail("https://account.mechquest.com/images/logos/logo-lg-MQ.png?ver=2")
-                    .color(Color::from_rgb(48, 135, 188))
+                    .thumbnail("https://account.aq.com/images/logos/logo-lg-AQW.png?ver=2")
+                    .color(Color::from_rgb(248, 191, 1))
                     .description(embed_str)
             })
         })
@@ -122,9 +134,9 @@ pub async fn lookup_aqw_character(
     } else {
         ctx.send(|f| {
             f.embed(|f| {
-                f.title("Character Not Found")
+                f.title("Not Found!")
                     .url(url)
-                    .thumbnail("https://account.mechquest.com/images/logos/logo-lg-MQ.png?ver=2")
+                    .thumbnail("https://account.aq.com/images/aqw/gfx-char-boom.png")
                     .color(Color::DARK_RED)
                     .description("The game character you are searching for does not exist.")
             })

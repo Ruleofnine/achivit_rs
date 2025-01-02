@@ -11,11 +11,22 @@ use log::error;
 use num_format::{Locale, ToFormattedString};
 use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
+use serde_json::to_string;
 use std::collections::HashMap;
 use std::future::Future;
 use std::iter::FromIterator;
 use std::pin::Pin;
 use tokio::fs;
+pub struct ElementRefWrapper<'a>(pub ElementRef<'a>);
+impl ToString for ElementRefWrapper<'_> {
+    fn to_string(&self) -> String {
+        self.0
+            .text() // Access the text content of the element
+            .collect::<String>() // Collect it into a single String
+            .trim() // Trim leading and trailing whitespace
+            .to_owned() // Return an owned String
+    }
+}
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum ParsingCategory {
     CharacterPage,
@@ -524,12 +535,12 @@ pub fn parse_df_character(document: &Html, df_id: i32) -> LookupState {
     };
     character.name = match charpagedetails.select(&h1_selector).next() {
         None => return parse_df_character_flash(document, df_id),
-        Some(name) => name.text().collect::<Vec<_>>().join(" ").trim().to_string(),
+        Some(name) => ElementRefWrapper(name).to_string(),
     };
 
     let cb_label_selector = Selector::parse("div#charpagedetails .card-body label").unwrap();
     for label in document.select(&cb_label_selector) {
-        let label_text = label.text().collect::<Vec<_>>().join("");
+        let label_text = label.text().collect::<String>();
         match label_text.as_str() {
             "Dragon Amulet Owner" => {
                 character.dragon_amulet = true;
@@ -560,13 +571,8 @@ pub fn parse_df_character(document: &Html, df_id: i32) -> LookupState {
             }
             "Dragon:" => {
                 let dragon_name_element = label.next_siblings().nth(1).unwrap();
-                let dragon_name_text = ElementRef::wrap(dragon_name_element)
-                    .unwrap()
-                    .text()
-                    .collect::<Vec<_>>()
-                    .join("")
-                    .trim()
-                    .to_string();
+                let dragon_name_text =
+                    ElementRefWrapper(ElementRef::wrap(dragon_name_element).unwrap()).to_string();
                 character.dragon = Some(Dragon::new(dragon_name_text));
             }
             "Last Played:" => {
@@ -655,15 +661,13 @@ pub fn parse_df_character_wars_only(document: &Html, _df_id: i32) -> LookupState
             .to_string(),
         None => {
             let h1_selector = Selector::parse("h1").unwrap();
-            charpagedetails
-                .select(&h1_selector)
-                .next()
-                .expect("No Name Found")
-                .text()
-                .collect::<Vec<_>>()
-                .join(" ")
-                .trim()
-                .to_string()
+            ElementRefWrapper(
+                charpagedetails
+                    .select(&h1_selector)
+                    .next()
+                    .expect("No Name Found"),
+            )
+            .to_string()
         }
     };
     let mut wars = WarList::new();
@@ -702,15 +706,13 @@ pub fn parse_df_character_inventory_only(document: &Html, _df_id: i32) -> Lookup
             .to_string(),
         None => {
             let h1_selector = Selector::parse("h1").unwrap();
-            charpagedetails
-                .select(&h1_selector)
-                .next()
-                .expect("No Name Found")
-                .text()
-                .collect::<Vec<_>>()
-                .join(" ")
-                .trim()
-                .to_string()
+            ElementRefWrapper(
+                charpagedetails
+                    .select(&h1_selector)
+                    .next()
+                    .expect("No Name Found"),
+            )
+            .to_string()
         }
     };
     let div_card_selector = Selector::parse("div.card").unwrap();
@@ -718,7 +720,7 @@ pub fn parse_df_character_inventory_only(document: &Html, _df_id: i32) -> Lookup
     let h4_selector = Selector::parse("h4").unwrap();
     for card in document.select(&div_card_selector) {
         if let Some(h4) = card.select(&h4_selector).next() {
-            if h4.text().collect::<String>() == "Inventory" {
+            if ElementRefWrapper(h4).to_string() == "Inventory" {
                 card.select(&span_selector).enumerate().for_each(|(i, x)| {
                     let item_name = x.inner_html();
                     let index = i + 1;
@@ -776,15 +778,13 @@ pub fn parse_df_character_duplicates(document: &Html, _df_id: i32) -> LookupStat
             .to_string(),
         None => {
             let h1_selector = Selector::parse("h1").unwrap();
-            charpagedetails
-                .select(&h1_selector)
-                .next()
-                .expect("No Name Found")
-                .text()
-                .collect::<Vec<_>>()
-                .join(" ")
-                .trim()
-                .to_string()
+            ElementRefWrapper(
+                charpagedetails
+                    .select(&h1_selector)
+                    .next()
+                    .expect("No Name Found"),
+            )
+            .to_string()
         }
     };
     let item_selector = Selector::parse("div#charpagedetails.card-columns.mx-auto span").unwrap();
@@ -924,7 +924,7 @@ pub fn parse_df_character_with_items(
             let cb_label_selector =
                 Selector::parse("div#charpagedetails .card-body label").unwrap();
             for label in document.select(&cb_label_selector) {
-                let label_text = label.text().collect::<Vec<_>>().join("");
+                let label_text = ElementRefWrapper(label).to_string();
                 match label_text.as_str() {
                     "Dragon Amulet Owner" => {
                         character.dragon_amulet = true;
@@ -955,13 +955,9 @@ pub fn parse_df_character_with_items(
                     }
                     "Dragon:" => {
                         let dragon_name_element = label.next_siblings().nth(1).unwrap();
-                        let dragon_name_text = ElementRef::wrap(dragon_name_element)
-                            .unwrap()
-                            .text()
-                            .collect::<Vec<_>>()
-                            .join("")
-                            .trim()
-                            .to_string();
+                        let dragon_name_text =
+                            ElementRefWrapper(ElementRef::wrap(dragon_name_element).unwrap())
+                                .to_string();
                         character.dragon = Some(Dragon::new(dragon_name_text));
                     }
                     "Last Played:" => {
@@ -984,7 +980,7 @@ pub fn parse_df_character_with_items(
                     _ => {}
                 }
             }
-            character.name = name.text().collect::<Vec<_>>().join(" ").trim().to_string();
+            character.name = name.text().collect::<String>().trim().to_string();
         }
     };
     let mut items = Items::default();
@@ -1057,7 +1053,7 @@ pub struct MechquestData {
     account_type: String,
     mech_models: i64,
 }
-impl Default for MechquestData{
+impl Default for MechquestData {
     fn default() -> Self {
         MechquestData {
             name: "".to_string(),
@@ -1086,7 +1082,7 @@ pub fn parse_mech_quest_charpage(document: Html) -> Result<Option<MechquestData>
     let h1_selector = Selector::parse("h1").unwrap();
     mechdata.name = match chardiv.select(&h1_selector).next() {
         None => return Ok(None),
-        Some(name) => name.text().collect::<Vec<_>>().join(" ").trim().to_string(),
+        Some(name) => name.text().collect::<String>().trim().to_owned(),
     };
     let labels = chardiv.select(&label_selector);
 
@@ -1095,13 +1091,13 @@ pub fn parse_mech_quest_charpage(document: Html) -> Result<Option<MechquestData>
             .next_sibling()
             .and_then(|sibling| sibling.value().as_text())
         {
-            match dbg!(label.text().collect::<Vec<_>>().join(" ").trim()) {
+            match ElementRefWrapper(label).to_string().as_str() {
                 "Level:" => mechdata.level = next_text.trim().parse::<i64>().unwrap_or_default(),
                 "Credits:" => {
                     mechdata.credits = next_text.trim().parse::<i64>().unwrap_or_default()
                 }
-                "Last Played:" => mechdata.last_played = next_text.trim().to_string(),
-                "Account Type:" => mechdata.account_type = next_text.trim().to_string(),
+                "Last Played:" => mechdata.last_played = next_text.trim().to_owned(),
+                "Account Type:" => mechdata.account_type = next_text.trim().to_owned(),
                 _ => (),
             }
         }
@@ -1112,9 +1108,9 @@ pub fn parse_mech_quest_charpage(document: Html) -> Result<Option<MechquestData>
 
     // Find the Mecha Models div
     if let Some(mecha_div) = document.select(&mecha_models_selector).find(|div| {
-        div.select(&h3_selector).next().is_some_and(|header| {
-            header.text().any(|t| t.contains("Mecha Models"))
-        })
+        div.select(&h3_selector)
+            .next()
+            .is_some_and(|header| header.text().any(|t| t.contains("Mecha Models")))
     }) {
         // Count the number of <br /> siblings
         let mecha_count = mecha_div
@@ -1125,36 +1121,45 @@ pub fn parse_mech_quest_charpage(document: Html) -> Result<Option<MechquestData>
     }
     Ok(Some(mechdata))
 }
-pub enum Bold{
+pub enum Bold {
     All,
     Prefix,
     Suffix,
-    None
+    None,
 }
-pub fn get_embed_str_partial_from_hashmap(hashmap:&HashMap<String,String>,key:&str,prefix:&str,bold:Bold,is_number:bool)->String{
-    if let Some(value) = hashmap.get(key){
-        if value.is_empty(){
-            return "".to_string()
+pub fn get_embed_str_partial_from_hashmap(
+    hashmap: &HashMap<String, String>,
+    key: &str,
+    prefix: &str,
+    bold: Bold,
+    is_number: bool,
+) -> String {
+    if let Some(value) = hashmap.get(key) {
+        if value.is_empty() {
+            return "".to_string();
         }
-        let new_value = if is_number{
-            value.parse::<i64>().unwrap_or_default().to_formatted_string(&Locale::en).to_string()
-        } else{
-                value.to_string()
-            };
-        match bold{
-            Bold::All => format!("**{}{}**\n",prefix,new_value),
-            Bold::Prefix => format!("**{}**{}\n",prefix,new_value),
-            Bold::Suffix=> format!("{}**{}**\n",prefix,new_value),
-            Bold::None => format!("{}{}\n",prefix,new_value),
+        let new_value = if is_number {
+            value
+                .parse::<i64>()
+                .unwrap_or_default()
+                .to_formatted_string(&Locale::en)
+                .to_string()
+        } else {
+            value.to_string()
+        };
+        match bold {
+            Bold::All => format!("**{}{}**\n", prefix, new_value),
+            Bold::Prefix => format!("**{}**{}\n", prefix, new_value),
+            Bold::Suffix => format!("{}**{}**\n", prefix, new_value),
+            Bold::None => format!("{}{}\n", prefix, new_value),
         }
-
-        
-    } else{
+    } else {
         "".to_string()
     }
 }
 
-pub fn parse_aqc_charpage(document: Html) -> Result<Option<HashMap<String,String>>> {
+
+pub fn parse_aqc_charpage(document: Html) -> Result<Option<HashMap<String, String>>> {
     let flashvars_selector = Selector::parse(r#"param[name="FlashVars"]"#).unwrap();
     let h3_selector = Selector::parse("h3").unwrap();
     let flashvars = match document.select(&flashvars_selector).next() {
@@ -1193,5 +1198,45 @@ pub fn parse_aqc_charpage(document: Html) -> Result<Option<HashMap<String,String
             }
         }
     };
+    Ok(Some(flashvars_map))
+}
+#[derive(Debug, Getters)]
+#[getset(get = "pub")]
+pub struct AqwData {
+    name: String,
+    level: i64,
+    class: String,
+    weapon: String,
+    armor: String,
+    helm: String,
+    cape: String,
+    pet: String,
+    misc: String,
+    faction: String,
+    guild: String,
+}
+pub fn parse_aqw_charpage(document: Html) -> Result<Option<HashMap<String, String>>> {
+    let alert_selector =
+        Selector::parse("div#serveralert.alert.alert-warning.font-weight-bold").unwrap();
+    if let Some(alert) =document.select(&alert_selector).next(){
+        if ElementRefWrapper(alert).to_string() == "Not Found!"{
+            return Ok(None)
+        }
+    }
+    let flashvars_selector = Selector::parse(r#"param[name="FlashVars"]"#).unwrap();
+    let flashvars = match document.select(&flashvars_selector).next() {
+        Some(vars) => vars.value().attr("value").unwrap(),
+        None => return Ok(None),
+    };
+    let key_value_pairs: Vec<&str> = flashvars.split('&').collect();
+    let mut flashvars_map = std::collections::HashMap::new();
+    for pair in key_value_pairs {
+        let parts: Vec<&str> = pair.split('=').collect();
+        if parts.len() == 2 {
+            let key = parts[0].trim();
+            let value = parts[1].trim();
+            flashvars_map.insert(key.to_string(), value.to_string());
+        }
+    }
     Ok(Some(flashvars_map))
 }

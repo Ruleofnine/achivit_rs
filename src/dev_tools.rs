@@ -26,8 +26,7 @@ pub async fn list_slash_commands(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 #[poise::command(slash_command, owners_only, guild_only,default_member_permissions = "ADMINISTRATOR")]
-pub async fn clear_guild_slash_commands(ctx: Context<'_>) -> Result<(), Error> {
-    let guild_id = *ctx.guild_id().unwrap().as_u64();
+pub async fn clear_guild_slash_commands(ctx: Context<'_>,guild_id:u64) -> Result<(), Error> {
     info!("Guild Commands");
     let commands = ctx
         .http()

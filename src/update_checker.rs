@@ -60,10 +60,9 @@ impl DesignNote {
             .next()
             .unwrap()
             .text()
-            .collect::<Vec<_>>()
-            .join(" ")
+            .collect::<String>()
             .trim()
-            .to_string();
+            .to_owned();
 
         let link_selector = Selector::parse("h2.postTitle.pt-0 a").unwrap();
         let link = article
@@ -82,10 +81,9 @@ impl DesignNote {
 
         let update_name = update_name_element
             .text()
-            .collect::<Vec<_>>()
-            .join(" ")
+            .collect::<String>()
             .trim()
-            .to_string();
+            .to_owned();
 
         let image_selector = Selector::parse("div.col.pt-2.dn-article img").unwrap();
         let image = article

@@ -9,9 +9,9 @@ use crate::requests::{
 use crate::requirements::{check_requirements, RequirementList, RequirementListType};
 use crate::rng::random_rgb;
 use crate::sheets::SheetData;
-use crate::update_checker::DesignNote;
+use crate::update_checker::{DesignNote, UpdateCheckerFeatureFlag};
 use crate::{
-    serenity::{ChannelId, Color, Http},
+    serenity::{ChannelId, Color},
     Context,
 };
 use color_eyre::{Report, Result};
@@ -46,10 +46,14 @@ pub async fn guild_only_with_id(ctx: Context<'_>) -> Result<Option<i64>> {
         Ok(None)
     }
 }
-pub async fn send_update_embed(guilds: Arc<Vec<GuildSettings>>, dn: DesignNote) -> Result<()> {
+pub async fn send_update_embed(
+    guilds: Arc<Vec<GuildSettings>>,
+    dn: DesignNote,
+    flag: UpdateCheckerFeatureFlag,
+) -> Result<()> {
     let url = format!("{DF_LINK}{}", dn.link());
     let token = env::var("BOT_TOKEN").unwrap();
-    let http = Http::new(&token);
+    let http = crate::serenity::Http::new(&token);
     let document = fetch_page_with_user_agent(USER_AGENT, &url).await?;
     let html = Html::parse_document(&document);
     let text_selector = Selector::parse(r#"div[class=""]"#).unwrap();
@@ -69,21 +73,22 @@ pub async fn send_update_embed(guilds: Arc<Vec<GuildSettings>>, dn: DesignNote) 
     tokio::spawn(async move {
         for guild in guilds.iter() {
             let channel = ChannelId(guild.announcement_channel_id().unwrap() as u64);
+            let ping = match flag {
+                UpdateCheckerFeatureFlag::ForceNoPing => "".to_owned(),
+                _ => format!(" <@&{}>", guild.announcement_role_id().unwrap()),
+            };
             if let Err(why) = channel
                 .send_message(&http, |f| {
-                    f.content(format!(
-                        "Release is  **LIVE!** <@&{}>",
-                        guild.announcement_role_id.unwrap()
-                    ))
-                    .embed(|e| {
-                        e.title(dn.update_name())
-                            .url(url.clone())
-                            .color(Color::from_rgb(254, 216, 55))
-                            .thumbnail(DA_IMGUR)
-                            .image(dn.image())
-                            .description(description.clone())
-                            .author(|a| a.name(dn.poster_name()).icon_url(dn.poster_image()))
-                    })
+                    f.content(format!("Release is  **LIVE!**{}", ping))
+                        .embed(|e| {
+                            e.title(dn.update_name())
+                                .url(url.clone())
+                                .color(Color::from_rgb(254, 216, 55))
+                                .thumbnail(DA_IMGUR)
+                                .image(dn.image())
+                                .description(description.clone())
+                                .author(|a| a.name(dn.poster_name()).icon_url(dn.poster_image()))
+                        })
                 })
                 .await
             {

@@ -12,8 +12,12 @@ use std::env;
 use std::time::Instant;
 #[tokio::main]
 async fn main() -> Result<()> {
-    print_banner();
     dotenv().ok();
+    let random_banner = env::var("RANDOM_BANNER_COLOR")
+        .unwrap_or_default()
+        .parse::<bool>()
+        .unwrap_or(false);
+    print_banner(random_banner);
     let token = env::var("BOT_TOKEN").expect("`BOT_TOKEN` not in .env file");
     let start_time = Instant::now();
     color_eyre::install().expect("Failed to install color_eyre");
@@ -27,7 +31,7 @@ async fn main() -> Result<()> {
             .expect("DEBUG_GUILD must be an integer"),
     );
     let super_user_str = env::var("SUPERUSERS").expect("`SUPERUSERS` not found in .env file");
-
+    let prefix = env::var("COMMAND_PREFIX").expect("`COMMAND_PREFIX` not found in .env file");
     let super_users: Vec<u64> = super_user_str
         .split(',')
         .map(|s| {
@@ -52,7 +56,7 @@ async fn main() -> Result<()> {
             })
         },
         prefix_options: poise::PrefixFrameworkOptions {
-            prefix: Some("|".into()),
+            prefix: Some(prefix),
             ..Default::default()
         },
         ..Default::default()

@@ -67,7 +67,6 @@ mod tests {
         let json_string = fetch_page_with_user_agent(FLASH_USER_AGENT, &url).await?;
         let document = Html::parse_document(&json_string);
         let data = parse_aqw_charpage(document)?;
-        dbg!(data);
         Ok(())
     }
 }

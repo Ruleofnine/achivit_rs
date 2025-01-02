@@ -11,18 +11,17 @@ This bot is created for the [Dragonsgrasp Discord Server](https://discord.gg/UrK
 
 ## Features
 
-* Lookup DF IDS
-* Custom Roles Lookup
-* Custom Ascendancies System
+* Lookup DF/AQC/MQ/AQW Character Pages
+* Custom Roles/Ascendancies/Inn Items Lookup
 * [DragonFable Endgame Wiki](https://dragonfable-endgame.fandom.com/wiki/) search with autocomplete 
-* Update checker
+* [Design Notes](https://www.dragonfable.com/df-designnotes.asp) Checker
 
 ## Todos
-- <b>Dfpedia</b>
-- challenges
+- <b>Dfpedia</b> 
+- challenges(technical challange of request limit and charpage caching?) limit to 1v1?
+- character snapshots
 - update README
 - fix update checker? (it should work?)
-- add AQW lookup
 
 ## Getting Started
 

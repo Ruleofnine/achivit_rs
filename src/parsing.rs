@@ -11,20 +11,22 @@ use log::error;
 use num_format::{Locale, ToFormattedString};
 use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
-use serde_json::to_string;
 use std::collections::HashMap;
 use std::future::Future;
 use std::iter::FromIterator;
 use std::pin::Pin;
 use tokio::fs;
+use std::fmt;
 pub struct ElementRefWrapper<'a>(pub ElementRef<'a>);
-impl ToString for ElementRefWrapper<'_> {
-    fn to_string(&self) -> String {
-        self.0
+impl fmt::Display for ElementRefWrapper<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let text = self
+            .0
             .text() // Access the text content of the element
-            .collect::<String>() // Collect it into a single String
-            .trim() // Trim leading and trailing whitespace
-            .to_owned() // Return an owned String
+            .collect::<String>() // Collect into a String
+            .trim()
+            .to_owned();
+        write!(f, "{}", text)
     }
 }
 #[derive(PartialEq, Copy, Clone, Debug)]

@@ -6,6 +6,7 @@ pub mod event_handler;
 pub mod guild_settings;
 pub mod lookup_df;
 pub mod manage_users;
+pub mod mech_aqw_lookup;
 pub mod parsing;
 pub mod requests;
 pub mod requirements;
@@ -13,7 +14,6 @@ pub mod rng;
 pub mod sheets;
 pub mod time;
 pub mod wiki;
-pub mod mech_aqw_lookup;
 pub use crate::event_handler::event_handler;
 pub use dotenv::dotenv;
 pub use log::info;
@@ -22,7 +22,8 @@ pub use poise::serenity_prelude as serenity;
 pub mod paginate;
 pub mod update_checker;
 use crate::serenity::Mutex;
-use color_eyre::owo_colors::{OwoColorize, Style};
+use color_eyre::owo_colors::{OwoColorize, Rgb, Style};
+use rand::{rngs::ThreadRng, Rng};
 use sqlx::PgPool;
 use std::collections::HashMap;
 use std::env;
@@ -39,11 +40,11 @@ pub struct Tasks {
     inner: Arc<Mutex<HashMap<String, bool>>>,
 }
 
-trait Task{
-    async fn stop_task(&self,task_name:&str);
-    async fn is_running(&self,task_name:&str)->bool;
+trait Task {
+    async fn stop_task(&self, task_name: &str);
+    async fn is_running(&self, task_name: &str) -> bool;
 }
-impl Task for Arc<Mutex<HashMap<String, bool>>>{
+impl Task for Arc<Mutex<HashMap<String, bool>>> {
     async fn stop_task(&self, task_name: &str) {
         let mut tasks = self.lock().await;
         tasks.insert(task_name.to_string(), false);
@@ -53,21 +54,17 @@ impl Task for Arc<Mutex<HashMap<String, bool>>>{
         let tasks = self.lock().await;
         *tasks.get(task_name).unwrap_or(&false)
     }
-
-} 
-impl Default for Tasks{
+}
+impl Default for Tasks {
     fn default() -> Self {
         Tasks {
             inner: Arc::new(Mutex::new(HashMap::new())),
         }
     }
-
-
 }
 impl Tasks {
-    pub fn clone_inner(&self)->Arc<Mutex<HashMap<String, bool>>>{
+    pub fn clone_inner(&self) -> Arc<Mutex<HashMap<String, bool>>> {
         self.inner.clone()
-
     }
     pub async fn start_task(&self, task_name: &str) {
         let mut tasks = self.inner.lock().await;
@@ -89,16 +86,21 @@ pub struct Data {
     pub start_time: Instant,
     pub db_connection: PgPool,
     pub tasks: Tasks,
-    pub super_users: Vec<u64>
+    pub super_users: Vec<u64>,
 }
 impl Data {
     pub fn tasks(&self) -> &Tasks {
         &self.tasks
     }
-    pub fn new(start_time:Instant,db_connection:PgPool,super_users:Vec<u64>)->Data{
-        Data { start_time, db_connection, tasks: Tasks::default(),super_users }
+    pub fn new(start_time: Instant, db_connection: PgPool, super_users: Vec<u64>) -> Data {
+        Data {
+            start_time,
+            db_connection,
+            tasks: Tasks::default(),
+            super_users,
+        }
     }
-    pub fn db(&self)->&PgPool{
+    pub fn db(&self) -> &PgPool {
         &self.db_connection
     }
 }
@@ -130,10 +132,28 @@ pub fn get_command_list(
         crate::update_checker::update_checker(),
     ]
 }
-pub fn print_banner() {
-    let achivit_style = Style::new().bright_purple();
-    let prefix_style = Style::new().bright_cyan();
-    let postfix_style = Style::new().bright_yellow();
+pub fn print_banner(random_banner: bool) {
+    fn random_color(rng: &mut ThreadRng) -> Rgb {
+        let r = rng.gen_range(100..=255);
+        let g = rng.gen_range(50..=200);
+        let b = rng.gen_range(150..=255);
+        Rgb(r, g, b)
+    }
+    let mut rng = rand::thread_rng();
+
+    let (achivit_style, prefix_style, postfix_style) = match random_banner {
+        true => (
+            Style::new().color(random_color(&mut rng)),
+            Style::new().color(random_color(&mut rng)),
+            Style::new().color(random_color(&mut rng)),
+        ),
+        false => (
+            Style::new().bright_purple(),
+            Style::new().bright_cyan(),
+            Style::new().bright_yellow(),
+        ),
+    };
+
     let version = env!("CARGO_PKG_VERSION");
     let authors = env!("CARGO_PKG_AUTHORS");
     let description = env!("CARGO_PKG_DESCRIPTION");

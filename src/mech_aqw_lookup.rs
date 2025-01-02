@@ -103,8 +103,8 @@ pub async fn lookup_aqw_character(
     ctx: Context<'_>,
     #[description = "Character Name to lookup"] name: String,
 ) -> Result<(), Error> {
-    let url = format!("https://account.aq.com/CharPage?id={}", name);
-    let json_string = fetch_page_with_user_agent(USER_AGENT, &url).await?;
+    let url = format!("https://account.aq.com/CharPage?id={name}");
+    let json_string = fetch_page_with_user_agent(FLASH_USER_AGENT , &url).await?;
     let document = Html::parse_document(&json_string);
     let data = parse_aqw_charpage(document)?;
     if let Some(data) = data {

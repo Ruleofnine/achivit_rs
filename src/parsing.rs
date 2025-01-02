@@ -626,9 +626,9 @@ pub fn parse_df_character(document: &Html, df_id: i32) -> LookupState {
                     warbuilder = WarBuilder::default();
                 }
                 _ => {
-                    dbg!(span.value().classes().collect::<Vec<_>>());
-                    dbg!(item_name);
-                    dbg!(class);
+                    error!("Classes : {:?}",span.value().classes().collect::<Vec<_>>());
+                    error!("Item Name: {}",item_name);
+                    error!("Item Class: {}",class);
                     panic!("UnexpectedItemType");
                 }
             }

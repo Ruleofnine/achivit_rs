@@ -5,7 +5,7 @@ use crate::{
     requests::{fetch_page_with_user_agent, DESIGN_NOTES_LINK, USER_AGENT},
     Context, Error, Task,
 };
-use chrono::NaiveDate;
+use chrono::{Datelike, NaiveDate};
 use color_eyre::{eyre::eyre, Result};
 use getset::Getters;
 use log::{error, info};
@@ -177,7 +177,9 @@ async fn run_update_checker(
     all_guilds: Arc<Vec<GuildSettings>>,
 ) -> Result<()> {
     let tasks = ctx.data().tasks().clone_inner();
-    let last_dn_str = fetch_page_with_user_agent(USER_AGENT, DESIGN_NOTES_LINK).await?;
+    let now = chrono::Local::now();
+    let dn_url = format!("{DESIGN_NOTES_LINK}/{}/{}",now.year(),now.month());
+    let last_dn_str = fetch_page_with_user_agent(USER_AGENT, &dn_url).await?;
     let last_dn = DesignNote::parse_from_str(&last_dn_str)?;
     tokio::spawn(async move {
         let mut interval = time::interval(Duration::from_secs(10));

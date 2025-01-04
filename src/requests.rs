@@ -12,7 +12,7 @@ pub const NDA_IMGUR: &str = "https://i.imgur.com/rBJt81B.png";
 pub const ROLE_DA_IMGUR: &str = "https://i.imgur.com/uxK6enN.png";
 pub const ASCEND_DA_IMGUR: &str = "https://i.imgur.com/MHJCKwE.png";
 pub const COLOR_SITE: &str = "https://www.color-hex.com/color/";
-pub const DESIGN_NOTES_LINK: &str = "https://www.dragonfable.com/gamedesignnotes";
+pub const DESIGN_NOTES_LINK: &str = "https://www.dragonfable.com/gamedesignnotes/date";
 pub const DF_LINK: &str = "https://www.dragonfable.com/";
 pub fn open_file(file_path:&str)->Result<String>{
         Ok(read_to_string(file_path)?)

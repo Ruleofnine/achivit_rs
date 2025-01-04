@@ -21,6 +21,7 @@ pub use lookup_df::lookup_df_character;
 pub use poise::serenity_prelude as serenity;
 pub mod paginate;
 pub mod update_checker;
+pub mod challenge;
 use crate::serenity::Mutex;
 use color_eyre::owo_colors::{OwoColorize, Rgb, Style};
 use rand::{rngs::ThreadRng, Rng};

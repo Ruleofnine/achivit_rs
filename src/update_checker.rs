@@ -185,7 +185,7 @@ async fn run_update_checker(
         let mut interval = time::interval(Duration::from_secs(10));
         while tasks.is_running(UPDATE_CHECKER).await {
             interval.tick().await;
-            let new_dn_str = match fetch_page_with_user_agent(USER_AGENT, DESIGN_NOTES_LINK).await {
+            let new_dn_str = match fetch_page_with_user_agent(USER_AGENT, &dn_url).await {
                 Ok(data) => data,
                 Err(e) => {
                     error!("Failed to fetch page for DN with error: [{e}]");

@@ -199,6 +199,8 @@ async fn run_update_checker(
                     continue;
                 }
             };
+            info!("last dn: {}",last_dn.date());
+            info!("new dn: {}",new_dn.date());
             if new_dn.date() > last_dn.date() || flag == UpdateCheckerFeatureFlag::Force || flag == UpdateCheckerFeatureFlag::ForceNoPing {
                 tasks.stop_task(UPDATE_CHECKER).await;
                 if let Err(e) = send_update_embed(Arc::clone(&all_guilds), new_dn,flag).await {

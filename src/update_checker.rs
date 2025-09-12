@@ -2,7 +2,7 @@ use crate::parsing::ElementRefWrapper;
 use crate::{
     embeds::send_update_embed,
     guild_settings::GuildSettings,
-    requests::{fetch_page_with_user_agent, DESIGN_NOTES_LINK, USER_AGENT},
+    requests::{fetch_dn, fetch_page_with_user_agent, DESIGN_NOTES_LINK, USER_AGENT},
     Context, Error, Task,
 };
 use chrono::{Datelike, NaiveDate};
@@ -42,7 +42,7 @@ static DATE_FORMATS: [&str; 27] = [
     "%B %drd, %Y",
     "%B %dth, %Y",
 ];
-#[derive(poise::ChoiceParameter, PartialEq, Debug,Clone, Copy)]
+#[derive(poise::ChoiceParameter, PartialEq, Debug, Clone, Copy)]
 pub enum UpdateCheckerFeatureFlag {
     Start,
     Stop,
@@ -178,8 +178,8 @@ async fn run_update_checker(
 ) -> Result<()> {
     let tasks = ctx.data().tasks().clone_inner();
     let now = chrono::Local::now();
-    let dn_url = format!("{DESIGN_NOTES_LINK}/{}/{}",now.year(),now.month());
-    let last_dn_str = fetch_page_with_user_agent(USER_AGENT, &dn_url).await?;
+    let dn_url = format!("{DESIGN_NOTES_LINK}/{}/{}", now.year(), now.month());
+    let last_dn_str = fetch_dn(USER_AGENT, &dn_url).await?;
     let last_dn = DesignNote::parse_from_str(&last_dn_str)?;
     tokio::spawn(async move {
         let mut interval = time::interval(Duration::from_secs(10));
@@ -199,11 +199,14 @@ async fn run_update_checker(
                     continue;
                 }
             };
-            info!("last dn: {}",last_dn.date());
-            info!("new dn: {}",new_dn.date());
-            if new_dn.date() > last_dn.date() || flag == UpdateCheckerFeatureFlag::Force || flag == UpdateCheckerFeatureFlag::ForceNoPing {
+            info!("last dn: {}", last_dn.date());
+            info!("new dn: {}", new_dn.date());
+            if new_dn.date() > last_dn.date()
+                || flag == UpdateCheckerFeatureFlag::Force
+                || flag == UpdateCheckerFeatureFlag::ForceNoPing
+            {
                 tasks.stop_task(UPDATE_CHECKER).await;
-                if let Err(e) = send_update_embed(Arc::clone(&all_guilds), new_dn,flag).await {
+                if let Err(e) = send_update_embed(Arc::clone(&all_guilds), new_dn, flag).await {
                     error!("Failed to send Embed for DN with error: [{e}]")
                 }
                 // send message to channel with ctx.send()
@@ -264,10 +267,16 @@ pub async fn update_checker(ctx: Context<'_>, flag: UpdateCheckerFeatureFlag) ->
     let all_guilds = query_as!(GuildSettings,"select * from guild_settings where announcement_channel_id IS NOT NULL and announcement_role_id IS NOT NULL").fetch_all(pool).await?;
     let arc_guilds = Arc::new(all_guilds);
     match (&flag, is_running) {
-        (UpdateCheckerFeatureFlag::Start, false) | (UpdateCheckerFeatureFlag::Force, _) | (UpdateCheckerFeatureFlag::ForceNoPing, _) => {
+        (UpdateCheckerFeatureFlag::Start, false)
+        | (UpdateCheckerFeatureFlag::Force, _)
+        | (UpdateCheckerFeatureFlag::ForceNoPing, _) => {
             tasks.start_task(UPDATE_CHECKER).await;
             run_update_checker(ctx, flag, arc_guilds).await?;
-            ctx.reply(format!("Command Executed Successfully with Feature Flag {}",flag)).await?;
+            ctx.reply(format!(
+                "Command Executed Successfully with Feature Flag {}",
+                flag
+            ))
+            .await?;
         }
         (UpdateCheckerFeatureFlag::Start, true) => {
             ctx.reply("Update Checker is **already** running!").await?;

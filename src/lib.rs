@@ -18,6 +18,7 @@ pub use crate::event_handler::event_handler;
 pub use dotenv::dotenv;
 pub use log::info;
 pub use lookup_df::lookup_df_character;
+use parsing::Items;
 pub use poise::serenity_prelude as serenity;
 pub mod paginate;
 pub mod update_checker;
@@ -88,6 +89,7 @@ pub struct Data {
     pub db_connection: PgPool,
     pub tasks: Tasks,
     pub super_users: Vec<u64>,
+    pub item_cache:Arc<Mutex<HashMap<u64,Vec<String>>>>
 }
 impl Data {
     pub fn tasks(&self) -> &Tasks {
@@ -99,6 +101,7 @@ impl Data {
             db_connection,
             tasks: Tasks::default(),
             super_users,
+            item_cache: Arc::new(Mutex::new(HashMap::new()))
         }
     }
     pub fn db(&self) -> &PgPool {
@@ -120,6 +123,7 @@ pub fn get_command_list(
         crate::lookup_df::lookup_df_character(),
         crate::lookup_df::compare_df_characters(),
         crate::lookup_df::roles_list(),
+        crate::challenge::challenge_user(),
         crate::mech_aqw_lookup::lookup_mechquest_id(),
         crate::mech_aqw_lookup::lookup_aqw_character(),
         crate::mech_aqw_lookup::lookup_aqc_id(),

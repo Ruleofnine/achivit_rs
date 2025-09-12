@@ -344,6 +344,9 @@ impl DFCharacterData {
             item_list: None,
         }
     }
+    pub fn take_items(self)->Option<Items>{
+        self.item_list
+    }
     fn calc_item_count(&mut self) -> u16 {
         self.da_count + self.dc_count + self.nda_count + self.artifact_count
     }
